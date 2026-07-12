@@ -1,0 +1,68 @@
+T1 (Single Glaze)
+Type:  85mm thick, exposed profile
+Panel Surface: Tempered Glass 
+
+T1 (Double Glaze)
+Type:  85mm thick, exposed profile
+Panel Surface: Tempered Glass with black/silver color border match frame
+
+T1 (Solid)
+Type:  85mm thick, exposed profile
+Panel Surface: Standard Bare MDF
+
+T1 (Single Glazed)
+Type:  80mm thick, exposed profile
+Panel Surface: Tempered Glass 
+
+T1 (Double Glazed)
+Type:  80mm thick, exposed profile
+Panel Surface: Tempered Glass with black/silver color border match frame
+
+T1 (Solid)
+Type:  80mm thick, exposed profile
+Panel Surface: Standard Bare MDF
+
+T1 (Double Glazed)
+Type:  110mm thick, exposed profile
+Panel Surface: Tempered Glass with black/silver color border match frame
+
+T1 (Solid)
+Type:  110mm thick, exposed profile
+Panel Surface: Standard Bare MDF
+
+E65 (Solid Operable Wall)
+Type:  65mm thick, exposed profile
+Panel Surface: Standard Bare MDF
+
+E65 (Single Glazed Operable Wall)
+Type:  65mm thick, exposed profile
+Panel Surface: Tempered Glass 
+
+E65 (Double Glazed Operable Wall)
+Type:  65mm thick, exposed profile
+Panel Surface: Tempered Glass with black/silver color border match frame
+
+E85 (Solid Operable Wall)
+Type:  85mm thick, exposed profile
+Panel Surface: Standard Bare MDF
+
+E85 (Single Glazed Operable Wall)
+Type:  85mm thick, exposed profile
+Panel Surface: Tempered Glass 
+
+E85 (Double Glazed Operable Wall)
+Type:  85mm thick, exposed profile
+Panel Surface: Tempered Glass with black/silver color border match frame
+
+E100 (Solid Operable Wall)
+Type:  100mm thick, exposed profile
+Panel Surface: Standard Bare MDF
+
+E100 (Single Glazed Operable Wall)
+Type:  100mm thick, exposed profile
+Panel Surface: Tempered Glass 
+
+E100 (Double Glazed Operable Wall)
+Type:  100mm thick, exposed profile
+Panel Surface: Tempered Glass with black/silver color border match frame
+

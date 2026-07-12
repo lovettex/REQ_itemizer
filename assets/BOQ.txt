@@ -1,0 +1,170 @@
+SINGLE GLAZED PARTITION SYSTEM:
+
+T1 Single Glaze Partition (T25) Without GSEAL / GJOINER	
+T1 Single Glaze Partition (T25)	| T1 Glass [ T-25 | GF-1/A ]
+T1 Single Glaze Partition (T50) [ T-50 | GF-2/B ]	
+T1 Single Glaze Partition (T108 - Center Pocket)	
+T1 Single Glaze Partition (T108 - Center Pocket)	 |T1 Glass [ T-108 | GF-4/D ]
+T1 Single Glaze Partition (T108 - Offset) [ T-108 | GF-5/E ]
+T1 Single Glaze Partition (T108 - Offset) |T1 Glass [ T-108 | GF-7/K ]
+T1 Single Glaze Partition (T108 - Offset) |T1 Glass [ T-108 | GF-5/N ]
+T1 Single Glaze Partition (T25)	|T1 Glass [ T-25 | GF-12/H]
+
+SINGLE GLAZED SWING DOOR PANEL SYSTEM:
+
+T1 Single Glazed Door (T115SG) | T1 Glass [ T-115SG | SWING DP-A1 ]
+[ T-30SG ] Single Glazed Entry Door Panel - Customised Lockbox |T1 Glass [ T-30SG | SWING DP-A3 ]
+[ T-30SG ] Single Glazed Entry Door Panel with Transom - Customised Lockbox	
+T1 Single Glazed Door (T30SG) - T1 Lockbox | T1 Glass [ T-30SG | SWING DP-A3 ]
+T1 Single Glazed Door (T70SG) - T1 Glass [ T-70SG | SWING DP-A2 ]
+
+PREMIO SWING DOOR:
+
+Door Frame 50x25mm with T5012 | T1 Glass [ T-50 | SWING DF-A1 (PREMIO)| ]
+[ Frameless] Frameless Glazed Door - Premio Door | T1 Glass [ SWING DP-C1 ]
+
+DOUBLE GLAZED PARTITION SYSTEM:
+
+T1 Double Glaze Partition (T108) | T1 Glass [ T-108 | GF-6/F ]
+T1 Double Glaze Partition (T108) (Vietnam) | T1 Glass [ T-108 | GF6/O ]
+T1 Double Glaze Partition (T108) | T1 Glass [ T-108 | GF-8/L ]
+T1 Double Glaze Partition (T108) - Pocket	| T1 Glass [ T-108 | GF-9/J ] - FB
+
+DOUBLE GLAZED SWING DOOR PANEL SYSTEM:
+
+T1 Double Glazed Door Panel (T90DG) | T1 Glass [ T-90DG | SWING DP-B1 ]
+[ T-115DG ] Double Glazed Entry Door Panel c/w Transom | T1 Glass [ T-115DG | SWING DP-B2 ]
+[ T-30DG ] Double Glazed Entry Door Panel with 25mmH Flat Bar Transom - t1 Lockbox|T1 Glass [ T-30SG | SWING DP-A3 ]
+
+SWING DOOR FRAME SYSTEM:
+
+Door Frame 50x25mm with T5012 |T1 Glass [ T-50 | SWING DF-A | DV-1 ]
+Door Frame 108x25mm with T8027A + T8029 - T90DG |T1 Glass [ T-108 | SWING DF-B | DV-8 ]
+Door Frame 108x25mm with T8027A + T8029 - T115DG	|T1 Glass [ T-108 | SWING DF-B2 | DV-7 ]
+Door Frame 108x25mm with T8027A + T8029 - T115SG / T1 Door Frame Only | T1 Glass [ T-108 | SWING DF-B3 | DV-3 ]
+Door Frame 108x25mm with T8834 + T8016/011 + T5008 |T1 Glass [ T-108 | SWING DF-C/D | DV-2 ]
+Door Frame 108x25mm with T8834 + T8016/011 + T5046+C	| T1 Glass [ T-108 | SWING DF-E/F ]
+Door Frame 108x50mm with T8835 + T8016/011 + T5008 | T1 Glass [ T-108 | SWING DF-G/H ]
+Door Frame 108x50mm with T8835 + T8016/011 + T5046+C	|T1 Glass [ T-108 | SWING DF-I/J ]
+
+SLIDING DOOR SYSTEM:
+
+Sliding Door Frame 25x50mm with T5053M - Floor Roller / Track (New T3008) - SGL | T1 Glass - [ T-108 | FRSLD-1  ]
+Sliding Door Frame 25x50mm with T5053M - Floor Roller / Track (New T3008) - DGL Pocket Sliding | T1 Glass - [ T-108 | FRSLD -3 ]
+Sliding Door Frame 25x50mm with T8835/8011 - Floor Roller / Track (New T3008) - SGL - Slide Offset |T1 Glass - [ T-108 | FRSLD-4  ]
+T1 Single Glazed Floor Track Sliding Door (T115SG)	 |T1 Glass - [ T-115SG | FRSDP-V A1 ]
+T1 Single Glazed Floor Track Sliding Door (T115SG - 1 Vert, T70 - T&B + 1 Vert) | T1 Glass - [ T-115SG/70SG | FRSDP-V A2 ]
+T1 Double Glazed Floor Track Sliding Door (T115DG) | T1 Glass [ T-115DG | FRSDP-V A3 ]
+Sliding Door Frame 50x25mm with T5004M + T5006 + T5046 - Ceiling Track	| T1 Glass - [ T-50 | SLIDE DF-1 ]
+Sliding Door Frame 108x25mm with T8834 + T8011/016 + T5046 - Ceiling Track | T1 Glass - [ T-108 | SLIDE DF-2 ]
+Sliding Door Frame 108x25mm with T8835 + T8011/016 + T5046 - Ceiling Track | T1 Glass - [ T-108 | SLIDE DF-3 ]
+T1 Single Glazed Ceiling Track Sliding Door (T115SG) |T1 Glass - [ T-115SG | SLIDE DP-1 ]
+T1 Double Glazed Ceiling Track Sliding Door (T90DG) |T1 Glass - [ T-90DG | SLIDE DP-5 ]
+
+BI-FOLD DOOR SYSTEM:
+
+Bi-Fold Door Frame 108x50mm	| T1 Glass [ T-50 | BF-DF ]
+T1 Single Glazed Bi-Fold Door (T70SG) | T1 Glass [ T-70SG | DP-A2 ]
+
+POWER COLUMN SYSTEM:
+
+T-50 Power Column | T1 Glass [ T-50 PC1 ]
+T-50 Metal Cladding Power Column | T1 Glass [ T-50 PC2 ]
+T-108 Power Column	|T1 Glass [ T-108 PC3 / PC4 ]
+T-108 Metal Cladding Power Column	|T1 Glass [ T-108 PC5 / PC6 ]
+T-108 Aluminium Square Post | T1 Glass [ T-108 Sqaure Post ]
+
+MISCELLANEOUS:
+
+Powder Coat for Aluminium Finishes	
+Manual Hoisting 	
+Motorised Venetian/Roller Blinds	
+T1 50/100mm Skirting | T1 Skirting
+
+ACOUSTIC TIMBER SWING DOOR PANEL SYSTEM :
+
+[ T-90DT ] Timber Door Panel (Single side Acoustic, Single side Laminated)	 | T1 Glass [ T-90DT | SWING DP-B1 ]
+
+
+CURVE GLASS:
+
+T1 Double Glaze Curved Parition (T108x25 - Curved)	| T1 Glass [ T-25 ]
+T1 Single Glaze Offset Curved Parition (T108x25 - Offset - Curved) | T1 Glass [ T-25 ]
+T1 Single Glaze Curved Parition (T25x25 - Curved) | T1 Glass [ T-25 ]
+
+FRAMELESS GLASS PARTITION & FRAMELESS DOOR:
+
+T1 Frameless Glass Partition |
+T1 Frameless Swing Door	| T1 Glass [ SWING DP-D1-Frameless ]
+T1 Frameless Swing Door w/ Clerestory | T1 Glass [ SWING DP-D1-Frameless with clerestory, door above 2400mmH]
+T1 Frameless Sliding Door	 |T1 Glass [ SLIDING DP-D1-Frameless ]
+
+	
+
+	
+															
+	
+	
+
+															
+
+															
+	
+															
+	
+
+
+	
+	
+															
+	
+
+															
+	
+	
+	
+	
+
+	
+	
+
+	
+
+	
+	
+															
+
+	
+
+	
+	
+
+	
+	
+															
+	
+	
+
+	
+															
+
+	
+	
+	
+															
+	
+	
+															
+	
+	
+	
+	
+															
+
+
+	
+
+
+
+
+															

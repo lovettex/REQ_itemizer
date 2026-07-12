@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>T1 系統配置庫</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar"><div class="brand"><span>T1</span>系統配置庫</div><div>System Partition Configuration · R6</div></header>
+  <section class="panel projects project-wide">
+    <details class="project-section">
+      <summary><span>＋ 新增 Project</span><small>點擊展開／收合</small></summary>
+      <div class="project-section-body"><form id="projectForm" class="project-form"><label>Project<input name="name" required placeholder="Project name"></label><label>Sales<input name="sales" list="salesList" autocomplete="off" placeholder="選擇或輸入 Sales"></label><datalist id="salesList"><option value="Glen Tew"><option value="Gerry Lee"><option value="Eugene Ng"><option value="Jim Lim"><option value="Kelvin Tjia"><option value="Benjamin Seng"><option value="Lim Zhi Kang Louis"><option value="Bella"><option value="Jensen"><option value="Rayven Leong"><option value="Zac Lee"><option value="Naomi"></datalist><label>案件等級<select name="priority" data-priority-select><option value="">選擇等級</option><option value="REGULAR">REGULAR</option><option value="URGENT">URGENT</option><option value="CERTAIN DEADLINE">CERTAIN DEADLINE</option></select></label><label class="deadline-label" style="display:none">Deadline<input name="deadline" type="date" data-deadline-input></label><label>Address<input name="address"></label><label>Tenderer 1<input name="tenderer"></label><label>Attn<input name="attn"></label><label>Tel<input name="tel"></label><label>Email<input name="email" type="email"></label><label>Mobile<input name="mobile"></label><label>Fax<input name="fax"></label><button class="primary" type="submit">儲存 Project</button></form></div>
+    </details>
+    <details class="project-section saved-projects">
+      <summary><span>▣ 已儲存 Projects <em id="projectCount"></em></span><small>點擊展開／收合</small></summary>
+      <div class="project-section-body"><div class="ps-search-wrap"><div class="ps-search-inner"><input type="text" id="projectSearch" placeholder="搜尋 Project..." autocomplete="off"><span class="ps-arrow">▾</span></div><div class="ps-dropdown" id="projectDropdown"></div></div><div id="projectList" class="project-list"></div><div class="backup"><button id="exportProjects" type="button">匯出 Projects</button><label>匯入 Projects<input id="importProjects" type="file" accept="application/json" hidden></label></div></div>
+    </details>
+  </section>
+  <main class="layout">
+    <section class="panel catalog">
+      <div class="heading"><div><p>CONFIGURATION FINDER</p><h1>搜尋並建立產品配對</h1></div><span id="resultCount"></span></div>
+      <label class="search"><span>⌕</span><input id="search" placeholder="輸入型號，例如 SWING DF - L" autocomplete="off"><button id="clearSearch" type="button">×</button></label>
+      <div class="filters" id="filters"></div><div id="empty" class="empty" hidden>找不到符合的圖紙。</div><div id="results" class="results"></div>
+    </section>
+    <aside class="workspace">
+      <div class="tab-bar"><button class="tab active" data-tab="ow">OPERABLE WALL</button><button class="tab" data-tab="pair">建立配對</button><button class="tab" data-tab="saved">已儲存配對</button></div>
+      <div class="tab-panel active" data-tab="ow">
+      <section class="panel operable-wall">
+        <div class="heading"><div><p>OPERABLE WALL</p><h2>OPERABLE WALL ITEMS</h2></div><span id="operableWallCount">17</span></div>
+        <div class="operable-wall-search ow-sourcing">
+          <div class="ow-search-wrap">
+            <input type="text" id="sourcingSearch" placeholder="搜尋 Sourcing..." autocomplete="off">
+            <span class="ow-arrow">▾</span>
+          </div>
+          <div class="ow-dropdown" id="sourcingDropdown">
+            <div class="ow-item" data-value="DGL OP (China)">DGL OP (China)</div>
+            <div class="ow-item" data-value="SOLID OP (China)">SOLID OP (China)</div>
+            <div class="ow-item" data-value="DGL OP (Malaysia)">DGL OP (Malaysia)</div>
+            <div class="ow-item" data-value="SGL OP (Malaysia)">SGL OP (Malaysia)</div>
+            <div class="ow-item" data-value="SOLID OP (Malaysia)">SOLID OP (Malaysia)</div>
+            <div class="ow-empty" id="sourcingEmpty" hidden>找不到符合的選項。</div>
+          </div>
+        </div>
+        <div class="operable-wall-search">
+          <div class="ow-search-wrap">
+            <input type="text" id="operableWallSearch" placeholder="搜尋 Operable Wall..." autocomplete="off">
+            <span class="ow-arrow">▾</span>
+          </div>
+          <div class="ow-dropdown" id="operableWallDropdown">
+            <div class="ow-group">
+              <div class="ow-group-label">T1 Series — 85mm</div>
+              <div class="ow-item" data-value="T1 (Single Glaze) 85mm — Tempered Glass">T1 (Single Glaze) 85mm — Tempered Glass</div>
+              <div class="ow-item" data-value="T1 (Double Glaze) 85mm — Tempered Glass (black/silver border)">T1 (Double Glaze) 85mm — Tempered Glass (black/silver border)</div>
+              <div class="ow-item" data-value="T1 (Solid) 85mm — Standard Bare MDF">T1 (Solid) 85mm — Standard Bare MDF</div>
+            </div>
+            <div class="ow-group">
+              <div class="ow-group-label">T1 Series — 80mm</div>
+              <div class="ow-item" data-value="T1 (Single Glazed) 80mm — Tempered Glass">T1 (Single Glazed) 80mm — Tempered Glass</div>
+              <div class="ow-item" data-value="T1 (Double Glazed) 80mm — Tempered Glass (black/silver border)">T1 (Double Glazed) 80mm — Tempered Glass (black/silver border)</div>
+              <div class="ow-item" data-value="T1 (Solid) 80mm — Standard Bare MDF">T1 (Solid) 80mm — Standard Bare MDF</div>
+            </div>
+            <div class="ow-group">
+              <div class="ow-group-label">T1 Series — 110mm</div>
+              <div class="ow-item" data-value="T1 (Double Glazed) 110mm — Tempered Glass (black/silver border)">T1 (Double Glazed) 110mm — Tempered Glass (black/silver border)</div>
+              <div class="ow-item" data-value="T1 (Solid) 110mm — Standard Bare MDF">T1 (Solid) 110mm — Standard Bare MDF</div>
+            </div>
+            <div class="ow-group">
+              <div class="ow-group-label">E65 Series — 65mm</div>
+              <div class="ow-item" data-value="E65 (Solid Operable Wall) 65mm — Standard Bare MDF">E65 (Solid Operable Wall) 65mm — Standard Bare MDF</div>
+              <div class="ow-item" data-value="E65 (Single Glazed Operable Wall) 65mm — Tempered Glass">E65 (Single Glazed Operable Wall) 65mm — Tempered Glass</div>
+              <div class="ow-item" data-value="E65 (Double Glazed Operable Wall) 65mm — Tempered Glass (black/silver border)">E65 (Double Glazed Operable Wall) 65mm — Tempered Glass (black/silver border)</div>
+            </div>
+            <div class="ow-group">
+              <div class="ow-group-label">E85 Series — 85mm</div>
+              <div class="ow-item" data-value="E85 (Solid Operable Wall) 85mm — Standard Bare MDF">E85 (Solid Operable Wall) 85mm — Standard Bare MDF</div>
+              <div class="ow-item" data-value="E85 (Single Glazed Operable Wall) 85mm — Tempered Glass">E85 (Single Glazed Operable Wall) 85mm — Tempered Glass</div>
+              <div class="ow-item" data-value="E85 (Double Glazed Operable Wall) 85mm — Tempered Glass (black/silver border)">E85 (Double Glazed Operable Wall) 85mm — Tempered Glass (black/silver border)</div>
+            </div>
+            <div class="ow-group">
+              <div class="ow-group-label">E100 Series — 100mm</div>
+              <div class="ow-item" data-value="E100 (Solid Operable Wall) 100mm — Standard Bare MDF">E100 (Solid Operable Wall) 100mm — Standard Bare MDF</div>
+              <div class="ow-item" data-value="E100 (Single Glazed Operable Wall) 100mm — Tempered Glass">E100 (Single Glazed Operable Wall) 100mm — Tempered Glass</div>
+              <div class="ow-item" data-value="E100 (Double Glazed Operable Wall) 100mm — Tempered Glass (black/silver border)">E100 (Double Glazed Operable Wall) 100mm — Tempered Glass (black/silver border)</div>
+            </div>
+            <div class="ow-empty" id="owEmpty" hidden>找不到符合的產品。</div>
+          </div>
+        </div>
+        <div class="ow-form">
+          <div class="ow-row ow-project-row"><span class="ow-label">複製到 Project</span><div class="ow-project-controls"><select id="owProjectSelect"><option value="">選擇 Project</option></select><button id="owCopyBtn" class="primary" type="button">複製到 Project</button></div></div>
+          <label class="ow-row">LEGEND (Manual)<input id="owLegend" placeholder="輸入 Legend"></label>
+          <label class="ow-row">FINISHES<input id="owFinishes" placeholder="輸入 Finishes"></label>
+          <label class="ow-row">HEIGHT<input id="owHeight" placeholder="輸入 Height"></label>
+          <label class="ow-row">TYPE<input id="owType" placeholder="輸入 Type"></label>
+          <label class="ow-row">OPERATE<input id="owOperate" placeholder="輸入 Operate"></label>
+          <label class="ow-row">COUNTRY<input id="owCountry" placeholder="輸入 Country"></label>
+          <label class="ow-row">HW FINISHES<input id="owHwFinishes" placeholder="輸入 HW Finishes"></label>
+          <label class="ow-row ow-row-full">REMARK IF ANY<textarea id="owRemark" placeholder="輸入 Remark"></textarea></label>
+        </div>
+      </section>
+      </div>
+      <div class="tab-panel" data-tab="pair" style="display:none">
+      <section class="panel pairing">
+        <div class="heading"><div><p>CURRENT SET</p><h2>建立配對</h2></div><button class="link" id="resetPair" type="button">重新開始</button></div>
+        <label class="field">配對名稱<input id="pairName" value="Item A" maxlength="48"></label>
+        <label class="field">QS ONLY-QTN
+          <div class="qtn-search-wrap">
+            <div class="qtn-search-inner">
+              <input type="text" id="qtnSearch" placeholder="搜尋 QTN 產品..." autocomplete="off">
+              <span class="qtn-arrow">▾</span>
+            </div>
+            <div class="qtn-dropdown" id="qtnDropdown"></div>
+          </div>
+        </label>
+        <label class="field">QS ONLY-BOQ
+          <div class="qtn-search-wrap">
+            <div class="qtn-search-inner">
+              <input type="text" id="boqSearch" placeholder="搜尋 BOQ 產品..." autocomplete="off">
+              <span class="qtn-arrow">▾</span>
+            </div>
+            <div class="qtn-dropdown" id="boqDropdown"></div>
+          </div>
+        </label>
+        <div class="slots"><div id="slotA1" class="slot"></div><div class="plus">＋</div><div id="slotA2" class="slot"></div></div>
+        <div class="inventory-fields"><label class="field">ITEM A1 - Inventory Description<input id="inventoryA1" list="inventoryOptions" autocomplete="off" placeholder="輸入以立即搜尋 Description"></label><label class="field">ITEM A2 - Inventory Description<input id="inventoryA2" list="inventoryOptions" autocomplete="off" placeholder="輸入以立即搜尋 Description"></label></div><datalist id="inventoryOptions"></datalist>
+        <button id="savePair" class="primary" type="button" disabled>儲存此配對</button><small>完成 A1 和 A2 後即可儲存；配對會保存在本機。</small>
+      </section>
+      </div>
+      <div class="tab-panel" data-tab="saved" style="display:none">
+      <section class="panel saved">
+        <div class="heading"><div><p>SAVED LIBRARY</p><h2>已儲存配對</h2></div><span id="savedCount"></span></div><div id="savedPairs" class="saved-list"></div><div class="pagination" id="savedPagination"></div>
+        <div class="backup"><button id="exportPairs" type="button">匯出備份</button><label>匯入備份<input id="importPairs" type="file" accept="application/json" hidden></label></div>
+      </section>
+      </div>
+    </aside>
+  </main>
+  <dialog id="viewer">
+    <div id="viewerWrapper">
+      <div id="viewerToolbar">
+        <strong id="viewerTitle"></strong>
+        <div id="viewerControls">
+          <button id="viewerZoomOut" type="button" title="縮小">−</button>
+          <span id="viewerZoomLevel">100%</span>
+          <button id="viewerZoomIn" type="button" title="放大">+</button>
+          <button id="viewerRefocus" type="button" title="重新聚焦到此產品" style="display:none">⊙</button>
+          <button id="viewerReset" type="button" title="顯示全頁">⊡</button>
+          <button id="closeViewer" type="button">×</button>
+        </div>
+      </div>
+      <div id="viewerContainer"><img id="viewerImage" src="" alt="" draggable="false"></div>
+      <small id="viewerInfo"></small>
+    </div>
+  </dialog>
+  <div id="toast" role="status"></div>
+  <script src="inventory.js"></script><script src="app.js"></script>
+</body>
+</html>
