@@ -3,19 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>T1 系統配置庫</title>
+  <title>RFQ: ITEMIZER Ver 1.5</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <header class="topbar"><div class="brand"><span>T1</span>系統配置庫</div><div>System Partition Configuration · R6</div></header>
   <section class="panel projects project-wide">
     <div class="project-tab-bar">
-      <button class="project-tab" data-project-tab="new"><span>＋ 新增 Project</span></button>
-      <button class="project-tab active" data-project-tab="saved"><span>▣ 已儲存 Projects <em id="projectCount"></em></span></button>
+      <button class="project-tab" data-project-tab="new"><span>NEW PROJECT</span></button>
+      <button class="project-tab active" data-project-tab="saved"><span>LISTED PROJECTS <em id="projectCount"></em></span></button>
       <button class="project-tab" data-project-tab="dashboard"><span>📊 DASHBOARD IN CHARGE <em id="dashboardCount"></em></span></button>
     </div>
     <div class="project-tab-panel" data-project-tab-panel="new" style="display:none">
-    <div class="project-section-body"><form id="projectForm" class="project-form"><label>Project<input name="name" required placeholder="Project name"></label><label>Sales<input name="sales" list="salesList" autocomplete="off" placeholder="選擇或輸入 Sales"></label><datalist id="salesList"><option value="Glen Tew"><option value="Gerry Lee"><option value="Eugene Ng"><option value="Jim Lim"><option value="Kelvin Tjia"><option value="Benjamin Seng"><option value="Lim Zhi Kang Louis"><option value="Bella"><option value="Jensen"><option value="Rayven Leong"><option value="Zac Lee"><option value="Naomi"></datalist><label>案件等級<select name="priority" data-priority-select><option value="">選擇等級</option><option value="REGULAR">REGULAR</option><option value="URGENT">URGENT</option><option value="CERTAIN DEADLINE">CERTAIN DEADLINE</option></select></label><label class="deadline-label" style="display:none">Deadline<input name="deadline" type="date" data-deadline-input></label><label>Address<input name="address"></label><label>Tenderer 1<input name="tenderer"></label><label>Attn<input name="attn"></label><label>Tel<input name="tel"></label><label>Email<input name="email" type="email"></label><label>Mobile<input name="mobile"></label><label>Fax<input name="fax"></label><label class="zip-upload-label"><span>📦 上傳 ZIP</span><input name="zipFile" type="file" accept=".zip" data-zip-upload><small>拖曳或點擊上傳 (未來對接 Supabase)</small></label><label class="scan-label"><span>📄 掃描 Excel</span><input id="excelScanInput" type="file" accept=".xlsx,.xls,.csv" hidden><button id="scanBtn" class="primary scan-btn" type="button">Scan</button><small>掃描 Excel 自動填入表單</small></label><button class="primary" type="submit">儲存 Project</button></form>
+    <div class="project-section-body"><form id="projectForm" class="project-form"><label>Project<input name="name" required placeholder="Project name"></label><label>Sales<input name="sales" list="salesList" autocomplete="off" placeholder="選擇或輸入 Sales"></label><datalist id="salesList"><option value="Glen Tew"><option value="Gerry Lee"><option value="Eugene Ng"><option value="Jim Lim"><option value="Kelvin Tjia"><option value="Benjamin Seng"><option value="Lim Zhi Kang Louis"><option value="Bella"><option value="Jensen"><option value="Rayven Leong"><option value="Zac Lee"><option value="Naomi"></datalist><label>案件等級<select name="priority" data-priority-select><option value="">CASE</option><option value="REGULAR">REGULAR</option><option value="URGENT">URGENT</option><option value="CERTAIN DEADLINE">CERTAIN DEADLINE</option></select></label><label class="deadline-label" style="display:none">Deadline<input name="deadline" type="date" data-deadline-input></label><label>Address<input name="address"></label><label>Tenderer 1<input name="tenderer"></label><label>Attn<input name="attn"></label><label>Tel<input name="tel"></label><label>Email<input name="email" type="email"></label><label>Mobile<input name="mobile"></label><label>Fax<input name="fax"></label><label class="zip-upload-label"><span>📦 UPLOAD ZIP</span><input name="zipFile" type="file" accept=".zip" data-zip-upload><small>拖曳或點擊上傳 (未來對接 Supabase)</small></label><label class="scan-label"><span>📄 Scan RFQ file</span><input id="excelScanInput" type="file" accept=".xlsx,.xls,.csv" hidden><button id="scanBtn" class="primary scan-btn" type="button">Scan RFQ file</button><small>掃描 Excel 自動填入表單</small></label><button class="primary" type="submit">SAVE</button></form>
 <input id="itemScanInput" type="file" accept=".xlsx,.xls,.csv" hidden></div>
     </div>
     <div class="project-tab-panel active" data-project-tab-panel="saved">
@@ -29,18 +29,18 @@
     <section class="panel catalog">
       <div class="catalog-tab-bar"><button class="catalog-tab active" data-catalog-tab="master">Master template</button><button class="catalog-tab" data-catalog-tab="profile">Profile template</button></div>
       <div class="catalog-tab-panel active" data-catalog-tab-panel="master">
-      <div class="heading"><div><p>CONFIGURATION FINDER</p><h1>搜尋並建立產品配對</h1></div><span id="resultCount"></span></div>
-      <label class="search"><span>⌕</span><input id="search" placeholder="輸入型號，例如 SWING DF - L" autocomplete="off"><button id="clearSearch" type="button">×</button></label>
-      <div class="filters" id="filters"></div><div id="empty" class="empty" hidden>找不到符合的圖紙。</div><div id="results" class="results"></div>
+      <div class="heading"><div><p>CONFIGURATION FINDER</p></div><span id="resultCount"></span></div>
+      <label class="search"><span>⌕</span><input id="search" placeholder="PROFILING ITEMS" autocomplete="off"><button id="clearSearch" type="button">×</button></label>
+      <div class="filters" id="filters"></div><div id="empty" class="empty" hidden>No matching drawings.</div><div id="results" class="results"></div>
       </div>
       <div class="catalog-tab-panel" data-catalog-tab-panel="profile" style="display:none">
       <div class="heading"><div><p>PROFILE DATABASE</p><h1>Profile 資料庫</h1></div><span id="profileResultCount"></span></div>
-      <label class="search"><span>⌕</span><input id="profileSearch" placeholder="搜尋 Profile CODE，例如 T-5001" autocomplete="off"><button id="clearProfileSearch" type="button">×</button></label>
-      <div class="filters" id="profileFilters"></div><div id="profileEmpty" class="empty" hidden>找不到符合的 Profile。</div><div id="profileResults" class="results"></div>
+      <label class="search"><span>⌕</span><input id="profileSearch" placeholder="PROFILING ITEMS" autocomplete="off"><button id="clearProfileSearch" type="button">×</button></label>
+      <div class="filters" id="profileFilters"></div><div id="profileEmpty" class="empty" hidden>No matching profiles.</div><div id="profileResults" class="results"></div>
       </div>
     </section>
     <aside class="workspace">
-      <div class="tab-bar"><button class="tab active" data-tab="ow">OPERABLE WALL</button><button class="tab" data-tab="pair">建立配對</button><button class="tab" data-tab="saved">已儲存配對</button></div>
+      <div class="tab-bar"><button class="tab active" data-tab="ow">OPERABLE WALL</button><button class="tab" data-tab="pair">CURRENT SET</button><button class="tab" data-tab="saved">SAVED LIBRARY</button></div>
       <div class="tab-panel active" data-tab="ow">
       <section class="panel operable-wall">
         <div class="heading"><div><p>OPERABLE WALL</p><h2>OPERABLE WALL ITEMS</h2></div><span id="operableWallCount">17</span></div>
@@ -103,22 +103,22 @@
           </div>
         </div>
         <div class="ow-form">
-          <div class="ow-row ow-project-row"><span class="ow-label">複製到 Project</span><div class="ow-project-controls"><select id="owProjectSelect"><option value="">選擇 Project</option></select><button id="owCopyBtn" class="primary" type="button">複製到 Project</button></div></div>
-          <label class="ow-row">LEGEND (Manual)<input id="owLegend" placeholder="輸入 Legend"></label>
-          <label class="ow-row">FINISHES<input id="owFinishes" placeholder="輸入 Finishes"></label>
-          <label class="ow-row">HEIGHT<input id="owHeight" placeholder="輸入 Height"></label>
-          <label class="ow-row">TYPE<input id="owType" placeholder="輸入 Type"></label>
-          <label class="ow-row">OPERATE<input id="owOperate" placeholder="輸入 Operate"></label>
-          <label class="ow-row">COUNTRY<input id="owCountry" placeholder="輸入 Country"></label>
-          <label class="ow-row">HW FINISHES<input id="owHwFinishes" placeholder="輸入 HW Finishes"></label>
-          <label class="ow-row ow-row-full">REMARK IF ANY<textarea id="owRemark" placeholder="輸入 Remark"></textarea></label>
+          <div class="ow-row ow-project-row"><span class="ow-label">COPY TO PROJECT</span><div class="ow-project-controls"><select id="owProjectSelect"><option value="">Select Project</option></select><button id="owCopyBtn" class="primary" type="button">COPY TO PROJECT</button></div></div>
+          <label class="ow-row">LEGEND (Manual)<input id="owLegend" placeholder=""></label>
+          <label class="ow-row">FINISHES<input id="owFinishes" placeholder=""></label>
+          <label class="ow-row">HEIGHT<input id="owHeight" placeholder=""></label>
+          <label class="ow-row">TYPE<input id="owType" placeholder=""></label>
+          <label class="ow-row">OPERATE<input id="owOperate" placeholder=""></label>
+          <label class="ow-row">COUNTRY<input id="owCountry" placeholder=""></label>
+          <label class="ow-row">HW FINISHES<input id="owHwFinishes" placeholder=""></label>
+          <label class="ow-row ow-row-full">REMARK IF ANY<textarea id="owRemark" placeholder=""></textarea></label>
         </div>
       </section>
       </div>
       <div class="tab-panel" data-tab="pair" style="display:none">
       <section class="panel pairing">
-        <div class="heading"><div><p>CURRENT SET</p><h2>建立配對</h2></div><button class="link" id="resetPair" type="button">重新開始</button></div>
-        <label class="field">配對名稱<input id="pairName" value="Item A" maxlength="48"></label>
+        <div class="heading"><div><p>CURRENT SET</p></div><button class="link" id="resetPair" type="button">RESTART</button></div>
+        <label class="field">Title:<input id="pairName" value="Item A" maxlength="48"></label>
         <label class="field">QS ONLY-QTN
           <div class="qtn-search-wrap">
             <div class="qtn-search-inner">
@@ -139,14 +139,14 @@
         </label>
         <div class="slots"><div id="slotA1" class="slot"></div><div class="plus">＋</div><div id="slotA2" class="slot"></div></div>
         <div class="inventory-fields"><label class="field">ITEM A1 - Inventory Description<input id="inventoryA1" list="inventoryOptions" autocomplete="off" placeholder="輸入以立即搜尋 Description"></label><label class="field">ITEM A2 - Inventory Description<input id="inventoryA2" list="inventoryOptions" autocomplete="off" placeholder="輸入以立即搜尋 Description"></label></div><datalist id="inventoryOptions"></datalist>
-        <div class="pair-copy-row"><select id="pairProjectSelect"><option value="">複製到 Project</option></select><button id="pairCopyBtn" class="primary" type="button" disabled>複製到 Project</button></div>
-        <button id="savePair" class="primary" type="button" disabled>儲存此配對</button><small>至少完成 A1 或 A2 任一即可儲存；配對會保存在本機。</small>
+        <div class="pair-copy-row"><select id="pairProjectSelect"><option value="">COPY TO PROJECT</option></select><button id="pairCopyBtn" class="primary" type="button" disabled>COPY TO PROJECT</button></div>
+        <button id="savePair" class="primary" type="button" disabled>Save Pair</button><small>Complete A1 or A2 to save; pairs are stored locally.</small>
       </section>
       </div>
       <div class="tab-panel" data-tab="saved" style="display:none">
       <section class="panel saved">
-        <div class="heading"><div><p>SAVED LIBRARY</p><h2>已儲存配對</h2></div><span id="savedCount"></span></div><div id="savedPairs" class="saved-list"></div><div class="pagination" id="savedPagination"></div>
-        <div class="backup"><button id="exportPairs" type="button">匯出備份</button><label>匯入備份<input id="importPairs" type="file" accept="application/json" hidden></label></div>
+        <div class="heading"><div><p>SAVED LIBRARY</p></div><span id="savedCount"></span></div><div id="savedPairs" class="saved-list"></div><div class="pagination" id="savedPagination"></div>
+        <div class="backup"><button id="exportPairs" type="button">EXPORT</button><label>IMPORT<input id="importPairs" type="file" accept="application/json" hidden></label></div>
       </section>
       </div>
     </aside>
