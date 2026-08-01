@@ -389,3 +389,29 @@ input,select,textarea,.ow-row input,.ow-row select,.ow-row textarea,.ow-project-
   -webkit-backdrop-filter:none;
   backdrop-filter:none;
 }
+
+/* ===== Firestore loading overlay ===== */
+.t1-loading-overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: #f4f5f7;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 16px;
+  transition: opacity 0.35s ease;
+  opacity: 1; pointer-events: all;
+}
+.t1-loading-overlay.t1-loaded {
+  opacity: 0; pointer-events: none;
+}
+.t1-loading-spinner {
+  width: 36px; height: 36px;
+  border: 3px solid #d5dbe1;
+  border-top-color: #0d5932;
+  border-radius: 50%;
+  animation: t1-spin 0.7s linear infinite;
+}
+@keyframes t1-spin { to { transform: rotate(360deg); } }
+.t1-loading-text {
+  font-size: 13px; font-weight: 700; color: #53606d;
+  letter-spacing: 0.04em;
+}
