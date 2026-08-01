@@ -178,3 +178,68 @@ body::after{ /* 近景光斑 — 小模糊較亮 (depth near) */
   max-width:calc(1560px - 8vw); /* .layout is border-box 1560 incl. 8vw padding */
   margin:26px auto 0;
 }
+
+/* === Remaining white blocks → consistent frosted glass === */
+.project-tab-panel,.catalog-tab-panel{
+  background:rgba(255,255,255,.45);
+  -webkit-backdrop-filter:blur(14px) saturate(1.4);
+  backdrop-filter:blur(14px) saturate(1.4);
+  border-color:rgba(255,255,255,.5);
+}
+.catalog-tab-bar{
+  background:rgba(255,255,255,.30);
+  -webkit-backdrop-filter:blur(8px);
+  backdrop-filter:blur(8px);
+  border-color:rgba(255,255,255,.5);
+}
+.catalog-tab.active{
+  background:rgba(255,255,255,.65);
+  -webkit-backdrop-filter:blur(8px);
+  backdrop-filter:blur(8px);
+}
+.wiki-search-box,.wiki-cancel-btn{
+  background:rgba(255,255,255,.60);
+  -webkit-backdrop-filter:blur(8px);
+  backdrop-filter:blur(8px);
+}
+.wiki-add-inquiry-btn{
+  background:rgba(255,250,240,.70);
+  -webkit-backdrop-filter:blur(8px);
+  backdrop-filter:blur(8px);
+}
+.ow-search-wrap,.ps-search-inner{
+  background:rgba(255,255,255,.55);
+  -webkit-backdrop-filter:blur(8px);
+  backdrop-filter:blur(8px);
+}
+.ps-dropdown,.wiki-dropdown{
+  background:rgba(255,255,255,.75);
+  -webkit-backdrop-filter:blur(12px);
+  backdrop-filter:blur(12px);
+  border-color:rgba(255,255,255,.6);
+}
+.saved-item{background:rgba(255,255,255,.58)}
+
+/* Form controls & light buttons → consistent frosted glass */
+input,select,textarea{
+  background:rgba(255,255,255,.80);
+  -webkit-backdrop-filter:blur(6px) saturate(1.2);
+  backdrop-filter:blur(6px) saturate(1.2);
+}
+.actions button,.pg-btn{
+  background:rgba(255,250,240,.72);
+  -webkit-backdrop-filter:blur(6px);
+  backdrop-filter:blur(6px);
+}
+
+/* OW form controls (same specificity as .ow-row rules, later wins) */
+.ow-row input,.ow-row select,.ow-row textarea,.ow-project-controls select{
+  background:rgba(255,255,255,.80);
+  -webkit-backdrop-filter:blur(6px) saturate(1.2);
+  backdrop-filter:blur(6px) saturate(1.2);
+}
+.ow-search-wrap,.ow-dropdown{
+  background:rgba(255,255,255,.60);
+  -webkit-backdrop-filter:blur(10px);
+  backdrop-filter:blur(10px);
+}

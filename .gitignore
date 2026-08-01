@@ -32,3 +32,6 @@ assets/*_extracted.txt
 
 # Test artifacts
 glass_check.png
+
+# Scan helper
+scan_white.js
