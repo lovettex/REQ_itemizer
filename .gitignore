@@ -26,3 +26,9 @@ apply_*.py
 
 # Extracted text (auto-generated from PDF)
 assets/*_extracted.txt
+
+# Reasonix tool state
+.reasonix/
+
+# Test artifacts
+glass_check.png

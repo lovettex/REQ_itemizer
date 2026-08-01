@@ -74,10 +74,10 @@ profileProducts.forEach(p => {
   const cellH = (1 - margin * (rows + 1)) / rows;
   p.pos = { x: margin + col * (cellW + margin), y: margin + row * (cellH + margin), w: cellW, h: cellH };
 });
-const profileCategories = ['全部', ...new Set(profileProducts.map(x => x.category))];
-const categories = ['全部', ...new Set(products.map(x => x.category))];
+const profileCategories = [...new Set(profileProducts.map(x => x.category))];
+const categories = [...new Set(products.map(x => x.category))];
 const $ = id => document.getElementById(id);
-const state = {query:'',category:'全部',a1:null,a2:null,inventoryA1:'',inventoryA2:'',pairs:read('t1-product-pairs'),projects:read('t1-projects')};
+const state = {query:'',category:'',a1:null,a2:null,inventoryA1:'',inventoryA2:'',pairs:read('t1-product-pairs'),projects:read('t1-projects')};
 function read(key){try{return JSON.parse(localStorage.getItem(key)||'[]')}catch{return []}}
 function save(){localStorage.setItem('t1-product-pairs',JSON.stringify(state.pairs));localStorage.setItem('t1-projects',JSON.stringify(state.projects))}
 function esc(s){return String(s||'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
@@ -85,13 +85,13 @@ function id(){return crypto.randomUUID()}
 function inventoryOptions(){return (window.inventoryDescriptions||[]).map(d=>`<option value="${esc(d)}"></option>`).join('')}
 function toast(text){const el=$('toast');el.textContent=text;el.classList.add('show');clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.classList.remove('show'),2200)}
 
-function renderFilters(){ $('filters').innerHTML=categories.map(x=>`<button class="filter ${state.category===x?'active':''}" data-cat="${esc(x)}">${esc(x)}</button>`).join('');document.querySelectorAll('[data-cat]').forEach(b=>b.onclick=()=>{state.category=b.dataset.cat;renderFilters();renderResults()}) }
-function renderResults(){const q=state.query.toLowerCase().replace(/\s/g,'');const shown=products.filter(p=>(state.category==='全部'||p.category===state.category)&&(`${p.code}${p.category}`.toLowerCase().replace(/\s/g,'').includes(q)));$('resultCount').textContent=`${shown.length} results`;$('empty').hidden=shown.length>0;$('results').innerHTML=shown.map((p,n)=>`<article class="card"><img src="${p.image}" alt="${esc(p.code)}" data-view="${products.indexOf(p)}" loading="${n>8?'lazy':'eager'}"><div class="card-body"><div class="code">${esc(p.code)}</div><div class="meta">${esc(p.category)}</div><div class="actions"><button data-assign="a1" data-product="${products.indexOf(p)}">A1</button><button data-assign="a2" data-product="${products.indexOf(p)}">A2</button></div></div></article>`).join('');document.querySelectorAll('[data-view]').forEach(x=>x.onclick=()=>openViewer(products[x.dataset.view]));document.querySelectorAll('[data-assign]').forEach(x=>x.onclick=()=>{state[x.dataset.assign]=products[x.dataset.product];renderSlots();document.querySelectorAll('.tab-bar .tab').forEach(t=>t.classList.remove('active'));const pairTab=document.querySelector('.tab-bar .tab[data-tab="pair"]');if(pairTab){pairTab.classList.add('active');document.querySelectorAll('.tab-panel').forEach(p=>{p.style.display=p.dataset.tab==='pair'?'block':'none';if(p.dataset.tab==='pair')p.classList.add('active');else p.classList.remove('active')})}toast(`Set as ${x.dataset.assign.toUpperCase()}`)})}
+function renderFilters(){ $('filters').innerHTML=categories.map(x=>`<button class="filter ${state.category===x?'active':''}" data-cat="${esc(x)}">${esc(x)}</button>`).join('');document.querySelectorAll('[data-cat]').forEach(b=>b.onclick=()=>{state.category=state.category===b.dataset.cat?'':b.dataset.cat;renderFilters();renderResults()}) }
+function renderResults(){const q=state.query.toLowerCase().replace(/\s/g,'');let shown=[];if(q||state.category){shown=products.filter(p=>(!state.category||p.category===state.category)&&(`${p.code}${p.category}`.toLowerCase().replace(/\s/g,'').includes(q)))};$('resultCount').textContent=`${shown.length} results`;$('empty').hidden=shown.length>0;$('empty').textContent=(!q&&!state.category)?'輸入檢索關鍵字或點選分類標籤以顯示內容':'No matching drawings.';$('results').innerHTML=shown.map((p,n)=>`<article class="card"><img src="${p.image}" alt="${esc(p.code)}" data-view="${products.indexOf(p)}" loading="${n>8?'lazy':'eager'}"><div class="card-body"><div class="code">${esc(p.code)}</div><div class="meta">${esc(p.category)}</div><div class="actions"><button data-assign="a1" data-product="${products.indexOf(p)}">A1</button><button data-assign="a2" data-product="${products.indexOf(p)}">A2</button></div></div></article>`).join('');document.querySelectorAll('[data-view]').forEach(x=>x.onclick=()=>openViewer(products[x.dataset.view]));document.querySelectorAll('[data-assign]').forEach(x=>x.onclick=()=>{state[x.dataset.assign]=products[x.dataset.product];renderSlots();document.querySelectorAll('.tab-bar .tab').forEach(t=>t.classList.remove('active'));const pairTab=document.querySelector('.tab-bar .tab[data-tab="pair"]');if(pairTab){pairTab.classList.add('active');document.querySelectorAll('.tab-panel').forEach(p=>{p.style.display=p.dataset.tab==='pair'?'block':'none';if(p.dataset.tab==='pair')p.classList.add('active');else p.classList.remove('active')})}toast(`Set as ${x.dataset.assign.toUpperCase()}`)})}
 
 // --- Profile Template state and functions ---
-const profileState = {query:'',category:'全部'};
-function renderProfileFilters(){ $('profileFilters').innerHTML=profileCategories.map(x=>`<button class="filter ${profileState.category===x?'active':''}" data-pcat="${esc(x)}">${esc(x)}</button>`).join('');document.querySelectorAll('[data-pcat]').forEach(b=>b.onclick=()=>{profileState.category=b.dataset.pcat;renderProfileFilters();renderProfileResults()}) }
-function renderProfileResults(){const q=profileState.query.toLowerCase().replace(/\s/g,'');const shown=profileProducts.filter(p=>(profileState.category==='全部'||p.category===profileState.category)&&(`${p.code}${p.category}`.toLowerCase().replace(/\s/g,'').includes(q)));$('profileResultCount').textContent=`${shown.length} results`;$('profileEmpty').hidden=shown.length>0;$('profileResults').innerHTML=shown.map((p,n)=>`<article class="card"><img src="${p.image}" alt="${esc(p.code)}" data-profile-view="${profileProducts.indexOf(p)}" loading="${n>8?'lazy':'eager'}"><div class="card-body"><div class="code">${esc(p.code)}</div><div class="meta">${esc(p.category)}</div></div></article>`).join('');document.querySelectorAll('[data-profile-view]').forEach(x=>x.onclick=()=>openViewer(profileProducts[x.dataset.profileView]))}
+const profileState = {query:'',category:''};
+function renderProfileFilters(){ $('profileFilters').innerHTML=profileCategories.map(x=>`<button class="filter ${profileState.category===x?'active':''}" data-pcat="${esc(x)}">${esc(x)}</button>`).join('');document.querySelectorAll('[data-pcat]').forEach(b=>b.onclick=()=>{profileState.category=profileState.category===b.dataset.pcat?'':b.dataset.pcat;renderProfileFilters();renderProfileResults()}) }
+function renderProfileResults(){const q=profileState.query.toLowerCase().replace(/\s/g,'');let shown=[];if(q||profileState.category){shown=profileProducts.filter(p=>(!profileState.category||p.category===profileState.category)&&(`${p.code}${p.category}`.toLowerCase().replace(/\s/g,'').includes(q)))};$('profileResultCount').textContent=`${shown.length} results`;$('profileEmpty').hidden=shown.length>0;$('profileEmpty').textContent=(!q&&!profileState.category)?'輸入檢索關鍵字或點選分類標籤以顯示內容':'No matching profiles.';$('profileResults').innerHTML=shown.map((p,n)=>`<article class="card"><img src="${p.image}" alt="${esc(p.code)}" data-profile-view="${profileProducts.indexOf(p)}" loading="${n>8?'lazy':'eager'}"><div class="card-body"><div class="code">${esc(p.code)}</div><div class="meta">${esc(p.category)}</div></div></article>`).join('');document.querySelectorAll('[data-profile-view]').forEach(x=>x.onclick=()=>openViewer(profileProducts[x.dataset.profileView]))}
 function slotHtml(slot){const p=state[slot];if(!p)return `<div class="slot-label">ITEM ${slot.toUpperCase()}</div>Select from left panel and set to ${slot.toUpperCase()}`;return `<div class="slot-label">ITEM ${slot.toUpperCase()}</div><img src="${p.image}" alt="" data-slot-view="${slot}"><strong>${esc(p.code)}</strong><br><span class="meta">${esc(p.category)}</span><br><button data-remove="${slot}">DELETE</button>`}
 function renderSlots(){['a1','a2'].forEach(slot=>{const el=$(slot==='a1'?'slotA1':'slotA2');el.className=`slot ${state[slot]?'filled':''}`;el.innerHTML=slotHtml(slot)});$('inventoryOptions').innerHTML=inventoryOptions();$('inventoryA1').value=state.inventoryA1;$('inventoryA2').value=state.inventoryA2;$('savePair').disabled=!(state.a1||state.a2);const sel=$('pairProjectSelect');if(sel){$('pairCopyBtn').disabled=!sel.value||!(state.a1||state.a2)}document.querySelectorAll('[data-remove]').forEach(b=>b.onclick=()=>{state[b.dataset.remove]=null;renderSlots()})}
 const viewer={img:null,container:null,scale:1,tx:0,ty:0,iw:0,ih:0,cw:0,ch:0,panning:false,panSX:0,panSY:0,panTX:0,panTY:0,target:null};function viewerUpdate(a){if(!viewer.img)return;viewer.img.style.transition=a?'transform .45s cubic-bezier(.22,.61,.36,1)':'none';viewer.img.style.transform=`translate(${viewer.tx}px,${viewer.ty}px) scale(${viewer.scale})`}function viewerLabel(){const el=$('viewerZoomLevel');if(el)el.textContent=Math.round(viewer.scale*100)+'%'}function viewerShowRefocus(v){const btn=$('viewerRefocus');if(btn)btn.style.display=v?'':'none'}function viewerFit(anim){if(!viewer.iw||!viewer.ih)return;const s=Math.min(viewer.cw/viewer.iw,viewer.ch/viewer.ih);viewer.scale=s;viewer.tx=(viewer.cw-viewer.iw*s)/2;viewer.ty=(viewer.ch-viewer.ih*s)/2;viewer.target=null;viewerShowRefocus(false);viewerUpdate(anim);viewerLabel()}function viewerFocus(p,anim){if(!viewer.iw||!viewer.ih||!p||!p.pos)return;const pos=p.pos;const s=Math.min(viewer.cw*.8/(viewer.iw*pos.w),viewer.ch*.8/(viewer.ih*pos.h));const sc=Math.max(.35,Math.min(8,s));const cx=(pos.x+pos.w/2)*viewer.iw*sc;const cy=(pos.y+pos.h/2)*viewer.ih*sc;viewer.scale=sc;viewer.tx=viewer.cw/2-cx;viewer.ty=viewer.ch/2-cy;viewer.target=p;viewerShowRefocus(true);viewerUpdate(anim);viewerLabel()}function viewerZoomAt(mx,my,delta){const ns=Math.max(.35,Math.min(8,viewer.scale*(1+delta*.15)));viewer.tx=mx-(mx-viewer.tx)*(ns/viewer.scale);viewer.ty=my-(my-viewer.ty)*(ns/viewer.scale);viewer.scale=ns;viewerUpdate(false);viewerLabel()}function viewerSyncSize(){viewer.cw=viewer.container.clientWidth;viewer.ch=viewer.container.clientHeight;if(viewer.img&&viewer.img.complete&&viewer.img.naturalWidth){viewer.iw=viewer.img.naturalWidth;viewer.ih=viewer.img.naturalHeight;viewer.target?viewerFocus(viewer.target,false):viewerFit(false)}}function initViewer(){viewer.img=$('viewerImage');viewer.container=$('viewerContainer');if(!viewer.img||!viewer.container)return;viewer.container.addEventListener('wheel',e=>{e.preventDefault();const r=viewer.container.getBoundingClientRect();viewerZoomAt(e.clientX-r.left,e.clientY-r.top,-Math.sign(e.deltaY))},{passive:false});viewer.container.addEventListener('mousedown',e=>{if(e.button!==0)return;viewer.panning=true;viewer.panSX=e.clientX;viewer.panSY=e.clientY;viewer.panTX=viewer.tx;viewer.panTY=viewer.ty;viewer.container.classList.add('grabbing')});window.addEventListener('mousemove',e=>{if(!viewer.panning)return;viewer.tx=viewer.panTX+(e.clientX-viewer.panSX);viewer.ty=viewer.panTY+(e.clientY-viewer.panSY);viewerUpdate(false)});window.addEventListener('mouseup',()=>{viewer.panning=false;viewer.container.classList.remove('grabbing')});viewer.container.addEventListener('dblclick',()=>{viewer.target?viewerFocus(viewer.target,true):viewerFit(true)});new ResizeObserver(()=>viewerSyncSize()).observe(viewer.container);$('viewerToolbar').addEventListener('click',e=>{const btn=e.target.closest('button');if(!btn)return;const id=btn.id;if(id==='viewerZoomIn'){const cx=viewer.cw/2,cy=viewer.ch/2;viewerZoomAt(cx,cy,1)}else if(id==='viewerZoomOut'){const cx=viewer.cw/2,cy=viewer.ch/2;viewerZoomAt(cx,cy,-1)}else if(id==='viewerReset'){viewerFit(true)}else if(id==='viewerRefocus'){if(viewer.target)viewerFocus(viewer.target,true)}else if(id==='viewerSavePos'){viewerSavePos()}else if(id==='closeViewer'){$('viewer').close()}});$('viewer').addEventListener('close',()=>{viewer.target=null;viewerShowRefocus(false)})}
@@ -102,14 +102,37 @@ function descriptionLine(pair){let html='';if(pair.a1)html+=`A1 · <span class="
 function projectOptions(){return `<option value="">選擇 Project</option>${state.projects.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}`}
 function renderPairs(){const pageSize=10;let page=renderPairs._page||1;const sorted=[...state.pairs].sort((a,b)=>{const da=a.createdAt||'',db=b.createdAt||'';return da<db?1:da>db?-1:0});const total=state.pairs.length,totalPages=Math.max(1,Math.ceil(total/pageSize));if(page>totalPages)page=totalPages;renderPairs._page=page;const start=(page-1)*pageSize,end=Math.min(start+pageSize,total),pageItems=sorted.slice(start,end);$('savedCount').textContent=total?`${total} pairs`:'';$('savedPairs').innerHTML=total?pageItems.map(pair=>`<div class="saved-item"><div class="saved-title" contenteditable data-pair-name="${pair.id}">${esc(pair.name)}</div><div class="saved-desc">${descriptionLine(pair)}</div><div class="saved-options"><button data-pair-view="a1" data-pair="${pair.id}">ZOOM IN A1</button><button data-pair-view="a2" data-pair="${pair.id}">ZOOM IN A2</button><button data-pair-delete="${pair.id}">DELETE SAVED</button></div><div class="copy-row"><select data-project-for="${pair.id}">${projectOptions()}</select><button data-copy="${pair.id}">COPY TO PROJECT</button></div></div>`).join(''):'<div class="saved-empty">尚未儲存配對。</div>';const pg=$('savedPagination');if(total<=pageSize){pg.innerHTML='';return}let btns='';for(let i=1;i<=totalPages;i++){btns+=`<button class="pg-btn ${i===page?'pg-active':''}" data-page="${i}">${i}</button>`}pg.innerHTML=btns;pg.querySelectorAll('.pg-btn').forEach(b=>b.addEventListener('click',()=>{renderPairs._page=parseInt(b.dataset.page);renderPairs()}))}
 
-function projectInputs(p){return `<form class="project-form project-edit" data-project-edit="${p.id}"><label>Project<input name="name" required value="${esc(p.name)}"></label><label>Sales<input name="sales" list="salesList" autocomplete="off" value="${esc(p.sales||'')}" placeholder="選擇或輸入 Sales"></label><datalist id="salesList"><option value="Glen Tew"><option value="Gerry Lee"><option value="Eugene Ng"><option value="Jim Lim"><option value="Kelvin Tjia"><option value="Benjamin Seng"><option value="Lim Zhi Kang Louis"><option value="Bella"><option value="Jensen"><option value="Rayven Leong"><option value="Zac Lee"><option value="Naomi"></datalist><label>案件等級<select name="priority" data-priority-select><option value="">選擇等級</option><option value="REGULAR" ${p.priority==='REGULAR'?'selected':''}>REGULAR</option><option value="URGENT" ${p.priority==='URGENT'?'selected':''}>URGENT</option><option value="CERTAIN DEADLINE" ${p.priority==='CERTAIN DEADLINE'?'selected':''}>CERTAIN DEADLINE</option></select></label><label class="deadline-label" style="${p.priority==='CERTAIN DEADLINE'?'':'display:none'}">Deadline<input name="deadline" type="date" value="${esc(p.deadline||'')}" data-deadline-input></label><label>Address<input name="address" value="${esc(p.address)}"></label><label>Tenderer 1<input name="tenderer" value="${esc(p.tenderer)}"></label><label>Attn<input name="attn" value="${esc(p.attn)}"></label><label>Tel<input name="tel" value="${esc(p.tel)}"></label><label>Email<input name="email" type="email" value="${esc(p.email)}"></label><label>Mobile<input name="mobile" value="${esc(p.mobile)}"></label><label>Fax<input name="fax" value="${esc(p.fax)}"></label><label class="zip-upload-label"><span>📦 上傳 ZIP</span><input name="zipFile" type="file" accept=".zip" data-zip-upload><small>拖曳或點擊上傳 (未來對接 Supabase)</small>${p.zipMeta?`<small style="color:#0d5932">目前檔案: ${esc(p.zipMeta.name)} (${(p.zipMeta.size/1024).toFixed(1)} KB)</small>`:''}</label><button class="primary" type="submit">儲存修改</button></form>`}
+function projectInputs(p){return `<form class="project-form project-edit" data-project-edit="${p.id}"><label>Project<input name="name" required value="${esc(p.name)}"></label><label>Sales<input name="sales" list="salesList" autocomplete="off" value="${esc(p.sales||'')}" placeholder="選擇或輸入 Sales"></label><datalist id="salesList"><option value="Glen Tew"><option value="Gerry Lee"><option value="Eugene Ng"><option value="Jim Lim"><option value="Kelvin Tjia"><option value="Benjamin Seng"><option value="Lim Zhi Kang Louis"><option value="Bella"><option value="Jensen"><option value="Rayven Leong"><option value="Zac Lee"><option value="Naomi"></datalist><label>案件等級<select name="priority" data-priority-select><option value="">選擇等級</option><option value="REGULAR" ${p.priority==='REGULAR'?'selected':''}>REGULAR</option><option value="URGENT" ${p.priority==='URGENT'?'selected':''}>URGENT</option><option value="CERTAIN DEADLINE" ${p.priority==='CERTAIN DEADLINE'?'selected':''}>CERTAIN DEADLINE</option></select></label><label class="deadline-label" style="${p.priority==='CERTAIN DEADLINE'?'':'display:none'}">Deadline<input name="deadline" type="date" value="${esc(p.deadline||'')}" data-deadline-input></label><label>Address<input name="address" value="${esc(p.address)}"></label><label>Tenderer 1<input name="tenderer" value="${esc(p.tenderer)}"></label><label>Attn<input name="attn" value="${esc(p.attn)}"></label><label>Tel<input name="tel" value="${esc(p.tel)}"></label><label>Email<input name="email" type="email" value="${esc(p.email)}"></label><label>Mobile<input name="mobile" value="${esc(p.mobile)}"></label><label>Fax<input name="fax" value="${esc(p.fax)}"></label><label class="zip-upload-label"><span>📦 上傳 ZIP</span><input name="zipFile" type="file" accept=".zip" data-zip-upload><small>拖曳或點擊上傳 (未來對接 Supabase)</small>${p.zipMeta?`<small style="color:#0d5932">目前檔案: ${esc(p.zipMeta.name)} (${(p.zipMeta.size/1024).toFixed(1)} KB)</small>`:''}</label><div class="briefing-block"><div class="briefing-title">Project Briefing</div><div class="briefing-hint">*Please sorted out your files into folders, and pinpoint the main target content to save time for evaluating and analyzing data</div><label class="briefing-field">General briefing<textarea name="briefingGeneral" rows="4" placeholder="輸入 General briefing...">${esc((p.briefing&&p.briefing.general)||'')}</textarea></label><label class="briefing-field">Layout &amp; file highlight<textarea name="briefingLayout" rows="4" placeholder="輸入 Layout &amp; file highlight...">${esc((p.briefing&&p.briefing.layout)||'')}</textarea></label></div><button class="primary" type="submit">儲存修改</button></form>`}
 const extraFields={PARTITION:[['legend','LEGEND'],['finishes','FRAME FINISHES'],['height','HEIGHT'],['verticalSection','VERTICAL SECTION'],['horizontalSection','HORIZONTAL SECTION'],['transom','TRANSOM'],['mullion','MULLION'],['glass1','GLASS 1'],['glass2','GLASS 2'],['squarePost','SQUARE POST'],['powerColumn','POWER COLUMN'],['sizePc','SIZE PC'],['remark','REMARK IF ANY']],DOOR:[['legend','LEGEND'],['finishes','FRAME FINISHES'],['height','HEIGHT'],['noOfLeaf','NO OF LEAF'],['doorFrame','DOOR FRAME'],['doorPanel','DOOR PANEL'],['transom','TRANSOM'],['mullion','MULLION'],['glass1','GLASS 1'],['glass2','GLASS 2'],['hardware','HARDWARE'],['lock','LOCK'],['doorCloser','DOOR CLOSER'],['hwFinishes','HW FINISHES'],['remark','REMARK IF ANY']],OPERABLE_WALL:[['legend','LEGEND (Manual)'],['finishes','FINISHES'],['height','HEIGHT'],['type','TYPE'],['operate','OPERATE'],['country','COUNTRY'],['hwFinishes','HW FINISHES'],['remark','REMARK IF ANY']]};
+// Work Log — 6 drop-downs. "-" is hidden from the exported Log Summary.
+const WORK_LOG_DROPDOWNS = [
+  ['-','A','A1','A2','A3','A4','A5','A6','A7','A8','A9','A10','A11'],
+  ['-','B','B1','B2','B3','B4','B5','B6','B7','B8','B9','B10','B11'],
+  ['-','A&B','A1&B1','A2&B2','A3&B3','A4&B4','A5&B5','A6&B6','A7&B7','A8&B8','A9&B9','A10&B10'],
+  ['-','R1','R2','R3','R4','R5','R6','R7','R9','R10','R11'],
+  ['-','VO1','VO2','VO3','VO4','VO5','VO6','VO7','VO8','VO9','VO10','VO11'],
+  ['-','R1','R2','R3','R4','R5','R6','R7','R9','R10','R11']
+];
+function worklogFormHtml(p){
+  const wl = p.workLog || {};
+  const fields = WORK_LOG_DROPDOWNS.map((opts,i)=>{
+    const name = 'wl'+(i+1);
+    const options = opts.map(o=>`<option value="${esc(o)}" ${(wl[name]||'-')===o?'selected':''}>${esc(o)}</option>`).join('');
+    return `<label class="worklog-field">Work Log ${i+1}<select name="${name}">${options}</select></label>`;
+  }).join('');
+  const logs = (Array.isArray(p.workLogs)?p.workLogs:[]).map(log=>{
+    const st = log.status || 'submited';
+    const bg = st==='confirmed' ? 'background:#F0FF45' : (st==='Considering' ? 'background:#406B28;color:#fff' : '');
+    return `<div class="worklog-item" style="${bg}"><span class="worklog-item-summary">${esc(log.summary||'—')}</span><span class="worklog-item-date">${esc((log.createdAt||'').slice(0,10))}</span><select class="worklog-status" data-wlog-status="${log.id}"><option value="submited" ${st==='submited'?'selected':''}>submited</option><option value="Considering" ${st==='Considering'?'selected':''}>Considering</option><option value="confirmed" ${st==='confirmed'?'selected':''}>confirmed</option></select><button type="button" class="worklog-btn" data-wlog-up="${log.id}" title="上移">▲</button><button type="button" class="worklog-btn" data-wlog-down="${log.id}" title="下移">▼</button><button type="button" class="worklog-btn worklog-del" data-wlog-del="${log.id}" title="刪除">✕</button></div>`;
+  }).join('');
+  return `<div class="p-inner-panel" data-ptab-panel="${p.id}|notes" style="display:none"><form class="worklog-form" data-worklog="${p.id}"><div class="worklog-heading">Work Log</div><div class="worklog-grid">${fields}</div><button class="primary" type="submit">Submit Work Log</button><div class="worklog-loglist">${logs||'<div class="worklog-empty">尚未生成任何 Log。</div>'}</div></form></div>`;
+}
 function itemExtraSummary(item){const type=item.type||'',extra=item.extra||{};if(!type)return '<span class="item-type-badge none">尚未設定類別</span>';const badge=type==='OPERABLE_WALL'?'<span class="item-type-badge operable-wall">OW</span>':`<span class="item-type-badge ${type==='PARTITION'?'partition':'door'}">${type}</span>`;return `<span class="item-extra-summary">${badge} ${(extraFields[type]||[]).map(([key,label])=>`<span class="extra-kv"><em>${label}:</em> <strong>${esc(extra[key]||'—')}</strong></span>`).join(' ')}</span>`}
 function itemExtraBody(project,item){const type=item.type||'',extra=item.extra||{};const formKey=`${project.id}|${item.id}`;if(type==='OPERABLE_WALL'){const fields=(extraFields.OPERABLE_WALL||[]).map(([key,label])=>`<label><span>${label}</span>${key==='remark'?`<textarea name="${key}">${esc(extra[key])}</textarea>`:`<input name="${key}" value="${esc(extra[key])}">`}</label>`).join('');return `<div class="extra-body"><div class="extra-fields">${fields}</div><button class="primary" type="submit">儲存項目資料</button></div>`}const isPartition=type==='PARTITION';if(!type)return `<div class="extra-body"><div class="type-tabs"><button class="type-tab partition" data-set-type="${formKey}|PARTITION">PARTITION</button><button class="type-tab door" data-set-type="${formKey}|DOOR">DOOR</button></div></div>`;const fields=(extraFields[type]||[]).map(([key,label])=>`<label><span>${label}</span>${key==='remark'?`<textarea name="${key}">${esc(extra[key])}</textarea>`:`<input name="${key}" value="${esc(extra[key])}">`}</label>`).join('');return `<div class="extra-body"><div class="type-tabs"><button class="type-tab partition ${isPartition?'active':''}" data-set-type="${formKey}|PARTITION">PARTITION</button><button class="type-tab door ${!isPartition?'active':''}" data-set-type="${formKey}|DOOR">DOOR</button></div><div class="extra-fields">${fields}</div><button class="primary" type="submit">儲存項目資料</button></div>`}
 function matchedItemsTable(project){const items=project.items.filter(i=>!i.type);if(!items.length)return'<div class="project-empty">尚無未分類商品。</div>';return'<div class="item-table-wrap"><table class="item-table"><thead><tr><th>#</th><th>商品名稱</th><th>配對資訊</th><th>分類</th><th></th></tr></thead><tbody>'+items.map((item,i)=>{const pairInfo=descriptionLine(item.pair);return'<tr><td>'+(i+1)+'</td><td>'+esc(item.pair.name)+'</td><td><small>'+pairInfo+'</small></td><td><select class="matched-type-select" data-matched-classify="'+project.id+'|'+item.id+'"><option value="">選擇分類</option><option value="PARTITION">PARTITION</option><option value="DOOR">DOOR</option></select></td><td class="item-actions"><button data-item-delete="'+project.id+'|'+item.id+'" class="project-delete">刪</button></td></tr>';}).join('')+'</tbody></table></div>';}
 function itemTable(project,type){const items=project.items.filter(i=>i.type===type);if(!items.length)return'<div class="project-empty">尚無 '+type+' 項目。</div>';const fields=extraFields[type]||[];const thead='<thead><tr><th>#</th>'+fields.map(([,l])=>'<th>'+l+'</th>').join('')+'<th>配對資訊</th><th></th></tr></thead>';const tbody='<tbody>'+items.map((item,i)=>{const CLICKABLE_KEYS=['verticalSection','horizontalSection','doorFrame','doorPanel'];const tds=fields.map(([k])=>{const v=item.extra[k];return'<td>'+(v?CLICKABLE_KEYS.includes(k)?'<span class="item-field-link" data-item-field-view="'+esc(v)+'">'+esc(v)+'</span>':esc(v):'—')+'</td>'}).join('');const pairInfo=descriptionLine(item.pair);const actions='<button data-up="'+project.id+'|'+item.id+'"'+(i===0?' disabled':'')+'>▲</button><button data-down="'+project.id+'|'+item.id+'"'+(i===items.length-1?' disabled':'')+'>▼</button><button data-item-delete="'+project.id+'|'+item.id+'" class="project-delete">刪</button><button data-item-edit="'+project.id+'|'+item.id+'" class="item-edit-btn">'+(item.extra&&Object.keys(item.extra).length?'編輯':'設定')+'</button>';return'<tr><td>'+(i+1)+'</td>'+tds+'<td>'+esc(item.pair.name)+'<br><small>'+pairInfo+'</small></td><td class="item-actions">'+actions+'</td></tr>'}).join('')+'</tbody>';const forms=items.map(item=>'<div class="item-extra-display" data-item-summary="'+project.id+'|'+item.id+'" style="display:none">'+itemExtraSummary(item)+'</div><form class="project-extra" data-item-extra-key="'+project.id+'|'+item.id+'" style="display:none">'+itemExtraBody(project,item)+'</form>').join('');return'<div class="item-table-wrap"><table class="item-table">'+thead+tbody+'</table></div>'+forms}
-function renderProjects(){state.projects.forEach(p=>p.items=Array.isArray(p.items)?p.items:[]);$('projectCount').textContent=state.projects.length?`(${state.projects.length})`:'';const openIds=new Set();document.querySelectorAll('.project-card[open]').forEach(el=>{const pid=el.dataset.projectCard;if(pid)openIds.add(pid)});$('projectList').innerHTML=state.projects.length?state.projects.map(p=>`<details class="project-card" ${openIds.has(p.id)?'open':''} data-project-card="${p.id}"><summary${p.priority==='URGENT'&&p.status!=='Completed'?' style="background:#b2fc58;color:#000"':''}><span>${esc(p.name)}<span class="pc-count">${p.items.length} 項配對</span></span><span class="pc-qs"><select class="assign-qs-select" data-assign-qs="${p.id}"><option value="">QS</option><option value="Ben" ${p.assignedQs==='Ben'?'selected':''}>Ben</option><option value="Mary" ${p.assignedQs==='Mary'?'selected':''}>Mary</option><option value="Bella" ${p.assignedQs==='Bella'?'selected':''}>Bella</option><option value="Shih Min" ${p.assignedQs==='Shih Min'?'selected':''}>Shih Min</option></select><select class="assign-status-select" data-assign-status="${p.id}"><option value="">Status</option><option value="Pending info" ${p.status==='Pending info'?'selected':''}>Pending info</option><option value="Pending supplier quote" ${p.status==='Pending supplier quote'?'selected':''}>Pending supplier quote</option><option value="On the queue" ${p.status==='On the queue'?'selected':''}>On the queue</option><option value="Processing" ${p.status==='Processing'?'selected':''}>Processing</option><option value="Double check" ${p.status==='Double check'?'selected':''}>Double check</option><option value="Completed" ${p.status==='Completed'?'selected':''}>Completed</option><option value="On hold" ${p.status==='On hold'?'selected':''}>On hold</option></select></span></summary><div class="project-detail">
-<div class="p-inner-tabs"><button class="p-inner-tab active" data-ptab="${p.id}" data-ptab-panel="info">Client info:<em></em></button><button class="p-inner-tab" data-ptab="${p.id}" data-ptab-panel="matched">Matched Items<em></em></button><button class="p-inner-tab" data-ptab="${p.id}" data-ptab-panel="partition">PARTITION<em></em></button><button class="p-inner-tab" data-ptab="${p.id}" data-ptab-panel="door">DOOR<em></em></button><button class="p-inner-tab" data-ptab="${p.id}" data-ptab-panel="ow">OW<em></em></button><button class="p-inner-tab" data-ptab="${p.id}" data-ptab-panel="notes">QS 備註</button></div>
+function renderProjects(){state.projects.forEach(p=>{p.items=Array.isArray(p.items)?p.items:[];if(!Array.isArray(p.workLogs))p.workLogs=[];if(p.workLogSummary){if(!p.workLogs.length)p.workLogs=[{id:id(),summary:p.workLogSummary,status:'submited',createdAt:new Date().toISOString()}];delete p.workLogSummary}});$('projectCount').textContent=state.projects.length?`(${state.projects.length})`:'';const openIds=new Set();document.querySelectorAll('.project-card[open]').forEach(el=>{const pid=el.dataset.projectCard;if(pid)openIds.add(pid)});$('projectList').innerHTML=state.projects.length?state.projects.map(p=>`<details class="project-card" ${openIds.has(p.id)?'open':''} data-project-card="${p.id}"><summary${p.priority==='URGENT'&&p.status!=='Completed'?' style="background:#b2fc58;color:#000"':''}><span>${esc(p.name)}<span class="pc-count">${p.items.length} 項配對</span></span><span class="pc-qs"><select class="assign-qs-select" data-assign-qs="${p.id}"><option value="">QS</option><option value="Ben" ${p.assignedQs==='Ben'?'selected':''}>Ben</option><option value="Mary" ${p.assignedQs==='Mary'?'selected':''}>Mary</option><option value="Bella" ${p.assignedQs==='Bella'?'selected':''}>Bella</option><option value="Shih Min" ${p.assignedQs==='Shih Min'?'selected':''}>Shih Min</option></select><select class="assign-status-select" data-assign-status="${p.id}"><option value="">Status</option><option value="Pending info" ${p.status==='Pending info'?'selected':''}>Pending info</option><option value="Pending supplier quote" ${p.status==='Pending supplier quote'?'selected':''}>Pending supplier quote</option><option value="On the queue" ${p.status==='On the queue'?'selected':''}>On the queue</option><option value="Processing" ${p.status==='Processing'?'selected':''}>Processing</option><option value="Double check" ${p.status==='Double check'?'selected':''}>Double check</option><option value="Completed" ${p.status==='Completed'?'selected':''}>Completed</option><option value="On hold" ${p.status==='On hold'?'selected':''}>On hold</option></select>${(Array.isArray(p.workLogs)?p.workLogs:[]).filter(l=>l.status==='confirmed').map(l=>`<span class="pc-log" title="Log Summary">${esc(l.summary)}</span>`).join('')}</span></summary><div class="project-detail">
+<div class="p-inner-tabs"><button class="p-inner-tab active" data-ptab="${p.id}" data-ptab-panel="info">Client info:<em></em></button><button class="p-inner-tab" data-ptab="${p.id}" data-ptab-panel="matched">Matched Items<em></em></button><button class="p-inner-tab" data-ptab="${p.id}" data-ptab-panel="partition">PARTITION<em></em></button><button class="p-inner-tab" data-ptab="${p.id}" data-ptab-panel="door">DOOR<em></em></button><button class="p-inner-tab" data-ptab="${p.id}" data-ptab-panel="ow">OW<em></em></button><button class="p-inner-tab" data-ptab="${p.id}" data-ptab-panel="notes">Work Log</button></div>
 <div class="p-inner-panel" data-ptab-panel="${p.id}|info">
 ${projectInputs(p)}<div class="project-info"><div>Sales: ${esc(p.sales||'-')}</div><div>等級: ${esc(p.priority||'-')}</div>${p.deadline?`<div>Deadline: ${esc(p.deadline)}</div>`:''}<div>QS: ${esc(p.assignedQs||'-')}</div><div>Status: ${esc(p.status||'-')}</div><div>Address: ${esc(p.address||'-')}</div><div>Tenderer: ${esc(p.tenderer||'-')}</div><div>Attn: ${esc(p.attn||'-')}</div><div>Tel: ${esc(p.tel||'-')}</div><div>Email: ${esc(p.email||'-')}</div><div>Mobile: ${esc(p.mobile||'-')}</div><div>Fax: ${esc(p.fax||'-')}</div></div></div>
 <div class="p-inner-panel" data-ptab-panel="${p.id}|matched" style="display:none">${matchedItemsTable(p)}</div>
@@ -122,8 +145,8 @@ ${itemTable(p,'DOOR')}</div>
 <div class="p-inner-panel" data-ptab-panel="${p.id}|ow" style="display:none">
 <div class="item-scan-row"><button class="item-scan-btn" data-scan-items="${p.id}" type="button">📄 掃描 Excel</button><small class="item-scan-hint">從 Excel 匯入 OPERABLE WALL 項目</small></div>
 ${itemTable(p,'OPERABLE_WALL')}</div>
-<div class="p-inner-panel" data-ptab-panel="${p.id}|notes" style="display:none"><form class="qs-notes-form" data-qs-notes="${p.id}"><div class="qs-notes-grid"><div class="qs-field"><label>Customization Level<select name="customizationLevel"><option value="">—</option><option value="HIGH" ${p.customizationLevel==='HIGH'?'selected':''}>HIGH</option><option value="REGULAR" ${p.customizationLevel==='REGULAR'?'selected':''}>REGULAR</option></select></label></div><div class="qs-field"><label>Layout Clearance<select name="layoutClearance"><option value="">—</option><option value="NOT CLEAR WITHOUT ANY MARKING" ${p.layoutClearance==='NOT CLEAR WITHOUT ANY MARKING'?'selected':''}>NOT CLEAR WITHOUT ANY MARKING</option><option value="REQUIRE SALES HIGHLIGHT AND BRIEFING" ${p.layoutClearance==='REQUIRE SALES HIGHLIGHT AND BRIEFING'?'selected':''}>REQUIRE SALES HIGHLIGHT AND BRIEFING</option><option value="ALL GOOD" ${p.layoutClearance==='ALL GOOD'?'selected':''}>ALL GOOD</option></select></label></div></div><label>QS 備註<textarea name="qsNotes" placeholder="輸入 QS 相關備註...">${esc(p.qsNotes||'')}</textarea></label><button class="primary" type="submit">儲存備註</button></form></div>
-<button class="project-delete" data-project-delete="${p.id}">刪除 Project</button></div></details>`).join(''):'<div class="project-empty">尚未儲存 Project。</div>';document.querySelectorAll('[data-project-edit]').forEach(form=>form.onsubmit=e=>{e.preventDefault();const p=state.projects.find(x=>x.id===form.dataset.projectEdit),f=new FormData(form);['name','sales','priority','deadline','address','tenderer','attn','tel','email','mobile','fax'].forEach(k=>{p[k]=f.get(k);if(k==='deadline'&&p[k])p[k]=p[k]+' EOD'});const zipInput=form.querySelector('[data-zip-upload]');const zipFile=zipInput&&zipInput.files[0];if(zipFile){p.zipMeta={name:zipFile.name,size:zipFile.size,lastModified:zipFile.lastModified}}save();renderProjects();renderPairs();toast(zipFile?`Project 已更新 (含 ${zipFile.name})`:'Project 已更新')});document.querySelectorAll('[data-priority-select]').forEach(sel=>sel.onchange=()=>{const dl=sel.closest('form').querySelector('.deadline-label');if(dl)dl.style.display=sel.value==='CERTAIN DEADLINE'?'':'none'});document.querySelectorAll('[data-item-edit]').forEach(btn=>btn.onclick=()=>{const [projectId,itemId]=btn.dataset.itemEdit.split('|');const form=document.querySelector(`[data-item-extra-key="${projectId}|${itemId}"]`);const summary=document.querySelector(`[data-item-summary="${projectId}|${itemId}"]`);if(form.style.display==='none'){form.style.display='';summary.style.display='none';btn.textContent='收起'}else{form.style.display='none';summary.style.display='';btn.textContent=document.querySelector(`[data-item-summary="${projectId}|${itemId}"] .item-type-badge`)?.classList.contains('none')?'設定類別':'編輯資料'}});document.querySelectorAll('[data-project-delete]').forEach(b=>b.onclick=()=>{state.projects=state.projects.filter(p=>p.id!==b.dataset.projectDelete);save();renderProjects();renderPairs();toast('已刪除 Project')});document.querySelectorAll('[data-item-delete]').forEach(b=>b.onclick=()=>{const [projectId,itemId]=b.dataset.itemDelete.split('|');const p=state.projects.find(x=>x.id===projectId);p.items=p.items.filter(x=>x.id!==itemId);save();renderProjects();toast('已刪除項目')});[['data-up',-1],['data-down',1]].forEach(([attribute,delta])=>document.querySelectorAll(`[${attribute}]`).forEach(b=>b.onclick=()=>{const [projectId,itemId]=b.getAttribute(attribute).split('|');const p=state.projects.find(x=>x.id===projectId);const i=p.items.findIndex(x=>x.id===itemId);[p.items[i],p.items[i+delta]]=[p.items[i+delta],p.items[i]];save();renderProjects()}));refreshPairProjectSelect();setTimeout(restoreProjectTabs,0) }
+<div class="p-inner-panel" data-ptab-panel="${p.id}|notes" style="display:none">${worklogFormHtml(p)}</div>
+<button class="project-delete" data-project-delete="${p.id}">刪除 Project</button></div></details>`).join(''):'<div class="project-empty">尚未儲存 Project。</div>';document.querySelectorAll('[data-project-edit]').forEach(form=>form.onsubmit=e=>{e.preventDefault();const p=state.projects.find(x=>x.id===form.dataset.projectEdit),f=new FormData(form);['name','sales','priority','deadline','address','tenderer','attn','tel','email','mobile','fax'].forEach(k=>{p[k]=f.get(k);if(k==='deadline'&&p[k])p[k]=p[k]+' EOD'});p.briefing={general:f.get('briefingGeneral')||'',layout:f.get('briefingLayout')||''};const zipInput=form.querySelector('[data-zip-upload]');const zipFile=zipInput&&zipInput.files[0];if(zipFile){p.zipMeta={name:zipFile.name,size:zipFile.size,lastModified:zipFile.lastModified}}save();renderProjects();renderPairs();toast(zipFile?`Project 已更新 (含 ${zipFile.name})`:'Project 已更新')});document.querySelectorAll('[data-priority-select]').forEach(sel=>sel.onchange=()=>{const dl=sel.closest('form').querySelector('.deadline-label');if(dl)dl.style.display=sel.value==='CERTAIN DEADLINE'?'':'none'});document.querySelectorAll('[data-item-edit]').forEach(btn=>btn.onclick=()=>{const [projectId,itemId]=btn.dataset.itemEdit.split('|');const form=document.querySelector(`[data-item-extra-key="${projectId}|${itemId}"]`);const summary=document.querySelector(`[data-item-summary="${projectId}|${itemId}"]`);if(form.style.display==='none'){form.style.display='';summary.style.display='none';btn.textContent='收起'}else{form.style.display='none';summary.style.display='';btn.textContent=document.querySelector(`[data-item-summary="${projectId}|${itemId}"] .item-type-badge`)?.classList.contains('none')?'設定類別':'編輯資料'}});document.querySelectorAll('[data-project-delete]').forEach(b=>b.onclick=()=>{state.projects=state.projects.filter(p=>p.id!==b.dataset.projectDelete);save();renderProjects();renderPairs();toast('已刪除 Project')});document.querySelectorAll('[data-item-delete]').forEach(b=>b.onclick=()=>{const [projectId,itemId]=b.dataset.itemDelete.split('|');const p=state.projects.find(x=>x.id===projectId);p.items=p.items.filter(x=>x.id!==itemId);save();renderProjects();toast('已刪除項目')});[['data-up',-1],['data-down',1]].forEach(([attribute,delta])=>document.querySelectorAll(`[${attribute}]`).forEach(b=>b.onclick=()=>{const [projectId,itemId]=b.getAttribute(attribute).split('|');const p=state.projects.find(x=>x.id===projectId);const i=p.items.findIndex(x=>x.id===itemId);[p.items[i],p.items[i+delta]]=[p.items[i+delta],p.items[i]];save();renderProjects()}));refreshPairProjectSelect();setTimeout(restoreProjectTabs,0); setTimeout(function(){if(typeof wikiRender==="function")wikiRender()},100) }
 
 function renderDashboard(){
   const STATUS_ORDER = ['Pending info','Pending supplier quote','On the queue','Processing','Double check','On hold'];
@@ -152,6 +175,89 @@ function renderDashboard(){
   $('dashboardList').innerHTML = html;
 }
 
+// PROJECT CONFIRMED tab — projects that have at least one confirmed Work Log
+// PROJECT CONFIRMED — per-project confirmation drop-downs (selection appends to Summary)
+const CONFIRMED_DROPDOWNS = [
+  { label: 'Ironmongery Sign Off (4DWGS)', options: ['TO DO','DONE'] },
+  { label: 'PROJECT ADMIN', options: ['UPDATED','PENDING'] },
+  { label: 'PICKLIST (DO)', options: ['NOT YET','DO1','DO2','DO3','DO4','DO5','DO6','D07','DO8','DO9','DO10','D011'] }
+];
+function renderConfirmed(){
+  const list = document.getElementById('confirmedList');
+  if (!list) return;
+  const hits = state.projects
+    .map(p => ({ p, logs: (Array.isArray(p.workLogs)?p.workLogs:[]).filter(l => l.status === 'confirmed') }))
+    .filter(x => x.logs.length > 0)
+    .sort((a,b) => (a.p.name||'').localeCompare(b.p.name||''));
+  list.innerHTML = hits.length
+    ? hits.map(({p, logs}) => {
+        const summary = Array.isArray(p.confirmSummary)?p.confirmSummary:[];
+        const selects = CONFIRMED_DROPDOWNS.map(dd=>`<label class="confirmed-select"><span>${esc(dd.label)}</span><select data-confirmed-select="${p.id}" data-confirmed-type="${esc(dd.label)}"><option value="">—</option>${dd.options.map(o=>`<option value="${esc(o)}">${esc(o)}</option>`).join('')}</select></label>`).join('');
+        const items = summary.map(r=>`<div class="confirmed-summary-item"><span class="cs-label">${esc(r.label)}</span><span class="cs-value">${esc(r.value)}</span><span class="cs-date">${esc((r.createdAt||'').slice(0,10))}</span><button type="button" class="worklog-btn worklog-del" data-confirmed-del="${p.id}|${r.id}" title="刪除">✕</button></div>`).join('');
+        return `<div class="confirmed-card" data-confirmed-card="${p.id}"><div class="confirmed-card-head"><strong class="confirmed-card-name" data-confirmed-open="${p.id}" title="開啟 Work Log">${esc(p.name)}</strong>${p.priority==='URGENT'?'<span class="confirmed-urgent">URGENT</span>':''}${p.assignedQs?`<span class="confirmed-qs">${esc(p.assignedQs)}</span>`:''}</div><div class="confirmed-card-logs">${logs.map(l=>`<span class="pc-log" title="${esc(l.summary)}">${esc(l.summary)}</span>`).join('')}</div><div class="confirmed-selects">${selects}</div><button type="button" class="confirmed-toggle" data-confirmed-toggle="${p.id}">▶ Summary (${summary.length})</button><div class="confirmed-summary" data-confirmed-summary="${p.id}" style="display:none">${items||'<div class="worklog-empty">尚無 Summary 記錄。</div>'}</div></div>`;
+      }).join('')
+    : '<div class="project-empty">尚無已確認 (confirmed) 的 Work Log。</div>';
+}
+
+// Click a confirmed project → jump to LISTED PROJECTS, open that card's Work Log tab
+document.addEventListener('click', e => {
+  const opener = e.target.closest('[data-confirmed-open]');
+  if (!opener) return;
+  const pid = opener.dataset.confirmedOpen;
+  const savedBtn = document.querySelector('.project-tab[data-project-tab="saved"]');
+  if (savedBtn) savedBtn.click();
+  const card = document.querySelector(`.project-card[data-project-card="${pid}"]`);
+  if (card) card.open = true;
+  projectTabState[pid] = 'notes';
+  setTimeout(() => {
+    const notesBtn = document.querySelector(`[data-ptab="${pid}"][data-ptab-panel="notes"]`);
+    if (notesBtn) notesBtn.click();
+  }, 60);
+});
+
+// Confirmed card drop-down → append to Summary (persisted per project)
+document.addEventListener('change', e => {
+  const sel = e.target.closest('[data-confirmed-select]');
+  if (!sel) return;
+  const pid = sel.dataset.confirmedSelect;
+  const label = sel.dataset.confirmedType;
+  const value = sel.value;
+  const p = state.projects.find(x => x.id === pid);
+  if (!p) return;
+  if (!value) return; // reverted to "—": no record
+  if (!Array.isArray(p.confirmSummary)) p.confirmSummary = [];
+  p.confirmSummary.push({ id: id(), label, value, createdAt: new Date().toISOString() });
+  save();
+  renderProjects(); // re-renders confirmed list (summary stays collapsed by default)
+  toast(`已新增 Summary: ${label} · ${value}`);
+});
+
+// Summary toggle (collapsed by default)
+document.addEventListener('click', e => {
+  const tog = e.target.closest('[data-confirmed-toggle]');
+  if (!tog) return;
+  const body = document.querySelector(`[data-confirmed-summary="${tog.dataset.confirmedToggle}"]`);
+  if (!body) return;
+  const isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : '';
+  const count = body.querySelectorAll('.confirmed-summary-item').length;
+  tog.textContent = (isOpen ? '▶' : '▼') + ' Summary (' + count + ')';
+});
+
+// Delete a Summary record
+document.addEventListener('click', e => {
+  const del = e.target.closest('[data-confirmed-del]');
+  if (!del) return;
+  e.preventDefault();
+  const [pid, rid] = del.dataset.confirmedDel.split('|');
+  const p = state.projects.find(x => x.id === pid);
+  if (!p || !Array.isArray(p.confirmSummary)) return;
+  p.confirmSummary = p.confirmSummary.filter(r => r.id !== rid);
+  save();
+  renderProjects();
+  toast('Summary 記錄已刪除');
+});
+
 // Dashboard group toggle (collapsed by default)
 document.addEventListener('click', e => {
   const header = e.target.closest('[data-dash-toggle]');
@@ -164,18 +270,19 @@ document.addEventListener('click', e => {
   icon.textContent = isOpen ? '▶' : '▼';
 });
 
-// Make renderProjects trigger dashboard refresh
+// Make renderProjects trigger dashboard + confirmed refresh
 const _origRenderProjects = renderProjects;
 renderProjects = function(){
   _origRenderProjects();
   renderDashboard();
+  renderConfirmed();
 };
 
 // Event delegation for type tabs and extra forms (avoids re-rendering entire project list)
 document.addEventListener('click',e=>{const btn=e.target.closest('[data-set-type]');if(!btn)return;e.preventDefault();const [projectId,itemId,newType]=btn.dataset.setType.split('|');const p=state.projects.find(x=>x.id===projectId);if(!p)return;const item=p.items.find(x=>x.id===itemId);if(!item)return;item.type=newType;item.extra={};save();const form=btn.closest('.project-extra');const isPartition=newType==='PARTITION';const fields=(extraFields[newType]||[]).map(([key,label])=>`<label><span>${label}</span>${key==='remark'?`<textarea name="${key}"></textarea>`:`<input name="${key}">`}</label>`).join('');const body=form.querySelector('.extra-body');body.innerHTML=`<div class="type-tabs"><button class="type-tab partition ${isPartition?'active':''}" data-set-type="${projectId}|${itemId}|PARTITION">PARTITION</button><button class="type-tab door ${!isPartition?'active':''}" data-set-type="${projectId}|${itemId}|DOOR">DOOR</button></div><div class="extra-fields">${fields}</div><button class="primary" type="submit">儲存項目資料</button>`});
 document.addEventListener('submit',e=>{const form=e.target.closest('[data-item-extra-key]');if(!form)return;e.preventDefault();const [projectId,itemId]=form.dataset.itemExtraKey.split('|');const p=state.projects.find(x=>x.id===projectId);const item=p.items.find(x=>x.id===itemId);const fd=new FormData(form);item.extra=Object.fromEntries(fd.entries());save();renderProjects();toast('項目資料已儲存');});
 
-$('search').oninput=e=>{state.query=e.target.value;renderResults()};$('clearSearch').onclick=()=>{$('search').value='';state.query='';renderResults()};$('inventoryA1').oninput=e=>state.inventoryA1=e.target.value;$('inventoryA2').oninput=e=>state.inventoryA2=e.target.value;$('resetPair').onclick=()=>{state.a1=null;state.a2=null;state.inventoryA1='';state.inventoryA2='';$('pairName').value='Item A';renderSlots()};$('savePair').onclick=()=>{state.pairs.unshift({id:id(),name:$('pairName').value.trim()||'未命名配對',a1:state.a1?structuredClone(state.a1):null,a2:state.a2?structuredClone(state.a2):null,inventoryA1:state.inventoryA1,inventoryA2:state.inventoryA2,qtn:$('qtnSearch').value.trim(),boq:$('boqSearch').value.trim(),createdAt:new Date().toISOString()});save();renderPairs();toast('配對已儲存')};document.addEventListener('change',e=>{const sel=e.target.closest('[data-priority-select]');if(!sel)return;const label=sel.closest('form').querySelector('.deadline-label');if(label)label.style.display=sel.value==='CERTAIN DEADLINE'?'':'none'});$('projectForm').onsubmit=e=>{e.preventDefault();const f=new FormData(e.target);const deadline=f.get('deadline');const zipInput=e.target.querySelector('[data-zip-upload]');const zipFile=zipInput&&zipInput.files[0];const zipMeta=zipFile?{name:zipFile.name,size:zipFile.size,lastModified:zipFile.lastModified}:null;state.projects.unshift({id:id(),name:f.get('name').trim(),assignedQs:'',status:'',sales:f.get('sales').trim(),priority:f.get('priority').trim(),deadline:deadline?deadline+' EOD':'',address:f.get('address').trim(),tenderer:f.get('tenderer').trim(),attn:f.get('attn').trim(),tel:f.get('tel').trim(),email:f.get('email').trim(),mobile:f.get('mobile').trim(),fax:f.get('fax').trim(),zipMeta,items:[]});save();e.target.reset();document.querySelector('[data-deadline-input]').closest('.deadline-label').style.display='none';renderProjects();renderPairs();refreshPairProjectSelect();toast(zipMeta?`Project 已儲存 (含 ${zipMeta.name})`:'Project 已儲存')};$('exportPairs').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify({pairs:state.pairs,projects:state.projects},null,2)],{type:'application/json'}));a.download='t1-configuration-backup.json';a.click();URL.revokeObjectURL(a.href)};$('importPairs').onchange=async e=>{try{const d=JSON.parse(await e.target.files[0].text());if(!Array.isArray(d.pairs))throw Error();state.pairs=d.pairs;state.projects=Array.isArray(d.projects)?d.projects:[];save();renderPairs();renderProjects();refreshPairProjectSelect();toast('備份已匯入')}catch{toast('無法讀取備份檔')}e.target.value=''};$('exportProjects').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify({projects:state.projects},null,2)],{type:'application/json'}));a.download='t1-projects-backup.json';a.click();URL.revokeObjectURL(a.href)};$('importProjects').onchange=async e=>{try{const d=JSON.parse(await e.target.files[0].text());if(!Array.isArray(d.projects))throw Error();state.projects=d.projects;save();renderProjects();renderPairs();refreshPairProjectSelect();toast('Projects 已匯入')}catch{toast('無法讀取 Projects 備份')}e.target.value=''};$('viewer').addEventListener('click',e=>{if(e.target===$('viewer'))$('viewer').close()});initViewer();renderFilters();renderResults();renderSlots();renderPairs();renderProjects();refreshPairProjectSelect()
+$('search').oninput=e=>{state.query=e.target.value;renderResults()};$('clearSearch').onclick=()=>{$('search').value='';state.query='';renderResults()};$('inventoryA1').oninput=e=>state.inventoryA1=e.target.value;$('inventoryA2').oninput=e=>state.inventoryA2=e.target.value;$('resetPair').onclick=()=>{state.a1=null;state.a2=null;state.inventoryA1='';state.inventoryA2='';$('pairName').value='Item A';renderSlots()};$('savePair').onclick=()=>{state.pairs.unshift({id:id(),name:$('pairName').value.trim()||'未命名配對',a1:state.a1?structuredClone(state.a1):null,a2:state.a2?structuredClone(state.a2):null,inventoryA1:state.inventoryA1,inventoryA2:state.inventoryA2,qtn:$('qtnSearch').value.trim(),boq:$('boqSearch').value.trim(),createdAt:new Date().toISOString()});save();renderPairs();toast('配對已儲存')};document.addEventListener('change',e=>{const sel=e.target.closest('[data-priority-select]');if(!sel)return;const label=sel.closest('form').querySelector('.deadline-label');if(label)label.style.display=sel.value==='CERTAIN DEADLINE'?'':'none'});$('projectForm').onsubmit=e=>{e.preventDefault();const f=new FormData(e.target);const deadline=f.get('deadline');const zipInput=e.target.querySelector('[data-zip-upload]');const zipFile=zipInput&&zipInput.files[0];const zipMeta=zipFile?{name:zipFile.name,size:zipFile.size,lastModified:zipFile.lastModified}:null;state.projects.unshift({id:id(),name:f.get('name').trim(),assignedQs:'',status:'',sales:f.get('sales').trim(),priority:f.get('priority').trim(),deadline:deadline?deadline+' EOD':'',address:f.get('address').trim(),tenderer:f.get('tenderer').trim(),attn:f.get('attn').trim(),tel:f.get('tel').trim(),email:f.get('email').trim(),mobile:f.get('mobile').trim(),fax:f.get('fax').trim(),briefing:{general:f.get('briefingGeneral')||'',layout:f.get('briefingLayout')||''},zipMeta,items:[]});save();e.target.reset();document.querySelector('[data-deadline-input]').closest('.deadline-label').style.display='none';renderProjects();renderPairs();refreshPairProjectSelect();toast(zipMeta?`Project 已儲存 (含 ${zipMeta.name})`:'Project 已儲存')};$('exportPairs').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify({pairs:state.pairs,projects:state.projects},null,2)],{type:'application/json'}));a.download='t1-configuration-backup.json';a.click();URL.revokeObjectURL(a.href)};$('importPairs').onchange=async e=>{try{const d=JSON.parse(await e.target.files[0].text());if(!Array.isArray(d.pairs))throw Error();state.pairs=d.pairs;state.projects=Array.isArray(d.projects)?d.projects:[];save();renderPairs();renderProjects();refreshPairProjectSelect();toast('備份已匯入')}catch{toast('無法讀取備份檔')}e.target.value=''};$('exportProjects').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify({projects:state.projects},null,2)],{type:'application/json'}));a.download='t1-projects-backup.json';a.click();URL.revokeObjectURL(a.href)};$('importProjects').onchange=async e=>{try{const d=JSON.parse(await e.target.files[0].text());if(!Array.isArray(d.projects))throw Error();state.projects=d.projects;save();renderProjects();renderPairs();refreshPairProjectSelect();toast('Projects 已匯入')}catch{toast('無法讀取 Projects 備份')}e.target.value=''};$('viewer').addEventListener('click',e=>{if(e.target===$('viewer'))$('viewer').close()});initViewer();renderFilters();renderResults();renderSlots();renderPairs();renderProjects();refreshPairProjectSelect()
 $('profileSearch').oninput=e=>{profileState.query=e.target.value;renderProfileResults()};$('clearProfileSearch').onclick=()=>{$('profileSearch').value='';profileState.query='';renderProfileResults()};renderProfileFilters();renderProfileResults();
 
 // Project searchable filter dropdown
@@ -429,7 +536,31 @@ document.addEventListener('change',e=>{const sel=e.target.closest('[data-matched
 document.addEventListener('change',e=>{const sel=e.target.closest('#pairProjectSelect');if(!sel)return;$('pairCopyBtn').disabled=!sel.value||!(state.a1||state.a2)});
 
 // QS 備註 form handler
-document.addEventListener('submit',e=>{const form=e.target.closest('[data-qs-notes]');if(!form)return;e.preventDefault();const p=state.projects.find(x=>x.id===form.dataset.qsNotes);if(!p)return;const fd=new FormData(form);p.qsNotes=fd.get('qsNotes')||'';p.customizationLevel=fd.get('customizationLevel')||'';p.layoutClearance=fd.get('layoutClearance')||'';save();toast('QS 備註已儲存')});
+// Work Log form handler — 6 drop-downs append a NEW log (never overwrites).
+// Log Summary = non-"-" values joined in order.
+document.addEventListener('submit',e=>{const form=e.target.closest('[data-worklog]');if(!form)return;e.preventDefault();const p=state.projects.find(x=>x.id===form.dataset.worklog);if(!p)return;const fd=new FormData(form);const names=['wl1','wl2','wl3','wl4','wl5','wl6'];const wl={};names.forEach(n=>wl[n]=fd.get(n)||'-');const summary=names.map(n=>wl[n]).filter(v=>v&&v!=='-').join('');if(!summary){toast('請至少選擇一個非「-」的 Work Log');return}p.workLog=wl;if(!Array.isArray(p.workLogs))p.workLogs=[];p.workLogs.unshift({id:id(),summary,status:'submited',createdAt:new Date().toISOString()});save();renderProjects();toast('Log 已新增: '+summary)});
+
+// Work Log management — status change / delete / reorder (delegated, bound once)
+function _findWorkLog(logId){
+  for(let i=0;i<state.projects.length;i++){
+    const logs=state.projects[i].workLogs||[];
+    for(let j=0;j<logs.length;j++) if(logs[j].id===logId) return {p:state.projects[i],i:j};
+  }
+  return null;
+}
+document.addEventListener('change',e=>{
+  const sel=e.target.closest('[data-wlog-status]');if(!sel)return;
+  const hit=_findWorkLog(sel.dataset.wlogStatus);if(!hit)return;
+  hit.p.workLogs[hit.i].status=sel.value;save();renderProjects();
+});
+document.addEventListener('click',e=>{
+  const del=e.target.closest('[data-wlog-del]');
+  if(del){e.preventDefault();const hit=_findWorkLog(del.dataset.wlogDel);if(!hit)return;hit.p.workLogs.splice(hit.i,1);save();renderProjects();toast('Log 已刪除');return}
+  const up=e.target.closest('[data-wlog-up]');
+  if(up){e.preventDefault();const hit=_findWorkLog(up.dataset.wlogUp);if(!hit)return;const a=hit.p.workLogs;if(hit.i>0){const t=a[hit.i];a[hit.i]=a[hit.i-1];a[hit.i-1]=t;save();renderProjects();}return}
+  const down=e.target.closest('[data-wlog-down]');
+  if(down){e.preventDefault();const hit=_findWorkLog(down.dataset.wlogDown);if(!hit)return;const a=hit.p.workLogs;if(hit.i<a.length-1){const t=a[hit.i];a[hit.i]=a[hit.i+1];a[hit.i+1]=t;save();renderProjects();}return}
+});
 // Project inner-tab state persistence
 let projectTabState={};
 document.addEventListener('click',e=>{const btn=e.target.closest('[data-ptab]');if(!btn)return;const pid=btn.dataset.ptab;projectTabState[pid]=btn.dataset.ptabPanel;document.querySelectorAll(`[data-ptab="${pid}"]`).forEach(t=>t.classList.remove('active'));btn.classList.add('active');const panel=btn.dataset.ptabPanel;document.querySelectorAll(`[data-ptab-panel="${pid}|info"],[data-ptab-panel="${pid}|matched"],[data-ptab-panel="${pid}|partition"],[data-ptab-panel="${pid}|door"],[data-ptab-panel="${pid}|ow"],[data-ptab-panel="${pid}|notes"]`).forEach(p=>{p.style.display=p.dataset.ptabPanel===`${pid}|${panel}`?'':'none'});});
@@ -448,3 +579,980 @@ window.T1.createItem = function(projectId, type, extraData, name) {
   save();
   return true;
 };
+
+
+/* === RFQ Wiki Module — appended === */
+// === RFQ Wiki Module (top-level independent tab) ===
+var wikiEntries = [];
+try { wikiEntries = JSON.parse(localStorage.getItem('t1-wiki-entries') || '[]'); } catch(e) { wikiEntries = []; }
+
+function wikiSave() { localStorage.setItem('t1-wiki-entries', JSON.stringify(wikiEntries)); }
+
+// Migrate legacy OS category names → OVERSEA A / B (keeps old entries matching the new dropdown)
+var WIKI_CATEGORY_RENAME = {'OS.PARTITION':'OVERSEA A','OS. PARTITION':'OVERSEA A','OS.DOOR':'OVERSEA B','OS. DOOR':'OVERSEA B'};
+var _wikiCategoryMigrated = false;
+for (var _we = 0; _we < wikiEntries.length; _we++) {
+  var _oldCat = wikiEntries[_we].category;
+  if (_oldCat && WIKI_CATEGORY_RENAME[_oldCat]) {
+    wikiEntries[_we].category = WIKI_CATEGORY_RENAME[_oldCat];
+    _wikiCategoryMigrated = true;
+  }
+}
+if (_wikiCategoryMigrated) wikiSave();
+
+// One-time migration: fix legacy wrong column keys.
+// The old column generator produced headers A, AB, AC, … while the paste writer
+// stored data under correct Excel keys A, B, C, … — so pasted cells were saved
+// under keys the grid never rendered (data looked "lost"). Migrate multi-letter
+// legacy keys (AB→B, AC→C, …, AZ→Z, BB→AB, …) exactly once.
+if (!localStorage.getItem('t1-wiki-cols-migrated')) {
+  var _colFix = {};
+  for (var _cf = 0; _cf < 200; _cf++) {
+    var _lg = _wikiLegacyCol(_cf);
+    if (_lg.length > 1) _colFix[_lg] = _wikiColLetter(_cf);
+  }
+  var _colMigrated = false;
+  for (var _ce2 = 0; _ce2 < wikiEntries.length; _ce2++) {
+    var _tabs2 = wikiEntries[_ce2].cells || {};
+    Object.keys(_tabs2).forEach(function(_tab){
+      var _cs2 = _tabs2[_tab];
+      var _new2 = {};
+      var _ks2 = Object.keys(_cs2);
+      for (var _kk2 = 0; _kk2 < _ks2.length; _kk2++) {
+        var _k2 = _ks2[_kk2];
+        var _mm = _k2.match(/^([A-Z]+)(\d+)$/);
+        var _fix = (_mm && _colFix[_mm[1]]) ? _colFix[_mm[1]] + _mm[2] : null;
+        // Legacy manual keys take precedence over the (usually empty) correct key,
+        // since they are the data the user actually saw and edited.
+        if (_fix) { _new2[_fix] = _cs2[_k2]; _colMigrated = true; }
+        else _new2[_k2] = _cs2[_k2];
+      }
+      _tabs2[_tab] = _new2;
+    });
+  }
+  if (_colMigrated) wikiSave();
+  localStorage.setItem('t1-wiki-cols-migrated', '1');
+}
+function wikiId() { return crypto.randomUUID(); }
+
+var wikiCurrentEntry = null;
+var wikiCurrentSubTab = 'RFQ';
+
+var WIKI_SUB_TABS = ['RFQ','BLUEBEAM','QTN','BOQ','HARDWARE','INVENTORY','PS','OP QTN','OP BOQ','OVERSEA A','OVERSEA B'];
+
+// Range selection state
+var wikiSelectAnchor = null;    // {key: "A1"} when drag starts
+var wikiSelectCells = [];       // array of {key, colLetter, rowNum} currently selected
+var wikiIsSelecting = false;    // true during mouse drag
+
+function wikiRender() {
+  var panel = document.getElementById('wikiContent');
+  if (!panel) return;
+
+  // Build sub-tabs bar — always show RFQ + BLUEBEAM, others conditional
+  var alwaysShow = ['RFQ','BLUEBEAM'];
+  var allToShow = alwaysShow.slice();
+  if (wikiCurrentEntry) {
+    var linked = wikiCurrentEntry.linkedTabs || [];
+    for (var lt = 0; lt < linked.length; lt++) {
+      if (allToShow.indexOf(linked[lt]) === -1 && WIKI_SUB_TABS.indexOf(linked[lt]) !== -1) {
+        allToShow.push(linked[lt]);
+      }
+    }
+  }
+  var subBarHtml = '<div class="wiki-subtabs-bar">';
+  for (var st = 0; st < allToShow.length; st++) {
+    var tn = allToShow[st];
+    var cls = wikiCurrentSubTab === tn ? ' active' : '';
+    subBarHtml += '<button class="wiki-subtab-btn'+cls+'" data-wikitab="'+tn+'">'+tn+'</button>';
+  }
+  subBarHtml += '<div class="wiki-subtab-actions">' +
+    '<button class="wiki-create-btn primary" type="button" id="wikiSaveCloseBtn">SAVE &amp; CLOSE</button>' +
+    '<button class="wiki-cancel-btn" type="button" id="wikiViewCancelBtn">CANCEL</button>' +
+    '</div>';
+  subBarHtml += '</div>';
+
+  // Content area based on which sub-tab is active
+  var contentHtml = '';
+  if (wikiCurrentSubTab === 'RFQ') {
+    contentHtml = _wikiRfqContent();
+  } else {
+    contentHtml = _wikiGridContent();
+  }
+
+  panel.innerHTML = subBarHtml + contentHtml;
+  _bindWikiEvents();
+  // Show detail panel for current entry
+  _renderWikiEntryDetail(wikiCurrentEntry);
+  _clearAllSelections();
+}
+
+// --- RFQ sub-tab content (search-as-you-type dropdown + entry detail) ---
+function _wikiRfqContent() {
+  var cats = [
+    {v:'PARTITION',l:'PARTITION'},{v:'DOOR',l:'DOOR'},{v:'OVERSEA A',l:'OVERSEA A'},
+    {v:'OVERSEA B',l:'OVERSEA B'},{v:'CUTSHEET',l:'CUTSHEET'},{v:'PO',l:'PO'},{v:'PICKLIST(DO)',l:'PICKLIST(DO)'}
+  ];
+  var opts = '';
+  for (var i = 0; i < cats.length; i++) opts += '<option value="'+cats[i].v+'">'+cats[i].l+'</option>';
+
+  // Build dropdown entries list
+  var dropdownEntries = '';
+  for (var de = 0; de < wikiEntries.length; de++) {
+    var ent = wikiEntries[de];
+    var lkTabs = (ent.linkedTabs||[]).join(', ');
+    dropdownEntries += '<div class="wiki-dd-item" data-wikidddentry="'+ent.id+'" title="'+esc(ent.title)+'"><span class="wiki-dd-item-text">'+esc(ent.title)+'<br><small style="color:#7a8896">('+esc(ent.category)+') '+lkTabs+'</small></span><button class="wiki-dd-del" type="button" data-widedel="'+ent.id+'" title="Delete">×</button></div>';
+  }
+
+  var html = '<div class="wiki-search-wrapper">' +
+    '<div class="wiki-search-box">' +
+      '<span class="wiki-search-icon">&#9998;</span>' +
+      '<input type="text" id="wikiSearchInput" placeholder="Search Knowledge Items..." autocomplete="off">' +
+    '</div>' +
+    '<div class="wiki-dropdown" id="wikiDropdown">' + (wikiEntries.length ? dropdownEntries : '<div class="wiki-dd-empty">No entries yet.</div>') + '</div>' +
+
+    // Entry detail panel
+    '<div class="wiki-entry-detail" id="wikiEntryDetail" style="display:none">' +
+      '<div class="wiki-detail-header"><strong class="wiki-detail-title"></strong><button class="wiki-detail-delete" data-widedel="" type="button">&#215;</button></div>' +
+      '<div class="wiki-detail-category">Category: <em></em></div>' +
+      '<div class="wiki-detail-remark">Remark: <em></em></div>' +
+      '<div class="wiki-detail-linked-tabs">Linked tabs: <span class="wiki-linked-tab-tags"></span></div>' +
+    '</div>' +
+    '</div>';
+
+  html += '<div class="wiki-level1">' +
+    '<select id="wikiCategorySelect">'+opts+'</select>' +
+    '<button class="wiki-add-inquiry-btn" type="button" id="wikiAddBtn">ADD NEW INQUIRY / NOTE</button>' +
+    '</div>';
+
+  html += '<form class="wiki-inquiry-form" id="wikiInquiryForm" style="display:none">' +
+    '<label>Title<input name="title" required placeholder="Inquiry title"></label>' +
+    '<label>Remark<textarea name="remark" placeholder="Additional notes..."></textarea></label>' +
+    '<div class="wiki-link-row">' +
+      '<label style="grid-column:1/-1;font-size:12px;font-weight:800;color:#3a4a5a;">Linked Tabs:</label>' +
+      WIKI_SUB_TABS.map(function(t){return '<div class="wiki-checkbox-item"><input type="checkbox" name="linkTab" value="'+t+'"> '+t+' </div>'}).join('') +
+    '</div>' +
+    '<button type="submit" style="display:none"></button>' +
+    '</form>';
+
+  html += '</div>';
+  return html;
+}
+
+// --- Other sub-tab content (editable grid) ---
+function _wikiGridContent() {
+  if (!wikiCurrentEntry) {
+    return '<div class="wiki-grid-area"><p class="wiki-empty">No inquiry selected. Go to RFQ tab and create one.</p></div>';
+  }
+  var linkedTabs = wikiCurrentEntry.linkedTabs || [];
+  // Only show sub-tabs that this entry has linked
+  var visibleTabs = linkedTabs.filter(function(t){ return WIKI_SUB_TABS.indexOf(t) !== -1; });
+
+  // Sub-tab buttons (only linked ones)
+  var innerBar = '<div class="wiki-inner-bar">';
+  for (var i = 0; i < visibleTabs.length; i++) {
+    var tn = visibleTabs[i];
+    var actClass = wikiCurrentSubTab === tn ? ' active' : '';
+    innerBar += '<button class="wiki-inner-tab'+actClass+'" data-wikisub="'+tn+'">'+tn+'</button>';
+  }
+  innerBar += '</div>';
+
+  // Grid for current sub-tab
+  var activeTabName = wikiCurrentSubTab;
+  var cells = (wikiCurrentEntry.cells && wikiCurrentEntry.cells[activeTabName]) || {};
+  var colLetters = _getWikiCols(activeTabName);
+  var maxRow = 0;
+  Object.keys(cells).forEach(function(k){ var rn = parseInt(k.replace(/[A-Z]/g,''), 10); if (rn > maxRow) maxRow = rn; });
+  var rows = Math.max(maxRow + 10, 10);
+
+  var tableHtml = '<table class="wiki-grid"><thead><tr><th class="wiki-row-num">#</th>';
+  for (var ci = 0; ci < colLetters.length; ci++) tableHtml += '<th class="wiki-col-header" data-colidx="'+ci+'">'+colLetters[ci]+'</th>';
+  tableHtml += '</tr></thead><tbody>';
+
+  for (var r = 1; r <= rows; r++) {
+    tableHtml += '<tr><td class="wiki-row-num" data-rownum="'+r+'">'+r+'</td>';
+    for (var c = 0; c < colLetters.length; c++) {
+      var key = colLetters[c] + r;
+      var val = cells[key] || '';
+      tableHtml += '<td class="wiki-cell-editable" contenteditable="true" data-key="'+key+'" data-tab="'+activeTabName+'" data-eid="'+wikiCurrentEntry.id+'">'+val+'</td>';
+    }
+    tableHtml += '</tr>';
+  }
+  tableHtml += '</tbody></table>';
+  tableHtml += '<div class="wiki-grid-controls">' +
+    '<button data-wikewrite-row="'+wikiCurrentEntry.id+'" type="button">+ Row</button>' +
+    '<button data-wikewrite-col="'+wikiCurrentEntry.id+'" type="button">+ Column</button>' +
+    '<button id="wikiDeleteRowsBtn" type="button">Delete Rows</button>' +
+    '<button id="wikiDeleteColsBtn" type="button">Delete Cols</button>' +
+    '</div>';
+
+  return '<div class="wiki-grid-area">'+innerBar+'<div data-wikipanel="'+activeTabName+'">'+tableHtml+'</div></div>';
+}
+
+// Excel-style column helpers (0-based index → A, B, …, Z, AA, AB, …)
+function _wikiColLetter(index) {
+  var letters = '';
+  index += 1;
+  while (index > 0) {
+    var rem = (index - 1) % 26;
+    letters = String.fromCharCode(65 + rem) + letters;
+    index = Math.floor((index - 1) / 26);
+  }
+  return letters;
+}
+
+// Excel-style column → 0-based index (A→0, Z→25, AA→26, AB→27)
+function _wikiColIndex(colStr) {
+  var idx = 0;
+  for (var i = 0; i < colStr.length; i++) idx = idx * 26 + (colStr.charCodeAt(i) - 64);
+  return idx - 1;
+}
+
+// Legacy (buggy) column generator that produced A, AB, AC, … — kept only for data migration
+function _wikiLegacyCol(n) {
+  var q = Math.floor(n / 26);
+  var r = n % 26;
+  return String.fromCharCode(65 + q) + (r ? String.fromCharCode(65 + r) : '');
+}
+
+function _getWikiCols(tabName) {
+  if (!wikiCurrentEntry) return [];
+  var cells = (wikiCurrentEntry.cells && wikiCurrentEntry.cells[tabName]) || {};
+  var maxIdx = -1;
+  Object.keys(cells).forEach(function(k){
+    var colStr = k.replace(/[0-9]/g,'');
+    var idx = _wikiColIndex(colStr);
+    if (idx > maxIdx) maxIdx = idx;
+  });
+  var count = Math.max(maxIdx + 1, 5);
+  var letters = [];
+  for (var n = 0; n < count; n++) letters.push(_wikiColLetter(n));
+  return letters;
+}
+
+// Render selected entry detail in the dropdown area
+function _renderWikiEntryDetail(entry) {
+  var detail = document.getElementById('wikiEntryDetail');
+  if (!detail) return;
+  if (!entry) {
+    detail.style.display = 'none';
+    return;
+  }
+  detail.style.display = '';
+  detail.querySelector('.wiki-detail-title').textContent = entry.title || 'Untitled';
+  var catEm = detail.querySelector('.wiki-detail-category em');
+  var remEm = detail.querySelector('.wiki-detail-remark em');
+  var tagSpan = detail.querySelector('.wiki-linked-tab-tags');
+  var delBtn = detail.querySelector('.wiki-detail-delete');
+  if (catEm) catEm.textContent = entry.category || '-';
+  if (remEm) remEm.textContent = entry.remark || '(no remark)';
+  if (tagSpan) {
+    var tabs = entry.linkedTabs || [];
+    var tagsHtml = '';
+    for (var t = 0; t < tabs.length; t++) {
+      tagsHtml += '<span class="wiki-linked-tab-tag">'+tabs[t]+'</span>';
+    }
+    tagSpan.innerHTML = tagsHtml;
+  }
+  if (delBtn) delBtn.dataset.widedel = entry.id;
+}
+
+function _bindWikiEvents() {
+  // Document-level listeners must be bound exactly once — _bindWikiEvents runs
+  // on every wikiRender, and re-adding paste/keydown/input each time stacked
+  // duplicate handlers (double paste processing, double toasts).
+  if (!window._wikiDocBound) {
+    window._wikiDocBound = true;
+    document.addEventListener('mouseup', _wikiOnMouseUp);
+    document.addEventListener('keydown', _wikiOnKeyDown);
+    document.addEventListener('paste', _wikiOnPaste, true);
+    document.addEventListener('paste', _wikiOnPasteFallback, true);
+    document.addEventListener('input', _wikiOnInput);
+    document.addEventListener('copy', _wikiOnCopy);
+    document.addEventListener('cut', _wikiOnCut);
+  }
+
+  // Add inquiry button → toggle form
+  var addBtn = document.getElementById('wikiAddBtn');
+  if (addBtn) {
+    addBtn.onclick = function() {
+      var form = document.getElementById('wikiInquiryForm');
+      if (form) {
+        form.style.display = form.style.display === 'none' ? '' : 'none';
+      }
+    };
+  }
+
+  // Form submit → create entry
+  var form = document.getElementById('wikiInquiryForm');
+  if (form) {
+    form.onsubmit = function(e) {
+      e.preventDefault();
+      var catSel = document.getElementById('wikiCategorySelect');
+      var category = catSel.value;
+      if (!category) { toast('Please select a category first'); return; }
+
+      var checkboxes = form.querySelectorAll('input[name="linkTab"]:checked');
+      var linkedTabs = [];
+      for (var i = 0; i < checkboxes.length; i++) linkedTabs.push(checkboxes[i].value);
+
+      var titleInput = form.querySelector('input[name="title"]');
+      var remarkInput = form.querySelector('textarea[name="remark"]');
+
+      if (!linkedTabs.length) { toast('Please select at least one tab to link'); return; }
+      if (!titleInput || !titleInput.value.trim()) { toast('Please enter a title'); return; }
+
+      var entry = {
+        id: wikiId(),
+        category: category,
+        title: titleInput ? titleInput.value.trim() : '',
+        remark: remarkInput ? remarkInput.value.trim() : '',
+        createdAt: new Date().toISOString(),
+        linkedTabs: linkedTabs,
+        cells: {}
+      };
+      for (var k = 0; k < linkedTabs.length; k++) entry.cells[linkedTabs[k]] = {};
+
+      wikiEntries.push(entry);
+      wikiSave();
+      wikiCurrentEntry = entry;
+      wikiCurrentSubTab = linkedTabs[0]; // switch to first linked tab
+      form.style.display = 'none';
+      wikiRender();
+      toast('RFQ Wiki entry created');
+    };
+  }
+
+  // Sub-tab bar SAVE & CLOSE / CANCEL buttons (global — visible when an entry is selected)
+  var saveCloseBtn = document.getElementById('wikiSaveCloseBtn');
+  if (saveCloseBtn) {
+    saveCloseBtn.onclick = function() {
+      var form = document.getElementById('wikiInquiryForm');
+      // If the inquiry form is open, submit it (creates new entry)
+      if (form && form.style.display !== 'none') {
+        var submitEvent = new Event('submit', { cancelable: true });
+        form.dispatchEvent(submitEvent);
+        return;
+      }
+      // Otherwise save current entry and exit
+      wikiSave();
+      wikiCurrentEntry = null;
+      wikiCurrentSubTab = 'RFQ';
+      wikiRender();
+      toast('Changes saved');
+    };
+  }
+  var viewCancelBtn = document.getElementById('wikiViewCancelBtn');
+  if (viewCancelBtn) {
+    viewCancelBtn.onclick = function() {
+      // If form is open, just hide it
+      var form = document.getElementById('wikiInquiryForm');
+      if (form && form.style.display !== 'none') {
+        form.style.display = 'none';
+        return;
+      }
+      wikiCurrentEntry = null;
+      wikiCurrentSubTab = 'RFQ';
+      wikiRender();
+    };
+  }
+
+  // Search filter — only show dropdown when typing (not on focus)
+  var searchInput = document.getElementById('wikiSearchInput');
+  if (searchInput) {
+    searchInput.addEventListener('input', function() {
+      var dd = document.getElementById('wikiDropdown');
+      var q = searchInput.value.toLowerCase().trim();
+      if (q) {
+        if (dd) dd.classList.add('open');
+      } else {
+        if (dd) dd.classList.remove('open');
+        // Hide all dropdown items too
+        var allItems = document.querySelectorAll('.wiki-dd-item');
+        for (var j = 0; j < allItems.length; j++) allItems[j].style.display = 'none';
+        var emptyEl2 = document.querySelector('.wiki-dd-empty');
+        if (emptyEl2) emptyEl2.style.display = 'none';
+        return;
+      }
+      var items = document.querySelectorAll('.wiki-dd-item');
+      var anyVisible = 0;
+      for (var i = 0; i < items.length; i++) {
+        var txt = items[i].textContent.toLowerCase();
+        var show = q ? txt.indexOf(q) !== -1 : false;
+        items[i].style.display = show ? '' : 'none';
+        if (show) anyVisible++;
+      }
+      var emptyEl = document.querySelector('.wiki-dd-empty');
+      if (emptyEl) emptyEl.style.display = anyVisible ? 'none' : '';
+    });
+  }
+
+  // Dropdown click → select entry OR delete
+  var dropdown = document.getElementById('wikiDropdown');
+  if (dropdown) {
+    dropdown.addEventListener('click', function(e) {
+      // Handle delete button on dropdown item
+      var delBtn = e.target.closest('.wiki-dd-del');
+      if (delBtn) {
+        e.stopPropagation();
+        var eid2 = delBtn.dataset.widedel;
+        wikiEntries = wikiEntries.filter(function(x){ return x.id !== eid2; });
+        if (wikiCurrentEntry && wikiCurrentEntry.id === eid2) wikiCurrentEntry = null;
+        wikiSave();
+        wikiRender();
+        toast('RFQ Wiki entry deleted');
+        return;
+      }
+
+      var item = e.target.closest('.wiki-dd-item');
+      if (!item) return;
+      var eid = item.dataset.wikidddentry;
+      var entry = null;
+      for (var i = 0; i < wikiEntries.length; i++) {
+        if (wikiEntries[i].id === eid) { entry = wikiEntries[i]; break; }
+      }
+      if (!entry) return;
+      wikiCurrentEntry = entry;
+      wikiCurrentSubTab = (entry.linkedTabs && entry.linkedTabs[0]) || 'BLUEBEAM';
+      wikiRender();
+    });
+  }
+
+  // === Wiki grid cell selection + delete ===
+  var gridArea = document.querySelector('.wiki-grid-area');
+  if (gridArea) {
+    var tbody = gridArea.querySelector('tbody');
+    var thead = gridArea.querySelector('thead');
+    if (!tbody) return; // nothing to bind on
+
+    // Mouse down on cell → start selection anchor
+    gridArea.addEventListener('mousedown', function(e) {
+      var td = e.target.closest('.wiki-cell-editable');
+      // If clicking column header, select entire column
+      if (thead && e.target.closest('.wiki-col-header')) {
+        e.preventDefault();
+        var th = e.target.closest('.wiki-col-header');
+        var ci = parseInt(th.dataset.colidx, 10);
+        var colHeaders = thead.querySelectorAll('.wiki-col-header');
+        var clickedColLetter = colHeaders[ci] ? colHeaders[ci].textContent : null;
+        if (!clickedColLetter) return;
+        var newSel = [];
+        var maxRow = 200;
+        for (var rr = 1; rr <= maxRow; rr++) {
+          newSel.push({ key: clickedColLetter + rr, colLetter: clickedColLetter, rowNum: rr });
+        }
+        if (!e.shiftKey && !e.ctrlKey) _clearAllSelections();
+        wikiSelectCells = newSel;
+        _highlightSelectedCells(newSel);
+        wikiIsSelecting = true;
+        wikiSelectAnchor = { key: clickedColLetter + '1', colLetter: clickedColLetter, rowNum: 1 };
+        return;
+      }
+      if (!td || !wikiCurrentEntry) return;
+      if (e.ctrlKey || e.metaKey || e.shiftKey) {
+        e.preventDefault();
+      } else {
+        // Don't prevent default — allow the cell to gain focus for editing
+      }
+      var key = td.dataset.key;
+
+      if (e.shiftKey && wikiSelectAnchor) {
+        var colLetters = _getWikiCols(wikiCurrentSubTab);
+        var cells = _computeRangeCells(wikiSelectAnchor.key, key, colLetters);
+        wikiSelectCells = cells;
+        _highlightSelectedCells(cells);
+      } else if (e.ctrlKey || e.metaKey) {
+        var parsed = _parseCellKey(key);
+        if (!parsed) return;
+        var existingIdx = -1;
+        for (var t = 0; t < wikiSelectCells.length; t++) {
+          if (wikiSelectCells[t].key === key) { existingIdx = t; break; }
+        }
+        if (existingIdx >= 0) {
+          wikiSelectCells.splice(existingIdx, 1);
+        } else {
+          wikiSelectCells.push(parsed);
+        }
+        _highlightSelectedCells(wikiSelectCells);
+      } else {
+        _clearAllSelections();
+        var parsed = _parseCellKey(key);
+        if (parsed) {
+          wikiSelectAnchor = parsed;
+          wikiSelectCells = [parsed];
+          _highlightSelectedCells([parsed]);
+        }
+      }
+      wikiIsSelecting = true;
+    });
+
+    // Mouse over tbody → drag selection
+    tbody.addEventListener('mouseover', function(e) {
+      if (!wikiIsSelecting || !wikiSelectAnchor) return;
+      var td = e.target.closest('.wiki-cell-editable');
+      if (!td) return;
+      var key = td.dataset.key;
+      var colLetters = _getWikiCols(wikiCurrentSubTab);
+      var cells = _computeRangeCells(wikiSelectAnchor.key, key, colLetters);
+      wikiSelectCells = cells;
+      _highlightSelectedCells(cells);
+    });
+
+    // Mouse up ends selection (document-level, bound once — see _wikiOnMouseUp)
+
+    // Click (non-drag) on cell: clear other handlers
+    gridArea.addEventListener('click', function(e) {
+      var td = e.target.closest('.wiki-cell-editable');
+      if (td) return; // handled by mousedown/mouseover
+      var subTab = e.target.closest('[data-wikisub]');
+      if (subTab) { wikiCurrentSubTab = subTab.dataset.wikisub; wikiRender(); return; }
+      var rowBtn = e.target.closest('[data-wikewrite-row]');
+      if (rowBtn) { wikiAddRow(rowBtn.dataset.wikiwriteRow); return; }
+      var colBtn = e.target.closest('[data-wikewrite-col]');
+      if (colBtn) { wikiAddColumn(colBtn.dataset.wikiewriteCol); return; }
+    });
+
+    // Row number header click → select entire row
+    tbody.addEventListener('click', function(e) {
+      var rowTd = e.target.closest('.wiki-row-num');
+      if (!rowTd) return;
+      var rowNum = parseInt(rowTd.dataset.rownum, 10);
+      // Find all editable cells in this row by querying data-rownum
+      var colHeaders = gridArea.querySelector('thead .wiki-col-header');
+      // Use the column count from thead
+      var colCount = gridArea.querySelectorAll('thead .wiki-col-header').length;
+      if (colCount === 0) return;
+      var newSel = [];
+      for (var c = 0; c < colCount; c++) {
+        var colHeader = gridArea.querySelectorAll('thead .wiki-col-header')[c];
+        var colLetter = colHeader ? colHeader.textContent : '';
+        if (colLetter) {
+          newSel.push({ key: colLetter + rowNum, colLetter: colLetter, rowNum: rowNum });
+        }
+      }
+      if (!e.shiftKey && !e.ctrlKey) _clearAllSelections();
+      var merged = newSel;
+      if (e.ctrlKey || e.metaKey) {
+        for (var m = 0; m < newSel.length; m++) {
+          var found = false;
+          for (var n = 0; n < wikiSelectCells.length; n++) {
+            if (wikiSelectCells[n].key === newSel[m].key) { found = true; break; }
+          }
+          if (!found) merged.push(newSel[m]);
+        }
+      }
+      wikiSelectCells = merged;
+      _highlightSelectedCells(merged);
+    });
+
+    // Delete Rows / Delete Cols buttons
+    var delRowsBtn = document.getElementById('wikiDeleteRowsBtn');
+    if (delRowsBtn) {
+      delRowsBtn.addEventListener('click', function(e){ e.stopPropagation(); _wikiDeleteSelectedRows(wikiCurrentEntry.id, wikiCurrentSubTab); });
+    }
+    var delColsBtn = document.getElementById('wikiDeleteColsBtn');
+    if (delColsBtn) {
+      delColsBtn.addEventListener('click', function(e){ e.stopPropagation(); _wikiDeleteSelectedColumns(wikiCurrentEntry.id, wikiCurrentSubTab); });
+    }
+  }
+
+
+
+}
+
+/* === Wiki document-level event handlers (bound exactly once) === */
+var _wikiInputTimer = null;
+var _wikiPasteHandled = false;
+
+function _wikiOnMouseUp() { wikiIsSelecting = false; }
+
+// Delete/Backspace → clear selected cells
+function _wikiOnKeyDown(e) {
+  if (e.key !== 'Delete' && e.key !== 'Backspace') return;
+  if (!wikiCurrentEntry) return;
+  if (wikiSelectCells.length === 0) return;
+  e.preventDefault();
+  var tabName = wikiCurrentSubTab;
+  var eid = wikiCurrentEntry.id;
+  for (var s = 0; s < wikiSelectCells.length; s++) {
+    var item = wikiSelectCells[s];
+    var el = document.querySelector('.wiki-cell-editable[data-key="'+item.key+'"][data-tab="'+tabName+'"][data-eid="'+eid+'"]');
+    if (el) { el.innerHTML = ''; }
+    _saveWikiCell(item.key, tabName, eid, '');
+  }
+  _clearAllSelections();
+}
+
+// Manual cell editing auto-save (debounced)
+function _wikiOnInput(e) {
+  var td = e.target.closest ? e.target.closest('.wiki-cell-editable') : null;
+  if (!td) return;
+  clearTimeout(_wikiInputTimer);
+  _wikiInputTimer = setTimeout(function() {
+    _saveWikiCell(td.dataset.key, td.dataset.tab, td.dataset.eid, td.innerHTML);
+  }, 800);
+}
+
+// Parse clipboard into rows of cells (Excel HTML table first, then TSV)
+function _wikiParseClipboardTable(e) {
+  var allRows = [];
+  var html = e.clipboardData ? e.clipboardData.getData('text/html') : '';
+  if (html && html.indexOf('<table') !== -1) {
+    var tempDiv = document.createElement('div');
+    tempDiv.innerHTML = html;
+    var table = tempDiv.querySelector('table');
+    if (table) {
+      var trs = table.querySelectorAll('tr');
+      for (var ri = 0; ri < trs.length; ri++) {
+        var tds = trs[ri].querySelectorAll('td, th');
+        var rowArr = [];
+        for (var ci = 0; ci < tds.length; ci++) rowArr.push(tds[ci].textContent);
+        if (rowArr.length) allRows.push(rowArr);
+      }
+    }
+  }
+  if (!allRows.length) {
+    var text = (e.clipboardData ? e.clipboardData.getData('text/plain') : '') || '';
+    if (text.indexOf('\t') !== -1) {
+      var lines = text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n');
+      for (var li = 0; li < lines.length; li++) {
+        if (lines[li] === '') continue;
+        allRows.push(lines[li].split('\t'));
+      }
+    }
+  }
+  return allRows;
+}
+
+// Paste anchor: top-left of the current selection when there is one (Excel-like),
+// otherwise the cell that received the paste event.
+function _wikiPasteAnchor(e, fallbackKey) {
+  if (!wikiSelectCells || !wikiSelectCells.length) return fallbackKey;
+  var colLetters = _getWikiCols(wikiCurrentSubTab);
+  var minCi = Infinity, minRow = Infinity;
+  for (var s = 0; s < wikiSelectCells.length; s++) {
+    var ci = colLetters.indexOf(wikiSelectCells[s].colLetter);
+    if (ci === -1) continue;
+    if (ci < minCi) minCi = ci;
+    if (wikiSelectCells[s].rowNum < minRow) minRow = wikiSelectCells[s].rowNum;
+  }
+  if (minCi === Infinity || minRow === Infinity) return fallbackKey;
+  return colLetters[minCi] + minRow;
+}
+
+// Write parsed rows into entry.cells starting at startKey, save, re-render and
+// highlight the pasted region.
+function _wikiApplyPasteRows(allRows, startKey) {
+  if (!startKey || !wikiCurrentEntry) return;
+  var startParsed = _parseCellKey(startKey);
+  if (!startParsed) return;
+  var startColIdx = _wikiColIndex(startParsed.colLetter);
+  var startRow = startParsed.rowNum;
+  var tabName = wikiCurrentSubTab;
+  var eid = wikiCurrentEntry.id;
+  var entry = _findWikiEntry(eid);
+  if (!entry) return;
+  if (!entry.cells[tabName]) entry.cells[tabName] = {};
+
+  var maxCols = 1;
+  for (var ri = 0; ri < allRows.length; ri++) {
+    var cols = allRows[ri];
+    if (cols.length > maxCols) maxCols = cols.length;
+    for (var ci = 0; ci < cols.length; ci++) {
+      entry.cells[tabName][_wikiColLetter(startColIdx + ci) + (startRow + ri)] = cols[ci];
+    }
+  }
+  wikiSave();
+  wikiRender();
+
+  // Highlight the freshly pasted region (Excel-like feedback)
+  var newSel = [];
+  for (var hr = 0; hr < allRows.length; hr++) {
+    for (var hc = 0; hc < maxCols; hc++) {
+      var hCol = _wikiColLetter(startColIdx + hc);
+      newSel.push({ key: hCol + (startRow + hr), colLetter: hCol, rowNum: startRow + hr });
+    }
+  }
+  wikiSelectCells = newSel;
+  _highlightSelectedCells(newSel);
+  toast('Pasted ' + allRows.length + '×' + maxCols + ' cells');
+}
+
+// Paste — capture phase (intercepts before the contenteditable default)
+function _wikiOnPaste(e) {
+  if (_wikiPasteHandled) { _wikiPasteHandled = false; return; }
+  var td = e.target.closest ? e.target.closest('.wiki-cell-editable') : null;
+  var inWiki = e.target.closest ? !!e.target.closest('#wikiContent') : false;
+  var hasSel = wikiSelectCells && wikiSelectCells.length > 0;
+  if (!td && !(hasSel && inWiki)) return;
+
+  // Image paste (only into a cell)
+  if (td) {
+    var items = e.clipboardData ? (e.clipboardData.items || []) : [];
+    for (var i2 = 0; i2 < items.length; i2++) {
+      if (items[i2].type.indexOf('image/') === 0) {
+        e.preventDefault();
+        _wikiPasteHandled = true;
+        var blob = items[i2].getAsFile();
+        var reader = new FileReader();
+        reader.onload = function(ev) {
+          td.innerHTML = '<img src="'+ev.target.result+'" style="max-width:100%;max-height:200px;display:block">';
+          _saveWikiCell(td.dataset.key, td.dataset.tab, td.dataset.eid, td.innerHTML);
+        };
+        reader.readAsDataURL(blob);
+        return;
+      }
+    }
+  }
+
+  // Excel / Sheets tabular data (HTML table or TSV)
+  var allRows = _wikiParseClipboardTable(e);
+  if (!allRows.length) return;
+
+  e.preventDefault();
+  e.stopPropagation();
+  _wikiPasteHandled = true;
+
+  // Detach the focused cell so the browser does not also insert raw text
+  if (td) td.contentEditable = 'false';
+  if (document.activeElement && document.activeElement.closest && document.activeElement.closest('.wiki-cell-editable')) {
+    document.activeElement.blur();
+  }
+
+  _wikiApplyPasteRows(allRows, _wikiPasteAnchor(e, td ? td.dataset.key : null));
+}
+
+// Fallback paste — second chance if the primary handler bailed out
+function _wikiOnPasteFallback(e) {
+  if (_wikiPasteHandled) { _wikiPasteHandled = false; return; }
+  var td = e.target.closest ? e.target.closest('.wiki-cell-editable') : null;
+  var inWiki = e.target.closest ? !!e.target.closest('#wikiContent') : false;
+  var hasSel = wikiSelectCells && wikiSelectCells.length > 0;
+  if (!td && !(hasSel && inWiki)) return;
+  var text = (e.clipboardData ? e.clipboardData.getData('text/plain') : '') || '';
+  if (text.indexOf('\t') === -1) return;
+  var allRows = [];
+  var lines = text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n');
+  for (var li = 0; li < lines.length; li++) {
+    if (lines[li] === '') continue;
+    allRows.push(lines[li].split('\t'));
+  }
+  if (!allRows.length) return;
+  e.preventDefault();
+  e.stopPropagation();
+  _wikiPasteHandled = true;
+  _wikiApplyPasteRows(allRows, _wikiPasteAnchor(e, td ? td.dataset.key : null));
+}
+
+// Copy — multi-cell selection is emitted as TSV + HTML table so Excel/Sheets
+// pastes it back as separate cells. Single cell falls through to the default.
+function _wikiOnCopy(e) {
+  if (!wikiCurrentEntry || !wikiSelectCells || wikiSelectCells.length < 2) return;
+  if (!e.target.closest || !e.target.closest('#wikiContent')) return;
+  var colLetters = _getWikiCols(wikiCurrentSubTab);
+  var minCi = Infinity, maxCi = -1, minRow = Infinity, maxRow = -1;
+  for (var s = 0; s < wikiSelectCells.length; s++) {
+    var ci = colLetters.indexOf(wikiSelectCells[s].colLetter);
+    if (ci === -1) continue;
+    if (ci < minCi) minCi = ci;
+    if (ci > maxCi) maxCi = ci;
+    if (wikiSelectCells[s].rowNum < minRow) minRow = wikiSelectCells[s].rowNum;
+    if (wikiSelectCells[s].rowNum > maxRow) maxRow = wikiSelectCells[s].rowNum;
+  }
+  if (minCi === Infinity) return;
+  var cells = (wikiCurrentEntry.cells && wikiCurrentEntry.cells[wikiCurrentSubTab]) || {};
+  var tsvRows = [];
+  var htmlRows = [];
+  for (var r = minRow; r <= maxRow; r++) {
+    var tsvCells = [];
+    var htmlCells = [];
+    for (var c = minCi; c <= maxCi; c++) {
+      var key = colLetters[c] + r;
+      var v = cells[key] || '';
+      tsvCells.push(String(v).replace(/\r\n/g, '\n'));
+      htmlCells.push('<td>' + esc(v) + '</td>');
+    }
+    tsvRows.push(tsvCells.join('\t'));
+    htmlRows.push('<tr>' + htmlCells.join('') + '</tr>');
+  }
+  e.preventDefault();
+  e.clipboardData.setData('text/plain', tsvRows.join('\r\n'));
+  e.clipboardData.setData('text/html', '<table><tbody>' + htmlRows.join('') + '</tbody></table>');
+}
+
+// Cut — copy the selection then clear the source cells
+function _wikiOnCut(e) {
+  if (!wikiCurrentEntry || !wikiSelectCells || wikiSelectCells.length < 2) return;
+  if (!e.target.closest || !e.target.closest('#wikiContent')) return;
+  _wikiOnCopy(e);
+  var count = wikiSelectCells.length;
+  var tabName = wikiCurrentSubTab;
+  var eid = wikiCurrentEntry.id;
+  for (var s = 0; s < wikiSelectCells.length; s++) {
+    _saveWikiCell(wikiSelectCells[s].key, tabName, eid, '');
+  }
+  _clearAllSelections();
+  wikiRender();
+  toast('Cut ' + count + ' cells');
+}
+
+function _saveWikiCell(cellKey, tabName, entryId, value) {
+  var entry = _findWikiEntry(entryId);
+  if (!entry) return;
+  if (!entry.cells[tabName]) entry.cells[tabName] = {};
+  entry.cells[tabName][cellKey] = value;
+  wikiSave();
+}
+
+function _findWikiEntry(entryId) {
+  for (var i = 0; i < wikiEntries.length; i++) {
+    if (wikiEntries[i].id === entryId) return wikiEntries[i];
+  }
+  return null;
+}
+
+function _parseCellKey(key) {
+  var m = key.match(/^([A-Z]+)(\d+)$/);
+  if (!m) return null;
+  return { key: key, colLetter: m[1], rowNum: parseInt(m[2], 10) };
+}
+
+function _computeRangeCells(startKey, endKey, colLetters) {
+  var start = _parseCellKey(startKey);
+  var end = _parseCellKey(endKey);
+  if (!start || !end) return [];
+  var c1 = colLetters.indexOf(start.colLetter);
+  var c2 = colLetters.indexOf(end.colLetter);
+  if (c1 === -1 || c2 === -1) return [];
+  var minCol = Math.min(c1, c2);
+  var maxCol = Math.max(c1, c2);
+  var minRow = Math.min(start.rowNum, end.rowNum);
+  var maxRow = Math.max(start.rowNum, end.rowNum);
+  var result = [];
+  for (var r = minRow; r <= maxRow; r++) {
+    for (var c = minCol; c <= maxCol; c++) {
+      var k = colLetters[c] + r;
+      result.push({ key: k, colLetter: colLetters[c], rowNum: r });
+    }
+  }
+  return result;
+}
+
+function _highlightSelectedCells(cells) {
+  var old = document.querySelectorAll('.wiki-cell-editable.wiki-cell-selected');
+  for (var i = 0; i < old.length; i++) old[i].classList.remove('wiki-cell-selected');
+  var eid = wikiCurrentEntry ? wikiCurrentEntry.id : '';
+  var tabName = wikiCurrentSubTab;
+  for (var j = 0; j < cells.length; j++) {
+    var el = document.querySelector(
+      '.wiki-cell-editable[data-key="'+cells[j].key+'"][data-tab="'+tabName+'"][data-eid="'+eid+'"]'
+    );
+    if (el) el.classList.add('wiki-cell-selected');
+  }
+}
+
+function _clearAllSelections() {
+  var old = document.querySelectorAll('.wiki-cell-editable.wiki-cell-selected');
+  for (var i = 0; i < old.length; i++) old[i].classList.remove('wiki-cell-selected');
+  wikiSelectCells = [];
+  wikiSelectAnchor = null;
+  wikiIsSelecting = false;
+}
+
+function wikiAddRow(entryId) {
+  var entry = null;
+  for (var i = 0; i < wikiEntries.length; i++) {
+    if (wikiEntries[i].id === entryId) { entry = wikiEntries[i]; break; }
+  }
+  if (!entry) return;
+  var tabs = entry.linkedTabs || [];
+  for (var t = 0; t < tabs.length; t++) {
+    var cells = entry.cells[tabs[t]] || {};
+    var maxRow = 0;
+    Object.keys(cells).forEach(function(key){
+      var rowNum = parseInt(key.replace(/[A-Z]/g,''), 10);
+      if (rowNum > maxRow) maxRow = rowNum;
+    });
+    var colLetters = _getWikiCols(tabs[t]);
+    var newRow = maxRow + 1;
+    for (var c = 0; c < colLetters.length; c++) {
+      cells[colLetters[c] + newRow] = '';
+    }
+    entry.cells[tabs[t]] = cells;
+  }
+  wikiSave();
+  wikiRender();
+}
+
+function wikiAddColumn(entryId) {
+  var entry = null;
+  for (var i = 0; i < wikiEntries.length; i++) {
+    if (wikiEntries[i].id === entryId) { entry = wikiEntries[i]; break; }
+  }
+  if (!entry) return;
+  var tabs = entry.linkedTabs || [];
+  for (var t = 0; t < tabs.length; t++) {
+    var cells = entry.cells[tabs[t]] || {};
+    var currentCols = _getWikiCols(tabs[t]);
+    var newColLetter = _wikiColLetter(currentCols.length);
+
+    var maxRow = 0;
+    Object.keys(cells).forEach(function(key){
+      var rowNum = parseInt(key.replace(/[A-Z]/g,''), 10);
+      if (rowNum > maxRow) maxRow = rowNum;
+    });
+    for (var row = 1; row <= maxRow; row++) {
+      cells[newColLetter + row] = '';
+    }
+    entry.cells[tabs[t]] = cells;
+  }
+  wikiSave();
+  wikiRender();
+}
+
+// --- Delete selected rows and columns ---
+function _wikiDeleteSelectedRows(entryId, tabName) {
+  var entry = _findWikiEntry(entryId);
+  if (!entry || !entry.cells[tabName]) return;
+  var cells = entry.cells[tabName];
+  // Collect unique row numbers from selection
+  var rowSet = {};
+  for (var s = 0; s < wikiSelectCells.length; s++) {
+    var rn = wikiSelectCells[s].rowNum;
+    rowSet[rn] = true;
+  }
+  // Remove all cells belonging to selected rows
+  Object.keys(cells).forEach(function(key){
+    var rowNum = parseInt(key.replace(/[A-Z]/g,''), 10);
+    if (rowSet[rowNum]) delete cells[key];
+  });
+  _clearAllSelections();
+  wikiSave();
+  wikiRender();
+}
+
+function _wikiDeleteSelectedColumns(entryId, tabName) {
+  var entry = _findWikiEntry(entryId);
+  if (!entry || !entry.cells[tabName]) return;
+  var cells = entry.cells[tabName];
+  // Collect unique column letters from selection
+  var colSet = {};
+  for (var s2 = 0; s2 < wikiSelectCells.length; s2++) {
+    colSet[wikiSelectCells[s2].colLetter] = true;
+  }
+  // Remove all cells belonging to selected columns
+  Object.keys(cells).forEach(function(key){
+    var m = key.match(/^([A-Z]+)/);
+    if (m && colSet[m[1]]) delete cells[key];
+  });
+  _clearAllSelections();
+  wikiSave();
+  wikiRender();
+}
+
+// Initialize when page loads
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', function(){ setTimeout(wikiRender, 600); });
+} else {
+  setTimeout(wikiRender, 600);
+}
