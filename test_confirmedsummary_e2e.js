@@ -9,6 +9,7 @@ const { chromium } = require('playwright');
   page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
   page.on('pageerror', e => errors.push(String(e)));
 
+await page.context().route(/gstatic\.com\/firebasejs/, r => r.fulfill({ status: 200, contentType: 'application/javascript', body: '' }));
   await page.goto('http://localhost:3000', { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(1000);
 

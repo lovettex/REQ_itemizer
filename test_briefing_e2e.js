@@ -9,6 +9,7 @@ const { chromium } = require('playwright');
   page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
   page.on('pageerror', e => errors.push(String(e)));
 
+await page.context().route(/gstatic\.com\/firebasejs/, r => r.fulfill({ status: 200, contentType: 'application/javascript', body: '' }));
   await page.goto('http://localhost:3000', { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(1000);
 
@@ -65,6 +66,12 @@ const { chromium } = require('playwright');
     card.open = true;
   });
   await page.waitForTimeout(300);
+  const dbg = await page.evaluate(() => ({
+    forms: document.querySelectorAll('[data-project-edit]').length,
+    cards: document.querySelectorAll('.project-card').length,
+    names: Array.from(document.querySelectorAll('.project-card summary > span:first-child')).map(s => s.textContent.slice(0, 30)),
+  }));
+  console.log('DBG edit:', JSON.stringify(dbg));
   const editUI = await page.evaluate(() => {
     const form = document.querySelector('[data-project-edit]');
     const g = form.querySelector('textarea[name="briefingGeneral"]');

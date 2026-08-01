@@ -50,31 +50,35 @@
         self.db.collection(COLLECTION).doc('pairs').get(),
         self.db.collection(COLLECTION).doc('projects').get()
       ]).then(function(results) {
-        var pairs = results[0].exists ? (results[0].data().items || []) : [];
-        var projects = results[1].exists ? (results[1].data().items || []) : [];
-        lsWrite(LS_PAIRS, pairs);
-        lsWrite(LS_PROJECTS, projects);
-        return { pairs: pairs, projects: projects };
+        // 雲端為權威：doc 存在 → 用雲端資料；不存在 → 保留 localStorage 現有資料
+        // （絕不以空陣列覆寫本地，避免 commit/push 後重新載入造成資料消失）
+        var localPairs = lsRead(LS_PAIRS);
+        var localProjects = lsRead(LS_PROJECTS);
+        var out = { pairs: localPairs, projects: localProjects, cloud: { pairs: false, projects: false } };
+        if (results[0].exists) {
+          out.pairs = results[0].data().items || [];
+          out.cloud.pairs = true;
+        }
+        if (results[1].exists) {
+          out.projects = results[1].data().items || [];
+          out.cloud.projects = true;
+        }
+        lsWrite(LS_PAIRS, out.pairs);
+        lsWrite(LS_PROJECTS, out.projects);
+        return out;
       }).catch(function(err) {
         console.warn('[T1 Firestore] loadAll failed, falling back to localStorage:', err.message);
         return self._fallback();
       });
     },
 
+    // 網頁唯讀雲端：save 只寫 localStorage，不寫 Firestore（雲端資料以 Firebase 端為主）
     savePairs: function(pairs) {
       lsWrite(LS_PAIRS, pairs);
-      if (!this.db) return;
-      this.db.collection(COLLECTION).doc('pairs')
-        .set({ items: pairs, updatedAt: new Date().toISOString() })
-        .catch(function(e) { console.warn('[T1 Firestore] savePairs failed:', e.message); });
     },
 
     saveProjects: function(projects) {
       lsWrite(LS_PROJECTS, projects);
-      if (!this.db) return;
-      this.db.collection(COLLECTION).doc('projects')
-        .set({ items: projects, updatedAt: new Date().toISOString() })
-        .catch(function(e) { console.warn('[T1 Firestore] saveProjects failed:', e.message); });
     },
 
     _fallback: function() {

@@ -5,6 +5,7 @@ const { chromium } = require('playwright');
 const CHECK = async (width, height) => {
   const browser = await chromium.launch();
   const page = await browser.newPage({ viewport: { width, height } });
+await page.context().route(/gstatic\.com\/firebasejs/, r => r.fulfill({ status: 200, contentType: 'application/javascript', body: '' }));
   await page.goto('http://localhost:3000', { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(1200);
   const rects = await page.evaluate(() => {
