@@ -376,3 +376,16 @@ input,select,textarea,.ow-row input,.ow-row select,.ow-row textarea,.ow-project-
   backdrop-filter:blur(6px);
 }
 .catalog .filter.active{background:rgba(24,37,50,.85);border-color:rgba(24,37,50,.85)}
+
+/* === Catalog search boxes blend into the panel gradient === */
+.catalog .search{
+  background:transparent;
+  -webkit-backdrop-filter:none;
+  backdrop-filter:none;
+  border-color:rgba(255,255,255,.45);
+}
+.catalog .search input{
+  background:transparent;
+  -webkit-backdrop-filter:none;
+  backdrop-filter:none;
+}
