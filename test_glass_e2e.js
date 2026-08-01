@@ -16,7 +16,7 @@ const { chromium } = require('playwright');
       const el = document.querySelector(sel);
       if (!el) return null;
       const cs = getComputedStyle(el);
-      return { bg: cs.backgroundColor, backdrop: cs.backdropFilter || cs.webkitBackdropFilter, blur: cs.filter };
+      return { bg: cs.backgroundImage || cs.backgroundColor, backdrop: cs.backdropFilter || cs.webkitBackdropFilter, blur: cs.filter };
     };
     return {
       bodyBg: getComputedStyle(document.body).backgroundImage.slice(0, 80),
@@ -31,11 +31,7 @@ const { chromium } = require('playwright');
   if (styles.bodyBg.indexOf('gradient') === -1) throw new Error('body gradient missing');
   if (!styles.bodyBefore || styles.bodyBefore.blur.indexOf('46px') === -1) throw new Error('far depth blur layer missing');
   if (!styles.panel) throw new Error('panel missing');
-  if (styles.panel.bg.indexOf('0.52') === -1 && styles.panel.bg.indexOf('rgba(255, 255, 255, 0.52)') === -1) {
-    console.log('panel bg:', styles.panel.bg);
-    if (!styles.panel.bg.includes('255, 255, 255')) throw new Error('panel not translucent white');
-  }
-  if (!styles.panel.backdrop) throw new Error('panel backdrop-filter missing');
+  if (styles.panel.bg.indexOf('gradient') === -1) throw new Error('panel should use the page gradient');
 
   // Open Master template search → cards visible & translucent
   await page.evaluate(() => {

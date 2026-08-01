@@ -294,3 +294,16 @@ input,select,textarea,.ow-row input,.ow-row select,.ow-row textarea,.ow-project-
   backdrop-filter:blur(10px) saturate(1.3);
 }
 .wiki-grid th,.item-table th,.wiki-row-num,.ow-num{background:rgba(244,246,248,.60)}
+
+/* === Panels adopt the same gradient/glow as the page backdrop === */
+.panel,.project-tab-panel,.catalog-tab-panel{
+  background:
+    radial-gradient(1100px 700px at 12% -8%, rgba(96,165,235,.50), transparent 60%),
+    radial-gradient(900px 650px at 108% 12%, rgba(167,120,245,.38), transparent 55%),
+    radial-gradient(950px 850px at 50% 118%, rgba(56,199,173,.42), transparent 60%),
+    radial-gradient(700px 500px at 85% 80%, rgba(251,191,110,.35), transparent 60%),
+    linear-gradient(160deg,#eaf1fb 0%,#d3e2f5 48%,#e4edf9 100%);
+  background-attachment:fixed;
+  border:1px solid rgba(255,255,255,.55);
+  box-shadow:0 10px 36px rgba(31,58,92,.14), inset 0 1px 0 rgba(255,255,255,.5);
+}
