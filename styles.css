@@ -307,3 +307,34 @@ input,select,textarea,.ow-row input,.ow-row select,.ow-row textarea,.ow-project-
   border:1px solid rgba(255,255,255,.55);
   box-shadow:0 10px 36px rgba(31,58,92,.14), inset 0 1px 0 rgba(255,255,255,.5);
 }
+
+/* === Hide inner block borders inside the top projects panel (seamless with bg) === */
+.project-wide .project-tab-bar{
+  border:none;
+  background:transparent;
+  -webkit-backdrop-filter:none;
+  backdrop-filter:none;
+}
+.project-wide .project-tab+.project-tab{border-left:none}
+.project-wide .project-tab{background:transparent;box-shadow:inset 0 -2px 0 transparent;transition:background .12s}
+.project-wide .project-tab:hover:not(.active){background:rgba(255,255,255,.35);color:#3a4755}
+.project-wide .project-tab.active{background:rgba(255,255,255,.50);box-shadow:inset 0 -3px 0 #0d5932}
+.project-wide .project-tab-panel{
+  border:none;
+  background:transparent;
+  -webkit-backdrop-filter:none;
+  backdrop-filter:none;
+  box-shadow:none;
+}
+.project-wide .project-card{
+  border:none;
+  background:rgba(255,255,255,.40);
+  box-shadow:0 6px 20px rgba(31,58,92,.08);
+}
+.project-wide .project-card:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(31,58,92,.13)}
+.project-wide .project-detail{border-top:none;background:transparent}
+.project-wide .p-inner-tabs{border:none;background:transparent}
+.project-wide .p-inner-tab{background:transparent}
+.project-wide .p-inner-tab.active{background:rgba(255,255,255,.45);box-shadow:inset 0 -2px 0 #0d5932}
+.project-wide .p-inner-panel .project-item{border-top:1px solid rgba(255,255,255,.40)}
+.project-wide .p-inner-panel .project-extra{border-top:1px dashed rgba(255,255,255,.45)}
