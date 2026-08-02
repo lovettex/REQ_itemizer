@@ -21,13 +21,14 @@ await page.context().route(/gstatic\.com\/firebasejs/, r => r.fulfill({ status: 
   if (!tabExists.btn || !tabExists.panel) throw new Error('PROJECT CONFIRMED tab missing');
   if (tabExists.label !== 'PROJECT CONFIRMED') throw new Error('Tab label wrong: ' + tabExists.label);
 
-  const createProject = async (name) => {
-    await page.evaluate((n) => {
+  const createProject = async (name, sales) => {
+    await page.evaluate(({ n, s }) => {
       document.querySelector('.project-tab[data-project-tab="new"]').click();
       const form = document.getElementById('projectForm');
       form.querySelector('input[name="name"]').value = n;
+      if (s) form.querySelector('input[name="sales"]').value = s;
       form.dispatchEvent(new Event('submit', { cancelable: true }));
-    }, name);
+    }, { n: name, s: sales || '' });
     await page.waitForTimeout(400);
     return page.evaluate((n) => {
       const p = JSON.parse(localStorage.getItem('t1-projects')).find(x => x.name === n);
@@ -73,16 +74,31 @@ await page.context().route(/gstatic\.com\/firebasejs/, r => r.fulfill({ status: 
     await page.waitForTimeout(400);
   };
 
-  const idA = await createProject('Conf Project A');
+  const idA = await createProject('Conf Project A', 'Sales A');
   const idB = await createProject('Conf Project B');
   await addWorkLog(idA, { wl1: 'A2', wl5: 'VO3' }, 'confirmed'); // A2VO3
   await addWorkLog(idB, { wl5: 'VO9' }, 'submited');            // VO9 (not confirmed)
+
+  // Set QS for Conf Project A via summary-column dropdown
+  await page.evaluate((id) => {
+    document.querySelector('.project-tab[data-project-tab="saved"]').click();
+    const card = document.querySelector(`.project-card[data-project-card="${id}"]`);
+    card.open = true;
+    const sel = card.querySelector('[data-assign-qs]');
+    sel.value = 'Ben';
+    sel.dispatchEvent(new Event('change', { bubbles: true }));
+  }, idA);
+  await page.waitForTimeout(400);
+  // QS change handler saves without re-render — reload so confirmed cards pick it up
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await page.waitForTimeout(900);
 
   await page.evaluate(() => document.querySelector('.project-tab[data-project-tab="confirmed"]').click());
   await page.waitForTimeout(300);
   const confirmedList = await page.evaluate(() => {
     return Array.from(document.querySelectorAll('.confirmed-card')).map(card => ({
       name: card.querySelector('.confirmed-card-name').textContent,
+      head: card.querySelector('.confirmed-card-head').textContent.replace(/\s+/g, ' ').trim(),
       logs: Array.from(card.querySelectorAll('.pc-log')).map(b => b.textContent),
     }));
   });
@@ -92,6 +108,8 @@ await page.context().route(/gstatic\.com\/firebasejs/, r => r.fulfill({ status: 
   if (JSON.stringify(confirmedList[0].logs) !== JSON.stringify(['A2VO3'])) {
     throw new Error('Confirmed summary wrong: ' + JSON.stringify(confirmedList[0].logs));
   }
+  if (confirmedList[0].head.indexOf('Sales: Sales A') === -1) throw new Error('Sales not shown: ' + confirmedList[0].head);
+  if (confirmedList[0].head.indexOf('QS: Ben') === -1) throw new Error('QS not shown: ' + confirmedList[0].head);
 
   // Demote A's log → tab empties
   await setLogStatus(idA, 'submited');
