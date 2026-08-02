@@ -22,8 +22,8 @@
   <section class="panel projects project-wide">
     <div class="project-tab-bar">
       <button class="project-tab" data-project-tab="new"><span>NEW PROJECT</span></button>
-      <button class="project-tab active" data-project-tab="saved"><span>LISTED PROJECTS <em id="projectCount"></em></span></button>
-      <button class="project-tab" data-project-tab="dashboard"><span>📊 DASHBOARD IN CHARGE <em id="dashboardCount"></em></span></button>
+      <button class="project-tab active" data-project-tab="saved"><span>LISTED PROJECTS</span></button>
+      <button class="project-tab" data-project-tab="dashboard"><span>DASHBOARD IN CHARGE</span></button>
       <button class="project-tab" data-project-tab="confirmed"><span>PROJECT CONFIRMED</span></button>
       <button class="project-tab" data-project-tab="wiki"><span>RFQ Wiki</span></button>
     </div>
@@ -38,7 +38,10 @@
     <div class="project-section-body"><div id="dashboardList" class="dashboard-list"></div></div>
     </div>
     <div class="project-tab-panel" data-project-tab-panel="confirmed" style="display:none">
-    <div class="project-section-body"><div id="confirmedList" class="confirmed-list"></div></div>
+    <div class="project-section-body">
+      <div class="ps-search-wrap"><div class="ps-search-inner"><input type="text" id="confirmedSearch" placeholder="檢索 Project..." autocomplete="off"><span class="ps-arrow">▾</span></div><div class="ps-dropdown" id="confirmedDropdown"></div></div>
+      <div id="confirmedList" class="confirmed-list"></div>
+    </div>
     </div>
     <div class="project-tab-panel" data-project-tab-panel="wiki" style="display:none">
     <div class="project-section-body">

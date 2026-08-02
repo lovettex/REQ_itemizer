@@ -131,7 +131,7 @@ function itemExtraSummary(item){const type=item.type||'',extra=item.extra||{};if
 function itemExtraBody(project,item){const type=item.type||'',extra=item.extra||{};const formKey=`${project.id}|${item.id}`;if(type==='OPERABLE_WALL'){const fields=(extraFields.OPERABLE_WALL||[]).map(([key,label])=>`<label><span>${label}</span>${key==='remark'?`<textarea name="${key}">${esc(extra[key])}</textarea>`:`<input name="${key}" value="${esc(extra[key])}">`}</label>`).join('');return `<div class="extra-body"><div class="extra-fields">${fields}</div><button class="primary" type="submit">儲存項目資料</button></div>`}const isPartition=type==='PARTITION';if(!type)return `<div class="extra-body"><div class="type-tabs"><button class="type-tab partition" data-set-type="${formKey}|PARTITION">PARTITION</button><button class="type-tab door" data-set-type="${formKey}|DOOR">DOOR</button></div></div>`;const fields=(extraFields[type]||[]).map(([key,label])=>`<label><span>${label}</span>${key==='remark'?`<textarea name="${key}">${esc(extra[key])}</textarea>`:`<input name="${key}" value="${esc(extra[key])}">`}</label>`).join('');return `<div class="extra-body"><div class="type-tabs"><button class="type-tab partition ${isPartition?'active':''}" data-set-type="${formKey}|PARTITION">PARTITION</button><button class="type-tab door ${!isPartition?'active':''}" data-set-type="${formKey}|DOOR">DOOR</button></div><div class="extra-fields">${fields}</div><button class="primary" type="submit">儲存項目資料</button></div>`}
 function matchedItemsTable(project){const items=project.items.filter(i=>!i.type);if(!items.length)return'<div class="project-empty">尚無未分類商品。</div>';return'<div class="item-table-wrap"><table class="item-table"><thead><tr><th>#</th><th>商品名稱</th><th>配對資訊</th><th>分類</th><th></th></tr></thead><tbody>'+items.map((item,i)=>{const pairInfo=descriptionLine(item.pair);return'<tr><td>'+(i+1)+'</td><td>'+esc(item.pair.name)+'</td><td><small>'+pairInfo+'</small></td><td><select class="matched-type-select" data-matched-classify="'+project.id+'|'+item.id+'"><option value="">選擇分類</option><option value="PARTITION">PARTITION</option><option value="DOOR">DOOR</option></select></td><td class="item-actions"><button data-item-delete="'+project.id+'|'+item.id+'" class="project-delete">刪</button></td></tr>';}).join('')+'</tbody></table></div>';}
 function itemTable(project,type){const items=project.items.filter(i=>i.type===type);if(!items.length)return'<div class="project-empty">尚無 '+type+' 項目。</div>';const fields=extraFields[type]||[];const thead='<thead><tr><th>#</th>'+fields.map(([,l])=>'<th>'+l+'</th>').join('')+'<th>配對資訊</th><th></th></tr></thead>';const tbody='<tbody>'+items.map((item,i)=>{const CLICKABLE_KEYS=['verticalSection','horizontalSection','doorFrame','doorPanel'];const tds=fields.map(([k])=>{const v=item.extra[k];return'<td>'+(v?CLICKABLE_KEYS.includes(k)?'<span class="item-field-link" data-item-field-view="'+esc(v)+'">'+esc(v)+'</span>':esc(v):'—')+'</td>'}).join('');const pairInfo=descriptionLine(item.pair);const actions='<button data-up="'+project.id+'|'+item.id+'"'+(i===0?' disabled':'')+'>▲</button><button data-down="'+project.id+'|'+item.id+'"'+(i===items.length-1?' disabled':'')+'>▼</button><button data-item-delete="'+project.id+'|'+item.id+'" class="project-delete">刪</button><button data-item-edit="'+project.id+'|'+item.id+'" class="item-edit-btn">'+(item.extra&&Object.keys(item.extra).length?'編輯':'設定')+'</button>';return'<tr><td>'+(i+1)+'</td>'+tds+'<td>'+esc(item.pair.name)+'<br><small>'+pairInfo+'</small></td><td class="item-actions">'+actions+'</td></tr>'}).join('')+'</tbody>';const forms=items.map(item=>'<div class="item-extra-display" data-item-summary="'+project.id+'|'+item.id+'" style="display:none">'+itemExtraSummary(item)+'</div><form class="project-extra" data-item-extra-key="'+project.id+'|'+item.id+'" style="display:none">'+itemExtraBody(project,item)+'</form>').join('');return'<div class="item-table-wrap"><table class="item-table">'+thead+tbody+'</table></div>'+forms}
-function renderProjects(){state.projects.forEach(p=>{p.items=Array.isArray(p.items)?p.items:[];if(!Array.isArray(p.workLogs))p.workLogs=[];if(p.workLogSummary){if(!p.workLogs.length)p.workLogs=[{id:id(),summary:p.workLogSummary,status:'submited',createdAt:new Date().toISOString()}];delete p.workLogSummary}});$('projectCount').textContent=state.projects.length?`(${state.projects.length})`:'';const openIds=new Set();document.querySelectorAll('.project-card[open]').forEach(el=>{const pid=el.dataset.projectCard;if(pid)openIds.add(pid)});$('projectList').innerHTML=state.projects.length?state.projects.map(p=>`<details class="project-card" ${openIds.has(p.id)?'open':''} data-project-card="${p.id}"><summary${p.priority==='URGENT'&&p.status!=='Completed'?' style="background:#b2fc58;color:#000"':''}><span>${esc(p.name)}<span class="pc-count">${p.items.length} 項配對</span></span><span class="pc-qs"><select class="assign-qs-select" data-assign-qs="${p.id}"><option value="">QS</option><option value="Ben" ${p.assignedQs==='Ben'?'selected':''}>Ben</option><option value="Mary" ${p.assignedQs==='Mary'?'selected':''}>Mary</option><option value="Bella" ${p.assignedQs==='Bella'?'selected':''}>Bella</option><option value="Shih Min" ${p.assignedQs==='Shih Min'?'selected':''}>Shih Min</option></select><select class="assign-status-select" data-assign-status="${p.id}"><option value="">Status</option><option value="Pending info" ${p.status==='Pending info'?'selected':''}>Pending info</option><option value="Pending supplier quote" ${p.status==='Pending supplier quote'?'selected':''}>Pending supplier quote</option><option value="On the queue" ${p.status==='On the queue'?'selected':''}>On the queue</option><option value="Processing" ${p.status==='Processing'?'selected':''}>Processing</option><option value="Double check" ${p.status==='Double check'?'selected':''}>Double check</option><option value="Completed" ${p.status==='Completed'?'selected':''}>Completed</option><option value="On hold" ${p.status==='On hold'?'selected':''}>On hold</option></select>${(Array.isArray(p.workLogs)?p.workLogs:[]).filter(l=>l.status==='confirmed').map(l=>`<span class="pc-log" title="Log Summary">${esc(l.summary)}</span>`).join('')}</span></summary><div class="project-detail">${p.zipMeta&&p.zipMeta.storagePath?`<div class="zip-bar"><span>📦 ${esc(p.zipMeta.name)} (${(p.zipMeta.size/1024).toFixed(1)} KB)${p.zipMeta.downloadUrl?' ✓ 已上傳':''}</span><button type="button" class="zip-download-btn" data-zip-download="${p.id}">⬇ Download file</button></div>`:''}
+function renderProjects(){state.projects.forEach(p=>{p.items=Array.isArray(p.items)?p.items:[];if(!Array.isArray(p.workLogs))p.workLogs=[];if(p.workLogSummary){if(!p.workLogs.length)p.workLogs=[{id:id(),summary:p.workLogSummary,status:'submited',createdAt:new Date().toISOString()}];delete p.workLogSummary}});$('projectCount')&&($('projectCount').textContent=state.projects.length?`(${state.projects.length})`:'');const openIds=new Set();document.querySelectorAll('.project-card[open]').forEach(el=>{const pid=el.dataset.projectCard;if(pid)openIds.add(pid)});$('projectList').innerHTML=state.projects.length?state.projects.map(p=>`<details class="project-card" ${openIds.has(p.id)?'open':''} data-project-card="${p.id}"><summary${p.priority==='URGENT'&&p.status!=='Completed'?' style="background:#b2fc58;color:#000"':''}><span>${esc(p.name)}<span class="pc-count">${p.items.length} 項配對</span></span><span class="pc-qs"><select class="assign-qs-select" data-assign-qs="${p.id}"><option value="">QS</option><option value="Ben" ${p.assignedQs==='Ben'?'selected':''}>Ben</option><option value="Mary" ${p.assignedQs==='Mary'?'selected':''}>Mary</option><option value="Bella" ${p.assignedQs==='Bella'?'selected':''}>Bella</option><option value="Shih Min" ${p.assignedQs==='Shih Min'?'selected':''}>Shih Min</option></select><select class="assign-status-select" data-assign-status="${p.id}"><option value="">Status</option><option value="Pending info" ${p.status==='Pending info'?'selected':''}>Pending info</option><option value="Pending supplier quote" ${p.status==='Pending supplier quote'?'selected':''}>Pending supplier quote</option><option value="On the queue" ${p.status==='On the queue'?'selected':''}>On the queue</option><option value="Processing" ${p.status==='Processing'?'selected':''}>Processing</option><option value="Double check" ${p.status==='Double check'?'selected':''}>Double check</option><option value="Completed" ${p.status==='Completed'?'selected':''}>Completed</option><option value="On hold" ${p.status==='On hold'?'selected':''}>On hold</option></select>${(Array.isArray(p.workLogs)?p.workLogs:[]).filter(l=>l.status==='confirmed').map(l=>`<span class="pc-log" title="Log Summary">${esc(l.summary)}</span>`).join('')}</span></summary><div class="project-detail">${p.zipMeta&&p.zipMeta.storagePath?`<div class="zip-bar"><span>📦 ${esc(p.zipMeta.name)} (${(p.zipMeta.size/1024).toFixed(1)} KB)${p.zipMeta.downloadUrl?' ✓ 已上傳':''}</span><button type="button" class="zip-download-btn" data-zip-download="${p.id}">⬇ Download file</button></div>`:''}
 <div class="p-inner-tabs"><button class="p-inner-tab active" data-ptab="${p.id}" data-ptab-panel="info">Client info:<em></em></button><button class="p-inner-tab" data-ptab="${p.id}" data-ptab-panel="matched">Matched Items<em></em></button><button class="p-inner-tab" data-ptab="${p.id}" data-ptab-panel="partition">PARTITION<em></em></button><button class="p-inner-tab" data-ptab="${p.id}" data-ptab-panel="door">DOOR<em></em></button><button class="p-inner-tab" data-ptab="${p.id}" data-ptab-panel="ow">OW<em></em></button><button class="p-inner-tab" data-ptab="${p.id}" data-ptab-panel="notes">Work Log</button></div>
 <div class="p-inner-panel" data-ptab-panel="${p.id}|info">
 ${projectInputs(p)}<div class="project-info"><div>Sales: ${esc(p.sales||'-')}</div><div>等級: ${esc(p.priority||'-')}</div>${p.deadline?`<div>Deadline: ${esc(p.deadline)}</div>`:''}<div>QS: ${esc(p.assignedQs||'-')}</div><div>Status: ${esc(p.status||'-')}</div><div>Address: ${esc(p.address||'-')}</div><div>Tenderer: ${esc(p.tenderer||'-')}</div><div>Attn: ${esc(p.attn||'-')}</div><div>Tel: ${esc(p.tel||'-')}</div><div>Email: ${esc(p.email||'-')}</div><div>Mobile: ${esc(p.mobile||'-')}</div><div>Fax: ${esc(p.fax||'-')}</div></div></div>
@@ -152,7 +152,7 @@ function renderDashboard(){
   const STATUS_ORDER = ['Pending info','Pending supplier quote','On the queue','Processing','Double check','On hold'];
   const STATUS_CSS = {'Pending info':'pending-info','Pending supplier quote':'pending-supplier-quote','On the queue':'on-the-queue','Processing':'processing','Double check':'double-check','On hold':'on-hold'};
   const incomplete = state.projects.filter(p => p.status !== 'Completed');
-  $('dashboardCount').textContent = incomplete.length ? `(${incomplete.length})` : '';
+  $('dashboardCount') && ($('dashboardCount').textContent = incomplete.length ? `(${incomplete.length})` : '');
   const grouped = {};
   STATUS_ORDER.forEach(s => { grouped[s] = []; });
   incomplete.forEach(p => {
@@ -182,22 +182,72 @@ const CONFIRMED_DROPDOWNS = [
   { label: 'PROJECT ADMIN', options: ['UPDATED','PENDING'] },
   { label: 'PICKLIST (DO)', options: ['NOT YET','DO1','DO2','DO3','DO4','DO5','DO6','D07','DO8','DO9','DO10','D011'] }
 ];
-function renderConfirmed(){
-  const list = document.getElementById('confirmedList');
-  if (!list) return;
-  const hits = state.projects
+function _confirmedHits(){
+  return state.projects
     .map(p => ({ p, logs: (Array.isArray(p.workLogs)?p.workLogs:[]).filter(l => l.status === 'confirmed') }))
     .filter(x => x.logs.length > 0)
     .sort((a,b) => (a.p.name||'').localeCompare(b.p.name||''));
-  list.innerHTML = hits.length
-    ? hits.map(({p, logs}) => {
-        const summary = Array.isArray(p.confirmSummary)?p.confirmSummary:[];
-        const selects = CONFIRMED_DROPDOWNS.map(dd=>`<label class="confirmed-select"><span>${esc(dd.label)}</span><select data-confirmed-select="${p.id}" data-confirmed-type="${esc(dd.label)}"><option value="">—</option>${dd.options.map(o=>`<option value="${esc(o)}">${esc(o)}</option>`).join('')}</select></label>`).join('');
-        const items = summary.map(r=>`<div class="confirmed-summary-item"><span class="cs-label">${esc(r.label)}</span><span class="cs-value">${esc(r.value)}</span><span class="cs-date">${esc((r.createdAt||'').slice(0,10))}</span><button type="button" class="worklog-btn worklog-del" data-confirmed-del="${p.id}|${r.id}" title="刪除">✕</button></div>`).join('');
-        return `<div class="confirmed-card" data-confirmed-card="${p.id}"><div class="confirmed-card-head"><strong class="confirmed-card-name" data-confirmed-open="${p.id}" title="開啟 Work Log">${esc(p.name)}</strong>${p.priority==='URGENT'?'<span class="confirmed-urgent">URGENT</span>':''}${p.sales?`<span class="confirmed-qs">Sales: ${esc(p.sales)}</span>`:''}${p.assignedQs?`<span class="confirmed-qs">QS: ${esc(p.assignedQs)}</span>`:''}</div><div class="confirmed-card-logs">${logs.map(l=>`<span class="pc-log" title="${esc(l.summary)}">${esc(l.summary)}</span>`).join('')}</div><div class="confirmed-selects">${selects}</div><button type="button" class="confirmed-toggle" data-confirmed-toggle="${p.id}">▶ Summary (${summary.length})</button><div class="confirmed-summary" data-confirmed-summary="${p.id}" style="display:none">${items||'<div class="worklog-empty">尚無 Summary 記錄。</div>'}</div></div>`;
-      }).join('')
-    : '<div class="project-empty">尚無已確認 (confirmed) 的 Work Log。</div>';
 }
+function _confirmedCardHtml(p, logs){
+  const summary = Array.isArray(p.confirmSummary)?p.confirmSummary:[];
+  const selects = CONFIRMED_DROPDOWNS.map(dd=>`<label class="confirmed-select"><span>${esc(dd.label)}</span><select data-confirmed-select="${p.id}" data-confirmed-type="${esc(dd.label)}"><option value="">—</option>${dd.options.map(o=>`<option value="${esc(o)}">${esc(o)}</option>`).join('')}</select></label>`).join('');
+  const items = summary.map(r=>`<div class="confirmed-summary-item"><span class="cs-label">${esc(r.label)}</span><span class="cs-value">${esc(r.value)}</span><span class="cs-date">${esc((r.createdAt||'').slice(0,10))}</span><button type="button" class="worklog-btn worklog-del" data-confirmed-del="${p.id}|${r.id}" title="刪除">✕</button></div>`).join('');
+  return `<div class="confirmed-card" data-confirmed-card="${p.id}"><div class="confirmed-card-head"><strong class="confirmed-card-name" data-confirmed-open="${p.id}" title="開啟 Work Log">${esc(p.name)}</strong>${p.priority==='URGENT'?'<span class="confirmed-urgent">URGENT</span>':''}${p.sales?`<span class="confirmed-qs">Sales: ${esc(p.sales)}</span>`:''}${p.assignedQs?`<span class="confirmed-qs">QS: ${esc(p.assignedQs)}</span>`:''}</div><div class="confirmed-card-logs">${logs.map(l=>`<span class="pc-log" title="${esc(l.summary)}">${esc(l.summary)}</span>`).join('')}</div><div class="confirmed-selects">${selects}</div><button type="button" class="confirmed-toggle" data-confirmed-toggle="${p.id}">▶ Summary (${summary.length})</button><div class="confirmed-summary" data-confirmed-summary="${p.id}" style="display:none">${items||'<div class="worklog-empty">尚無 Summary 記錄。</div>'}</div></div>`;
+}
+// PROJECT CONFIRMED：檢索式下拉 — 唯有檢索並選取才顯示該 project 的內容，否則空白
+renderConfirmed.selectedId = null;
+function renderConfirmed(){
+  const list = document.getElementById('confirmedList');
+  if (!list) return;
+  const hits = _confirmedHits();
+  // 檢索下拉清單（所有 confirmed project）
+  const dd = document.getElementById('confirmedDropdown');
+  if (dd) {
+    dd.innerHTML = hits.length
+      ? hits.map(({p}) => `<div class="ps-item" data-confirmed-pick="${p.id}">${esc(p.name)}${p.assignedQs?`<small style="color:#7a97b0;font-weight:400"> (${esc(p.assignedQs)})</small>`:''}</div>`).join('')
+      : '<div class="ps-empty">尚無已確認 (confirmed) 的 Project</div>';
+  }
+  // 僅顯示選取的 project（若仍為 confirmed），否則空白提示
+  let sel = null;
+  if (renderConfirmed.selectedId) {
+    const hit = hits.find(x => x.p.id === renderConfirmed.selectedId);
+    if (hit) sel = hit;
+    else renderConfirmed.selectedId = null;
+  }
+  list.innerHTML = sel
+    ? _confirmedCardHtml(sel.p, sel.logs)
+    : '<div class="project-empty">請檢索並選取一個已確認 (confirmed) 的 Project。</div>';
+}
+
+// Confirmed searchable dropdown — filter + pick
+(function(){
+  const search = document.getElementById('confirmedSearch');
+  const dd = document.getElementById('confirmedDropdown');
+  if (!search || !dd) return;
+  dd.addEventListener('click', e => {
+    const item = e.target.closest('[data-confirmed-pick]');
+    if (!item) return;
+    renderConfirmed.selectedId = item.dataset.confirmedPick;
+    const p = state.projects.find(x => x.id === renderConfirmed.selectedId);
+    if (search && p) search.value = p.name;
+    dd.classList.remove('open');
+    renderConfirmed();
+  });
+  search.addEventListener('focus', () => { renderConfirmed(); dd.classList.add('open'); });
+  search.addEventListener('blur', () => setTimeout(() => dd.classList.remove('open'), 200));
+  search.addEventListener('input', () => {
+    const q = search.value.toLowerCase().trim();
+    let visible = 0;
+    dd.querySelectorAll('.ps-item').forEach(it => {
+      const match = !q || it.textContent.toLowerCase().includes(q);
+      it.style.display = match ? '' : 'none';
+      if (match) visible++;
+    });
+    const empty = dd.querySelector('.ps-empty');
+    if (empty) empty.style.display = visible ? 'none' : '';
+    dd.classList.add('open');
+  });
+})();
 
 // Click a confirmed project → jump to LISTED PROJECTS, open that card's Work Log tab
 document.addEventListener('click', e => {

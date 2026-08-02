@@ -95,6 +95,31 @@ await page.context().route(/gstatic\.com\/firebasejs/, r => r.fulfill({ status: 
 
   await page.evaluate(() => document.querySelector('.project-tab[data-project-tab="confirmed"]').click());
   await page.waitForTimeout(300);
+
+  // --- Initial: searchable dropdown present, NO card shown until a pick ---
+  const initial = await page.evaluate(() => ({
+    searchExists: !!document.getElementById('confirmedSearch'),
+    dropdownExists: !!document.getElementById('confirmedDropdown'),
+    cards: document.querySelectorAll('.confirmed-card').length,
+    emptyHint: document.querySelector('#confirmedList .project-empty') ? document.querySelector('#confirmedList .project-empty').textContent : null,
+  }));
+  console.log('Initial confirmed tab:', JSON.stringify(initial));
+  if (!initial.searchExists || !initial.dropdownExists) throw new Error('searchable dropdown missing');
+  if (initial.cards !== 0) throw new Error('no card should show before a pick');
+  if (!initial.emptyHint || initial.emptyHint.indexOf('請檢索並選取') === -1) throw new Error('empty hint missing');
+
+  // --- Pick Conf Project A from the dropdown → card appears with Sales/QS/logs ---
+  await page.evaluate(() => {
+    const search = document.getElementById('confirmedSearch');
+    search.value = 'Conf Project A';
+    search.dispatchEvent(new Event('input'));
+  });
+  await page.waitForTimeout(200);
+  await page.evaluate(() => {
+    const item = document.querySelector('[data-confirmed-pick]');
+    if (item) item.click();
+  });
+  await page.waitForTimeout(300);
   const confirmedList = await page.evaluate(() => {
     return Array.from(document.querySelectorAll('.confirmed-card')).map(card => ({
       name: card.querySelector('.confirmed-card-name').textContent,
@@ -102,8 +127,8 @@ await page.context().route(/gstatic\.com\/firebasejs/, r => r.fulfill({ status: 
       logs: Array.from(card.querySelectorAll('.pc-log')).map(b => b.textContent),
     }));
   });
-  console.log('Confirmed list:', JSON.stringify(confirmedList));
-  if (confirmedList.length !== 1) throw new Error('Expected 1 confirmed project, got ' + confirmedList.length);
+  console.log('After pick:', JSON.stringify(confirmedList));
+  if (confirmedList.length !== 1) throw new Error('Expected 1 confirmed card after pick, got ' + confirmedList.length);
   if (confirmedList[0].name !== 'Conf Project A') throw new Error('Wrong project shown: ' + confirmedList[0].name);
   if (JSON.stringify(confirmedList[0].logs) !== JSON.stringify(['A2VO3'])) {
     throw new Error('Confirmed summary wrong: ' + JSON.stringify(confirmedList[0].logs));
@@ -111,21 +136,42 @@ await page.context().route(/gstatic\.com\/firebasejs/, r => r.fulfill({ status: 
   if (confirmedList[0].head.indexOf('Sales: Sales A') === -1) throw new Error('Sales not shown: ' + confirmedList[0].head);
   if (confirmedList[0].head.indexOf('QS: Ben') === -1) throw new Error('QS not shown: ' + confirmedList[0].head);
 
-  // Demote A's log → tab empties
+  // --- Dropdown lists ONLY confirmed projects (Conf Project B is submited → absent) ---
+  const ddItems = await page.evaluate(() => {
+    document.getElementById('confirmedSearch').dispatchEvent(new Event('focus'));
+    return Array.from(document.querySelectorAll('#confirmedDropdown .ps-item')).map(i => i.textContent);
+  });
+  console.log('Dropdown items:', JSON.stringify(ddItems));
+  if (ddItems.length !== 1 || ddItems[0].indexOf('Conf Project A') === -1) throw new Error('dropdown should list only confirmed projects: ' + JSON.stringify(ddItems));
+
+  // --- Demote A's log → selected card clears back to empty ---
   await setLogStatus(idA, 'submited');
   await page.evaluate(() => document.querySelector('.project-tab[data-project-tab="confirmed"]').click());
   await page.waitForTimeout(200);
   const emptyState = await page.evaluate(() => ({
     cards: document.querySelectorAll('.confirmed-card').length,
-    empty: !!document.querySelector('.confirmed-list .project-empty'),
+    empty: !!document.querySelector('#confirmedList .project-empty'),
   }));
   console.log('After demote:', JSON.stringify(emptyState));
-  if (emptyState.cards !== 0 || !emptyState.empty) throw new Error('Confirmed tab should be empty');
+  if (emptyState.cards !== 0 || !emptyState.empty) throw new Error('Confirmed tab should be empty after demote');
 
-  // Re-confirm A, click its card → jump to LISTED + open Work Log tab of that project
+  // --- Re-confirm A, pick it, click its name → jump to LISTED + open Work Log tab ---
   await setLogStatus(idA, 'confirmed');
-  await page.evaluate(() => document.querySelector('.project-tab[data-project-tab="confirmed"]').click());
+  await page.evaluate(() => {
+    document.querySelector('.project-tab[data-project-tab="confirmed"]').click();
+  });
   await page.waitForTimeout(200);
+  await page.evaluate(() => {
+    const search = document.getElementById('confirmedSearch');
+    search.value = 'Conf Project A';
+    search.dispatchEvent(new Event('input'));
+  });
+  await page.waitForTimeout(200);
+  await page.evaluate(() => {
+    const item = document.querySelector('[data-confirmed-pick]');
+    if (item) item.click();
+  });
+  await page.waitForTimeout(300);
   await page.evaluate(() => document.querySelector('[data-confirmed-open]').click());
   await page.waitForTimeout(500);
   const jump = await page.evaluate((id) => {

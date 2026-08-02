@@ -51,6 +51,19 @@ await page.context().route(/gstatic\.com\/firebasejs/, r => r.fulfill({ status: 
   await page.evaluate(() => document.querySelector('.project-tab[data-project-tab="confirmed"]').click());
   await page.waitForTimeout(300);
 
+  // Pick the project from the searchable dropdown so its card shows
+  await page.evaluate(() => {
+    const search = document.getElementById('confirmedSearch');
+    search.value = 'Confirm Summary Proj';
+    search.dispatchEvent(new Event('input'));
+  });
+  await page.waitForTimeout(200);
+  await page.evaluate(() => {
+    const item = document.querySelector('[data-confirmed-pick]');
+    if (item) item.click();
+  });
+  await page.waitForTimeout(300);
+
   const cardUI = await page.evaluate(() => {
     const card = document.querySelector('.confirmed-card');
     const selects = Array.from(card.querySelectorAll('[data-confirmed-select]')).map(s => ({
@@ -141,6 +154,18 @@ await page.context().route(/gstatic\.com\/firebasejs/, r => r.fulfill({ status: 
   const reloaded = await page.evaluate(() => {
     document.querySelector('.project-tab[data-project-tab="confirmed"]').click();
     return true;
+  });
+  await page.waitForTimeout(300);
+  // re-pick the project after reload (selectedId is in-memory only)
+  await page.evaluate(() => {
+    const search = document.getElementById('confirmedSearch');
+    search.value = 'Confirm Summary Proj';
+    search.dispatchEvent(new Event('input'));
+  });
+  await page.waitForTimeout(200);
+  await page.evaluate(() => {
+    const item = document.querySelector('[data-confirmed-pick]');
+    if (item) item.click();
   });
   await page.waitForTimeout(300);
   const reloadState = await page.evaluate(() => {
