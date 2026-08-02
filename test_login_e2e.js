@@ -33,7 +33,9 @@ const { chromium } = require('playwright');
   if (ui.loginBtn !== 'Login') throw new Error('login button missing');
   if (ui.columns.split(' ').length < 2) throw new Error('not two-column layout');
 
-  // Login click → console.log("Login Clicked")
+  // Login click → console.log("Login Clicked") (fill fields first; empty fields show hint)
+  await page.fill('input[name="email"]', 'a@b.com');
+  await page.fill('input[name="password"]', 'x');
   await page.click('#loginBtn');
   await page.waitForTimeout(300);
   console.log('Console:', JSON.stringify(logs));

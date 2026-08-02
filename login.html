@@ -237,6 +237,7 @@
       <p class="login-sub">Please enter your credentials to continue.</p>
       <div class="login-error" id="loginError"></div>
 
+      <form id="loginForm" novalidate>
       <label class="login-field">Email
         <input type="email" name="email" placeholder="you@company.com" autocomplete="email">
       </label>
@@ -249,7 +250,8 @@
         <a href="#" class="login-forgot" id="forgotLink">Forgot Password?</a>
       </div>
 
-      <button type="button" class="login-btn" id="loginBtn">Login</button>
+      <button type="submit" class="login-btn" id="loginBtn">Login</button>
+      </form>
       <div class="login-hint">Forgot Password is displayed for reference only.</div>
 
       <div class="login-version"><span>RFQ Itemizer</span><b>Version 1.0</b></div>
@@ -268,18 +270,45 @@
       el.classList.add('show');
     }
 
-    document.getElementById('loginBtn').addEventListener('click', function() {
-      console.log('Login Clicked');
+    // Firebase 錯誤碼 → 中文提示（便於判斷原因）
+    var AUTH_ERROR_HINTS = {
+      'auth/invalid-credential': 'Email 或密碼錯誤，請重新輸入',
+      'auth/wrong-password': '密碼錯誤',
+      'auth/user-not-found': '找不到此 Email 帳號',
+      'auth/invalid-email': 'Email 格式不正確',
+      'auth/operation-not-allowed': 'Firebase Console 尚未啟用 Email/Password 登入',
+      'auth/too-many-requests': '嘗試次數過多，請稍後再試',
+      'auth/network-request-failed': '網路連線失敗，請檢查網路'
+    };
+
+    function doLogin() {
+      var btn = document.getElementById('loginBtn');
       var auth = (window.T1 || {}).auth;
       var email = document.querySelector('input[name="email"]').value.trim();
       var password = document.querySelector('input[name="password"]').value;
 
+      if (!email || !password) { showLoginError('請輸入 Email 與 Password'); return; }
+
+      console.log('Login Clicked');
       // Auth 模組未載入（SDK 不可用）：視為成功直接進入主站（開發/測試用）
       if (!auth || !auth.handleLogin) { window.location.href = 'index.html'; return; }
 
+      if (btn) { btn.disabled = true; btn.textContent = 'Signing in…'; }
       auth.handleLogin(email, password).then(function(err) {
-        if (err) showLoginError(err); // 成功時 handleLogin 已導向 index.html
+        if (btn) { btn.disabled = false; btn.textContent = 'Login'; }
+        if (err) {
+          // 解析 Firebase error code 並加上中文提示
+          var code = (err.match(/\(([^)]+)\)/) || [])[1] || '';
+          var hint = AUTH_ERROR_HINTS[code] || '';
+          showLoginError(hint ? err + '\n' + hint : err);
+        }
+        // 成功時 handleLogin 已導向 index.html
       });
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      doLogin();
     });
 
     // 已登入狀態開啟 login.html → 自動導向主站
