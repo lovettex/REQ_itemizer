@@ -8,6 +8,8 @@ window.T1.auth = {
   _auth: null,
   _init: null,
   _listeners: [],
+  _lastUser: null,
+  _initialized: false,
 
   // 初始化 Auth 並開始監聽登入狀態；回傳 Promise
   init: function() {
@@ -18,7 +20,12 @@ window.T1.auth = {
       if (!r) { self.available = false; return; }
       self._auth = r.auth;
       self.available = true;
+      // onAuthStateChanged 會等待 session 從 persistence 恢復完成後才回呼，
+      // 因此回呼的 user 才是正確狀態（不可用同步 currentUser() 判斷）
       r.authMod.onAuthStateChanged(r.auth, function(user) {
+        console.log('[T1 Auth] Auth State Changed:', user ? user.email : 'null');
+        self._lastUser = user;
+        self._initialized = true;
         self._notify(user);
       });
     });
@@ -30,15 +37,10 @@ window.T1.auth = {
     this._listeners.forEach(function(cb) { try { cb(user); } catch(e) {} });
   },
 
-  // 訂閱登入狀態；若已初始化，立即以目前狀態回呼一次
+  // 訂閱登入狀態；若 onAuthStateChanged 已回呼過，補發「最後已知狀態」
   onAuthChange: function(cb) {
-    var self = this;
     this._listeners.push(cb);
-    if (this._init) {
-      this._init.then(function() {
-        if (self.available) self._notify(self._auth.currentUser);
-      });
-    }
+    if (this._initialized) cb(this._lastUser);
   },
 
   currentUser: function() {
@@ -53,7 +55,11 @@ window.T1.auth = {
       if (!r) return 'Firebase Auth 無法載入，請稍後再試';
       return r.authMod.setPersistence(r.auth, r.authMod.browserLocalPersistence).then(function() {
         return r.authMod.signInWithEmailAndPassword(r.auth, email, password);
-      }).then(function() {
+      }).then(function(userCred) {
+        var u = userCred && userCred.user;
+        console.log('[T1 Auth] Login Success:', u ? u.email : '');
+        console.log('[T1 Auth] Current User:', self.currentUser() ? self.currentUser().email : 'null');
+        console.log('[T1 Auth] Redirecting to index.html');
         window.location.href = 'index.html';
         return null;
       }).catch(function(err) {

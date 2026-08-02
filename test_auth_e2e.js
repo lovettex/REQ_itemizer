@@ -13,7 +13,7 @@ window.T1.auth = {
   loginResult: null,   // null = success, string = error message
   signOutCalled: false,
   init: function() { return Promise.resolve(); },
-  onAuthChange: function(cb) { this._cb = cb; },
+  onAuthChange: function(cb) { this._cb = cb; cb(this._user); },
   currentUser: function() { return this._user; },
   handleLogin: function(email, password) {
     if (this.loginResult) return Promise.resolve(this.loginResult);

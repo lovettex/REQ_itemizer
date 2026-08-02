@@ -206,15 +206,18 @@
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script><script src="inventory.js"></script><script src="app.js"></script><script src="scan.js"></script>
   <script>
     // 登入守衛：未登入自動跳回 login.html（auth SDK 不可用時放行，不影響既有功能）
+    // 只依賴 onAuthStateChanged 回呼（session 恢復完成後的正確狀態），
+    // 避免在恢復前同步檢查 currentUser() 誤判 null 而把已登入用戶彈回 login。
     (function() {
       var auth = (window.T1 || {}).auth;
       if (!auth || !auth.init) return; // auth.js 未載入 → 放行
-      auth.init().then(function() {
-        if (!auth.available) return;   // SDK 不可用 → 放行
-        if (!auth.currentUser()) window.location.replace('login.html');
-      });
+      auth.init();
       auth.onAuthChange(function(user) {
-        if (auth.available && !user) window.location.replace('login.html');
+        if (!auth.available) return;   // SDK 不可用 → 放行
+        if (!user) {
+          console.log('[T1 Auth] 未登入，導向 login.html');
+          window.location.replace('login.html');
+        }
       });
 
       // Logout → 返回 login.html
