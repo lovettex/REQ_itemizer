@@ -440,3 +440,17 @@ input,select,textarea,.ow-row input,.ow-row select,.ow-row textarea,.ow-project-
   font-size:11px;color:#53606d;font-weight:600;
 }
 .zip-bar .zip-download-btn{margin-left:auto}
+
+/* === Topbar logout (auth) === */
+.topbar-right{display:flex;align-items:center;gap:14px}
+.topbar-logout{
+  border:1px solid rgba(255,255,255,.25);
+  border-radius:6px;
+  background:rgba(255,255,255,.06);
+  color:#dfe6ee;
+  padding:6px 14px;
+  font:inherit;font-size:11px;font-weight:700;
+  cursor:pointer;transition:.12s;
+}
+.topbar-logout:hover{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.4)}
+@media(max-width:620px){.topbar-sub{display:none}}

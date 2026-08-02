@@ -8,9 +8,17 @@
   <link rel="icon" type="image/png" sizes="48x48" href="data/favicon-48.png">
   <link rel="apple-touch-icon" sizes="180x180" href="data/favicon-48.png">
   <link rel="stylesheet" href="styles.css">
+  <script type="importmap">
+  {
+    "imports": {
+      "firebase/app": "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js",
+      "firebase/auth": "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"
+    }
+  }
+  </script>
 </head>
 <body>
-  <header class="topbar"><div class="brand"><span>T1</span>系統配置庫</div><div>System Partition Configuration · R6</div></header>
+  <header class="topbar"><div class="brand"><span>T1</span>系統配置庫</div><div class="topbar-right"><span class="topbar-sub">System Partition Configuration · R6</span><button type="button" class="topbar-logout" id="logoutBtn">Logout</button></div></header>
   <section class="panel projects project-wide">
     <div class="project-tab-bar">
       <button class="project-tab" data-project-tab="new"><span>NEW PROJECT</span></button>
@@ -193,6 +201,31 @@
   <script src="https://www.gstatic.com/firebasejs/11.9.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/11.9.0/firebase-storage-compat.js"></script>
   <script src="firestore-db.js"></script>
+  <script src="firebase.js"></script>
+  <script src="auth.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script><script src="inventory.js"></script><script src="app.js"></script><script src="scan.js"></script>
+  <script>
+    // 登入守衛：未登入自動跳回 login.html（auth SDK 不可用時放行，不影響既有功能）
+    (function() {
+      var auth = (window.T1 || {}).auth;
+      if (!auth || !auth.init) return; // auth.js 未載入 → 放行
+      auth.init().then(function() {
+        if (!auth.available) return;   // SDK 不可用 → 放行
+        if (!auth.currentUser()) window.location.replace('login.html');
+      });
+      auth.onAuthChange(function(user) {
+        if (auth.available && !user) window.location.replace('login.html');
+      });
+
+      // Logout → 返回 login.html
+      var btn = document.getElementById('logoutBtn');
+      if (btn) {
+        btn.addEventListener('click', function() {
+          if (auth && auth.signOut) auth.signOut();
+          else window.location.href = 'login.html';
+        });
+      }
+    })();
+  </script>
 </body>
 </html>

@@ -4,6 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sign In · RFQ Itemizer</title>
+  <script type="importmap">
+  {
+    "imports": {
+      "firebase/app": "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js",
+      "firebase/auth": "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"
+    }
+  }
+  </script>
   <style>
     :root{
       --bg-deep:#0d141b;
@@ -182,6 +190,15 @@
     .login-hint{
       margin-top:16px;font-size:11px;color:#5f7182;text-align:center;
     }
+    .login-error{
+      display:none;
+      margin:0 0 18px;padding:10px 12px;
+      border:1px solid rgba(255,120,120,.4);
+      border-radius:8px;
+      background:rgba(200,60,60,.14);
+      color:#ffb4b4;font-size:12px;line-height:1.5;
+    }
+    .login-error.show{display:block}
     .login-version{
       margin-top:auto;
       padding-top:28px;
@@ -218,6 +235,7 @@
     <section class="login-form">
       <h2>Sign In</h2>
       <p class="login-sub">Please enter your credentials to continue.</p>
+      <div class="login-error" id="loginError"></div>
 
       <label class="login-field">Email
         <input type="email" name="email" placeholder="you@company.com" autocomplete="email">
@@ -238,11 +256,41 @@
     </section>
   </div>
 
+  <script src="firebase.js"></script>
+  <script src="auth.js"></script>
   <script>
-    // No real authentication yet — placeholder only.
+    // Firebase Authentication（Modular v10，經 auth.js）
+    // 登入成功 → 導向 index.html；失敗 → 顯示 Firebase error message。
+    function showLoginError(msg) {
+      var el = document.getElementById('loginError');
+      if (!el) return;
+      el.textContent = msg;
+      el.classList.add('show');
+    }
+
     document.getElementById('loginBtn').addEventListener('click', function() {
       console.log('Login Clicked');
+      var auth = (window.T1 || {}).auth;
+      var email = document.querySelector('input[name="email"]').value.trim();
+      var password = document.querySelector('input[name="password"]').value;
+
+      // Auth 模組未載入（SDK 不可用）：視為成功直接進入主站（開發/測試用）
+      if (!auth || !auth.handleLogin) { window.location.href = 'index.html'; return; }
+
+      auth.handleLogin(email, password).then(function(err) {
+        if (err) showLoginError(err); // 成功時 handleLogin 已導向 index.html
+      });
     });
+
+    // 已登入狀態開啟 login.html → 自動導向主站
+    (function() {
+      var auth = (window.T1 || {}).auth;
+      if (!auth || !auth.init) return;
+      auth.init().then(function() {
+        if (auth.available && auth.currentUser()) window.location.replace('index.html');
+      });
+    })();
+
     // Forgot Password — display only, no function (prevent navigation).
     document.getElementById('forgotLink').addEventListener('click', function(e) {
       e.preventDefault();
