@@ -465,3 +465,27 @@ input,select,textarea,.ow-row input,.ow-row select,.ow-row textarea,.ow-project-
   white-space:nowrap;
 }
 @media(max-width:620px){.topbar-user{display:none}}
+
+/* === Zip choose button + status (replaces native file input UI) === */
+.zip-upload-label .zip-choose-btn{
+  justify-self:start;
+  display:inline-flex;align-items:center;gap:6px;
+  border:1px solid #0d5932;border-radius:6px;
+  background:#e8f5ee;color:#0d5932;
+  padding:7px 14px;font:inherit;font-size:12px;font-weight:700;
+  cursor:pointer;transition:.12s;
+}
+.zip-upload-label .zip-choose-btn:hover{background:#ceead7}
+.zip-file-status{font-size:11px;color:#53606d;font-weight:400;grid-column:1/-1}
+
+/* === Zip choose button + status (replaces native file input UI) === */
+.zip-upload-label .zip-choose-btn{
+  justify-self:start;
+  display:inline-flex;align-items:center;gap:6px;
+  border:1px solid #0d5932;border-radius:6px;
+  background:#e8f5ee;color:#0d5932;
+  padding:7px 14px;font:inherit;font-size:12px;font-weight:700;
+  cursor:pointer;transition:.12s;
+}
+.zip-upload-label .zip-choose-btn:hover{background:#ceead7}
+.zip-file-status{font-size:11px;color:#53606d;font-weight:400;grid-column:1/-1}

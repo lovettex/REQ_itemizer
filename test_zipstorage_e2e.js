@@ -53,15 +53,26 @@ const { chromium } = require('playwright');
   console.log('T1.storage ready:', ready);
   if (!ready) throw new Error('T1.storage should be ready with mock');
 
-  // 2. Label renamed
-  const label = await page.evaluate(() => document.querySelector('.zip-upload-label span').textContent);
-  console.log('Zip label:', JSON.stringify(label));
-  if (label !== '📦 Upload Zip file') throw new Error('label not renamed: ' + label);
+  // 2. Label renamed + Choose Zip file button + No file selected yet
+  const label = await page.evaluate(() => ({
+    title: document.querySelector('.zip-upload-label > span').textContent,
+    chooseBtn: document.querySelector('.zip-choose-btn') ? document.querySelector('.zip-choose-btn').textContent.trim() : null,
+    status: document.querySelector('[data-zip-status]') ? document.querySelector('[data-zip-status]').textContent : null,
+  }));
+  console.log('Zip UI:', JSON.stringify(label));
+  if (label.title !== '📦 Upload Zip file') throw new Error('label not renamed: ' + label.title);
+  if (label.chooseBtn !== 'Choose Zip file') throw new Error('choose button missing: ' + label.chooseBtn);
+  if (label.status !== 'No file selected yet') throw new Error('initial status wrong: ' + label.status);
 
   // 3. Create project with a ZIP file → upload should run
   await page.evaluate(() => document.querySelector('.project-tab[data-project-tab="new"]').click());
   await page.waitForTimeout(200);
   await page.setInputFiles('#projectForm [data-zip-upload]', { name: 'RFQ-Package.zip', mimeType: 'application/zip', buffer: Buffer.from('PK-mock-zip-data') });
+  await page.waitForTimeout(300);
+  // Status text should now show the selected file name
+  const afterPick = await page.evaluate(() => document.querySelector('[data-zip-status]').textContent);
+  console.log('Status after pick:', JSON.stringify(afterPick));
+  if (afterPick !== 'RFQ-Package.zip') throw new Error('status should show file name: ' + afterPick);
   await page.evaluate(() => {
     const form = document.getElementById('projectForm');
     form.querySelector('input[name="name"]').value = 'Zip Upload Proj';
