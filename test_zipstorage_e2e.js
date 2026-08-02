@@ -18,7 +18,10 @@ const { chromium } = require('playwright');
     window.firebase = {
       apps: [],
       initializeApp: () => { window.firebase.apps.push({}); },
-      firestore: () => ({ collection: () => ({ doc: () => ({ get: async () => ({ exists: false }) }) }) }),
+      firestore: () => ({ collection: () => ({ doc: () => ({
+        get: async () => ({ exists: false }),
+        set: async () => {}
+      }) }) }),
       storage: () => {
         // real SDK throws if no app was initialized first — mimics init ordering
         if (!window.firebase.apps.length) throw new Error('No Firebase App has been created');

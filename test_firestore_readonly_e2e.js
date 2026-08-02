@@ -23,7 +23,10 @@ async function openPage(browser, opts) {
               // deep copy — real Firestore snapshots are independent of the DB object
               return { exists: !!d, data: () => ({ items: JSON.parse(JSON.stringify(d || [])) }) };
             },
-            set: async () => { window.__fsWriteCalls++; throw new Error('readonly violated: set called'); }
+            set: async (data) => {
+              window.__fsWriteCalls++;
+              window.__cloud[id] = data && data.items; // simulate cloud write
+            }
           })
         })
       })
@@ -111,7 +114,7 @@ const localPair = [{ id: 'lp1', name: '本地配對 Y' }];
     await context.close();
   }
 
-  // --- 3. Web operations never write to Firestore ---
+  // --- 3. Web operations now WRITE to Firestore (cloud backup) ---
   {
     const { page, context } = await openPage(browser, {
       cloudPairs: cloudPair, cloudProjects: cloudProj,
@@ -121,19 +124,19 @@ const localPair = [{ id: 'lp1', name: '本地配對 Y' }];
     await page.evaluate(() => {
       document.querySelector('.project-tab[data-project-tab="new"]').click();
       const form = document.getElementById('projectForm');
-      form.querySelector('input[name="name"]').value = '唯讀測試專案';
+      form.querySelector('input[name="name"]').value = '雲端寫入測試';
       form.dispatchEvent(new Event('submit', { cancelable: true }));
     });
     await page.waitForTimeout(600);
     const r = await page.evaluate(() => ({
       writes: window.__fsWriteCalls,
       lsProjects: JSON.parse(localStorage.getItem('t1-projects') || '[]').length,
-      cloudProjectsStill: (window.__cloud.projects || []).length,
+      cloudProjectNames: (window.__cloud.projects || []).map(x => x.name),
     }));
-    console.log('3. Readonly writes:', JSON.stringify(r));
-    if (r.writes !== 0) throw new Error('web operation must NOT write to Firestore (writes=' + r.writes + ')');
-    if (r.lsProjects === 0) throw new Error('web op should still save to localStorage');
-    if (r.cloudProjectsStill !== 1) throw new Error('cloud data must remain untouched');
+    console.log('3. Cloud write:', JSON.stringify(r));
+    if (r.writes === 0) throw new Error('web operation SHOULD write to Firestore');
+    if (r.lsProjects === 0) throw new Error('web op should also save to localStorage');
+    if (!r.cloudProjectNames.includes('雲端寫入測試')) throw new Error('cloud should contain the new project: ' + JSON.stringify(r.cloudProjectNames));
     await context.close();
   }
 

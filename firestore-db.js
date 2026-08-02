@@ -94,13 +94,21 @@
       });
     },
 
-    // 網頁唯讀雲端：save 只寫 localStorage，不寫 Firestore（雲端資料以 Firebase 端為主）
+    // save：localStorage 同步寫（UI 即時） + Firestore 異步寫（雲端備份，與 localStorage 同時觸發）
     savePairs: function(pairs) {
       lsWrite(LS_PAIRS, pairs);
+      if (!this.db) return;
+      this.db.collection(COLLECTION).doc('pairs')
+        .set({ items: pairs, updatedAt: new Date().toISOString() })
+        .catch(function(e) { console.warn('[T1 Firestore] savePairs failed:', e.message); });
     },
 
     saveProjects: function(projects) {
       lsWrite(LS_PROJECTS, projects);
+      if (!this.db) return;
+      this.db.collection(COLLECTION).doc('projects')
+        .set({ items: projects, updatedAt: new Date().toISOString() })
+        .catch(function(e) { console.warn('[T1 Firestore] saveProjects failed:', e.message); });
     },
 
     _fallback: function() {

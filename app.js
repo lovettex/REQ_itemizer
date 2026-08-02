@@ -79,7 +79,7 @@ const categories = [...new Set(products.map(x => x.category))];
 const $ = id => document.getElementById(id);
 const state = {query:'',category:'',a1:null,a2:null,inventoryA1:'',inventoryA2:'',pairs:_lsRead('t1-product-pairs'),projects:_lsRead('t1-projects')};
 function _lsRead(key){try{return JSON.parse(localStorage.getItem(key)||'[]')}catch{return []}}
-function save(){localStorage.setItem('t1-product-pairs',JSON.stringify(state.pairs));localStorage.setItem('t1-projects',JSON.stringify(state.projects))}
+function save(){localStorage.setItem('t1-product-pairs',JSON.stringify(state.pairs));localStorage.setItem('t1-projects',JSON.stringify(state.projects));const _fs=(window.T1||{}).firestore;if(_fs&&_fs.ready){_fs.savePairs(state.pairs);_fs.saveProjects(state.projects)}}
 function esc(s){return String(s||'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
 function id(){return crypto.randomUUID()}
 function inventoryOptions(){return (window.inventoryDescriptions||[]).map(d=>`<option value="${esc(d)}"></option>`).join('')}
