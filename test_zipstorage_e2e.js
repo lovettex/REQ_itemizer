@@ -96,11 +96,14 @@ const { chromium } = require('playwright');
   });
   await page.waitForTimeout(300);
   const btn = await page.evaluate(() => {
+    const bar = document.querySelector('.project-card .zip-bar');
     const el = document.querySelector('[data-zip-download]');
-    return el ? el.textContent.trim() : null;
+    return { barExists: !!bar, barText: bar ? bar.textContent.replace(/\s+/g, ' ').trim() : null, btnText: el ? el.textContent.trim() : null };
   });
   console.log('Download button:', JSON.stringify(btn));
-  if (btn !== '⬇ Download Zip') throw new Error('Download Zip button missing');
+  if (!btn.barExists) throw new Error('zip-bar (Download file) missing in expanded card');
+  if (btn.barText.indexOf('RFQ-Package.zip') === -1 || btn.barText.indexOf('Download file') === -1) throw new Error('zip-bar content wrong: ' + btn.barText);
+  if (btn.btnText !== '⬇ Download file') throw new Error('Download button text wrong: ' + btn.btnText);
   await page.evaluate(() => document.querySelector('[data-zip-download]').click());
   const dlEvt = await page.waitForEvent('download', { timeout: 5000 }).catch(() => null);
   await page.waitForTimeout(300);

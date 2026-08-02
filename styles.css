@@ -431,3 +431,12 @@ input,select,textarea,.ow-row input,.ow-row select,.ow-row textarea,.ow-project-
   transition:.12s;
 }
 .zip-download-btn:hover{background:#ceead7}
+
+/* === Zip bar inside expanded project detail === */
+.zip-bar{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:7px 10px;margin:8px 0;
+  border:1px solid #bfe3cd;border-radius:7px;background:rgba(232,245,238,.55);
+  font-size:11px;color:#53606d;font-weight:600;
+}
+.zip-bar .zip-download-btn{margin-left:auto}
