@@ -88,4 +88,46 @@
 
   window.T1 = window.T1 || {};
   window.T1.firestore = fs;
+
+  // === T1.storage — Firebase Storage 抽象層（ZIP 上傳/下載）===
+  var st = {
+    ref: null,
+    ready: false,
+
+    init: function() {
+      if (typeof firebase === 'undefined' || !firebase.storage) {
+        console.warn('[T1 Storage] Firebase Storage SDK not loaded; upload disabled.');
+        return false;
+      }
+      try {
+        this.ref = firebase.storage();
+        this.ready = true;
+      } catch(e) {
+        console.warn('[T1 Storage] init failed, upload disabled:', e.message);
+        return false;
+      }
+      return true;
+    },
+
+    // 上傳 ZIP → Promise<{ storagePath, downloadUrl }>
+    uploadZip: function(projectId, file) {
+      var self = this;
+      if (!self.ready || !self.ref) return Promise.reject(new Error('[T1 Storage] not ready'));
+      var path = 'uploads/' + projectId + '/' + file.name;
+      return self.ref.ref(path).put(file).then(function(snapshot) {
+        return snapshot.ref.getDownloadURL().then(function(url) {
+          return { storagePath: path, downloadUrl: url };
+        });
+      });
+    },
+
+    // 依 storagePath 取得下載 URL
+    getDownloadUrl: function(storagePath) {
+      var self = this;
+      if (!self.ready || !self.ref) return Promise.reject(new Error('[T1 Storage] not ready'));
+      return self.ref.ref(storagePath).getDownloadURL();
+    }
+  };
+  st.init();
+  window.T1.storage = st;
 })();

@@ -415,3 +415,19 @@ input,select,textarea,.ow-row input,.ow-row select,.ow-row textarea,.ow-project-
   font-size: 13px; font-weight: 700; color: #53606d;
   letter-spacing: 0.04em;
 }
+
+/* === Zip download button === */
+.zip-download-btn{
+  justify-self:start;
+  border:1px solid #0d5932;
+  border-radius:6px;
+  background:#e8f5ee;
+  color:#0d5932;
+  padding:6px 12px;
+  font:inherit;
+  font-size:11px;
+  font-weight:700;
+  cursor:pointer;
+  transition:.12s;
+}
+.zip-download-btn:hover{background:#ceead7}

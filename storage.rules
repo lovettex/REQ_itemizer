@@ -1,0 +1,14 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // RFQ ITEMIZER ZIP uploads — single-user tool, open read/write under /uploads
+    match /uploads/{fileName=**} {
+      allow read, write: if true;
+    }
+
+    // Deny everything else
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
