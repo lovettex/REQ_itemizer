@@ -43,26 +43,49 @@ const localPair = [{ id: 'lp1', name: '本地配對 Y' }];
 (async () => {
   const browser = await chromium.launch();
 
-  // --- 1. Cloud has data → web shows cloud (authority), local cache updated ---
+  // --- 1. Cloud + local both have data → MERGED (neither side is lost) ---
   {
     const { page, context } = await openPage(browser, {
       cloudPairs: cloudPair, cloudProjects: cloudProj,
-      localPairs: localPair, localProjects: localProj, // different local data
+      localPairs: localPair, localProjects: localProj, // different ids from cloud
     });
     const r = await page.evaluate(() => {
       const lsP = JSON.parse(localStorage.getItem('t1-projects') || '[]');
       const lsR = JSON.parse(localStorage.getItem('t1-product-pairs') || '[]');
       return {
         projectNames: Array.from(document.querySelectorAll('.project-card summary')).map(s => s.textContent),
-        lsProjectName: lsP[0] ? lsP[0].name : null,
-        lsPairName: lsR[0] ? lsR[0].name : null,
+        lsProjectNames: lsP.map(x => x.name),
+        lsPairNames: lsR.map(x => x.name),
         writes: window.__fsWriteCalls,
       };
     });
-    console.log('1. Cloud-authority:', JSON.stringify(r));
-    if (r.lsProjectName !== '雲端專案 A') throw new Error('cloud project should replace local cache');
-    if (r.lsPairName !== '雲端配對 X') throw new Error('cloud pair should replace local cache');
-    if (!r.projectNames.join('').includes('雲端專案 A')) throw new Error('UI should show cloud project');
+    console.log('1. Merge cloud+local:', JSON.stringify(r));
+    if (r.lsProjectNames.length !== 2 || !r.lsProjectNames.includes('雲端專案 A') || !r.lsProjectNames.includes('本地專案 B')) {
+      throw new Error('both cloud & local projects must survive: ' + JSON.stringify(r.lsProjectNames));
+    }
+    if (r.lsPairNames.length !== 2 || !r.lsPairNames.includes('雲端配對 X') || !r.lsPairNames.includes('本地配對 Y')) {
+      throw new Error('both cloud & local pairs must survive: ' + JSON.stringify(r.lsPairNames));
+    }
+    if (!r.projectNames.join('').includes('本地專案 B') || !r.projectNames.join('').includes('雲端專案 A')) {
+      throw new Error('UI should show both projects');
+    }
+    await context.close();
+  }
+
+  // --- 1b. Same id in cloud & local → LOCAL wins (most recently operated) ---
+  {
+    const { page, context } = await openPage(browser, {
+      cloudPairs: null,
+      cloudProjects: [{ id: 'same-1', name: '雲端舊名稱', items: [] }],
+      localPairs: null,
+      localProjects: [{ id: 'same-1', name: '本地新名稱', items: [] }],
+    });
+    const r = await page.evaluate(() => {
+      const lsP = JSON.parse(localStorage.getItem('t1-projects') || '[]');
+      return { names: lsP.map(x => x.name), count: lsP.length };
+    });
+    console.log('1b. Same-id conflict:', JSON.stringify(r));
+    if (r.count !== 1 || r.names[0] !== '本地新名稱') throw new Error('local should win on same id: ' + JSON.stringify(r.names));
     await context.close();
   }
 

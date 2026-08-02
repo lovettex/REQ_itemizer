@@ -14,6 +14,28 @@
     try { localStorage.setItem(key, JSON.stringify(data)); } catch(e) {}
   }
 
+  // 合併本地與雲端兩份陣列（以 id 去重）：
+  // - 同 id 衝突 → 本地優先（本地為最近操作的一方）
+  // - 雲端有而本地沒有的 → 補進來（不丟失雲端資料）
+  // - 任一來源非陣列則忽略該來源
+  function _mergeById(localArr, cloudArr) {
+    var local = Array.isArray(localArr) ? localArr : [];
+    var cloud = Array.isArray(cloudArr) ? cloudArr : [];
+    var map = {};
+    var order = [];
+    function put(item) {
+      if (!item || typeof item !== 'object') return;
+      var key = item.id != null ? String(item.id) : null;
+      if (key == null) { order.push(item); return; } // 無 id：直接保留
+      if (!(key in map)) order.push(item);
+      map[key] = item;
+    }
+    // 本地先（衝突時本地優先），雲端後（補缺）
+    local.forEach(put);
+    cloud.forEach(put);
+    return order;
+  }
+
   var fs = {
     db: null,
     ready: false,
@@ -52,19 +74,17 @@
         self.db.collection(COLLECTION).doc('pairs').get(),
         self.db.collection(COLLECTION).doc('projects').get()
       ]).then(function(results) {
-        // 雲端為權威：doc 存在 → 用雲端資料；不存在 → 保留 localStorage 現有資料
-        // （絕不以空陣列覆寫本地，避免 commit/push 後重新載入造成資料消失）
+        // 合併模式：本地（最近操作）與雲端（先前快照）以 id 合併，
+        // 同 id 本地優先、雲端補缺 —— 任何一方的資料都不因重新載入而丟失
         var localPairs = lsRead(LS_PAIRS);
         var localProjects = lsRead(LS_PROJECTS);
-        var out = { pairs: localPairs, projects: localProjects, cloud: { pairs: false, projects: false } };
-        if (results[0].exists) {
-          out.pairs = results[0].data().items || [];
-          out.cloud.pairs = true;
-        }
-        if (results[1].exists) {
-          out.projects = results[1].data().items || [];
-          out.cloud.projects = true;
-        }
+        var cloudPairs = results[0].exists ? (results[0].data().items || []) : [];
+        var cloudProjects = results[1].exists ? (results[1].data().items || []) : [];
+        var out = {
+          pairs: _mergeById(localPairs, cloudPairs),
+          projects: _mergeById(localProjects, cloudProjects),
+          cloud: { pairs: results[0].exists, projects: results[1].exists }
+        };
         lsWrite(LS_PAIRS, out.pairs);
         lsWrite(LS_PROJECTS, out.projects);
         return out;
