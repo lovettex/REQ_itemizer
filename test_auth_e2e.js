@@ -69,7 +69,10 @@ window.T1.auth = {
   await page.waitForURL('**/index.html', { timeout: 5000 });
   console.log('3. Login success →', page.url());
 
-  // --- 4. Logout → back to login.html ---
+  // --- 4. Logout → back to login.html (user name shown in topbar while logged in) ---
+  const userName = await page.evaluate(() => document.getElementById('topbarUser').textContent);
+  console.log('4. Topbar user:', JSON.stringify(userName));
+  if (userName.indexOf('bad@user.com') === -1) throw new Error('user name not shown in topbar: ' + userName);
   const logoutBtn = page.locator('#logoutBtn');
   if (await logoutBtn.count() === 0) throw new Error('Logout button missing on index.html');
   await logoutBtn.click();

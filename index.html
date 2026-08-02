@@ -18,7 +18,7 @@
   </script>
 </head>
 <body>
-  <header class="topbar"><div class="brand"><span>T1</span>系統配置庫</div><div class="topbar-right"><span class="topbar-sub">System Partition Configuration · R6</span><button type="button" class="topbar-logout" id="logoutBtn">Logout</button></div></header>
+  <header class="topbar"><div class="brand"><span>T1</span>系統配置庫</div><div class="topbar-right"><span class="topbar-sub">System Partition Configuration · R6</span><span class="topbar-user" id="topbarUser"></span><button type="button" class="topbar-logout" id="logoutBtn">Logout</button></div></header>
   <section class="panel projects project-wide">
     <div class="project-tab-bar">
       <button class="project-tab" data-project-tab="new"><span>NEW PROJECT</span></button>
@@ -214,6 +214,14 @@
       auth.init();
       auth.onAuthChange(function(user) {
         if (!auth.available) return;   // SDK 不可用 → 放行
+        // 顯示登入使用者名稱（displayName 或 email）在 Logout 旁
+        var userEl = document.getElementById('topbarUser');
+        if (user) {
+          var name = user.displayName || user.email || '';
+          if (userEl) userEl.textContent = '👤 ' + name;
+        } else {
+          if (userEl) userEl.textContent = '';
+        }
         if (!user) {
           console.log('[T1 Auth] 未登入，導向 login.html');
           window.location.replace('login.html');

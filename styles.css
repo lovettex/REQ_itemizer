@@ -454,3 +454,14 @@ input,select,textarea,.ow-row input,.ow-row select,.ow-row textarea,.ow-project-
 }
 .topbar-logout:hover{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.4)}
 @media(max-width:620px){.topbar-sub{display:none}}
+
+/* === Topbar user name (auth) === */
+.topbar-user{
+  font-size:12px;font-weight:600;color:#dfe6ee;
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.18);
+  border-radius:6px;
+  padding:5px 12px;
+  white-space:nowrap;
+}
+@media(max-width:620px){.topbar-user{display:none}}
