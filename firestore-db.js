@@ -36,6 +36,8 @@
         if (!firebase.apps.length) firebase.initializeApp(self.config);
         this.db = firebase.firestore();
         this.ready = true;
+        // Storage 需在 initializeApp 之後才能初始化（firebase.storage() 需要已建立的 app）
+        st.init();
       } catch(e) {
         console.warn('[T1 Firestore] init failed, using localStorage only:', e.message);
         return Promise.resolve(self._fallback());
@@ -128,6 +130,5 @@
       return self.ref.ref(storagePath).getDownloadURL();
     }
   };
-  st.init();
   window.T1.storage = st;
 })();

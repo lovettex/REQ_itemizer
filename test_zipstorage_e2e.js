@@ -17,20 +17,24 @@ const { chromium } = require('playwright');
     window.__storageCalls = { puts: [], downloads: [] };
     window.firebase = {
       apps: [],
-      initializeApp: () => {},
+      initializeApp: () => { window.firebase.apps.push({}); },
       firestore: () => ({ collection: () => ({ doc: () => ({ get: async () => ({ exists: false }) }) }) }),
-      storage: () => ({
-        ref: (path) => ({
-          put: async () => {
-            window.__storageCalls.puts.push(path);
-            return { ref: { getDownloadURL: async () => 'https://mock-dl/' + encodeURIComponent(path) } };
-          },
-          getDownloadURL: async () => {
-            window.__storageCalls.downloads.push(path);
-            return 'https://mock-dl/' + encodeURIComponent(path);
-          }
-        })
-      })
+      storage: () => {
+        // real SDK throws if no app was initialized first — mimics init ordering
+        if (!window.firebase.apps.length) throw new Error('No Firebase App has been created');
+        return {
+          ref: (path) => ({
+            put: async () => {
+              window.__storageCalls.puts.push(path);
+              return { ref: { getDownloadURL: async () => 'https://mock-dl/' + encodeURIComponent(path) } };
+            },
+            getDownloadURL: async () => {
+              window.__storageCalls.downloads.push(path);
+              return 'https://mock-dl/' + encodeURIComponent(path);
+            }
+          })
+        };
+      }
     };
   });
   const page = await context.newPage();
