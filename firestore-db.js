@@ -73,25 +73,30 @@
       return Promise.all([
         self.db.collection(COLLECTION).doc('pairs').get(),
         self.db.collection(COLLECTION).doc('projects').get(),
-        self.db.collection(COLLECTION).doc('mixmatch').get()
+        self.db.collection(COLLECTION).doc('mixmatch').get(),
+        self.db.collection(COLLECTION).doc('viewerPos').get()
       ]).then(function(results) {
         // 合併模式：本地（最近操作）與雲端（先前快照）以 id 合併，
         // 同 id 本地優先、雲端補缺 —— 任何一方的資料都不因重新載入而丟失
         var localPairs = lsRead(LS_PAIRS);
         var localProjects = lsRead(LS_PROJECTS);
         var localMixNotes = (function(){ try { return JSON.parse(localStorage.getItem('t1-mixmatch-notes') || '{}'); } catch(e) { return {}; } })();
+        var localViewerPos = (function(){ try { return JSON.parse(localStorage.getItem('t1-viewer-positions') || '{}'); } catch(e) { return {}; } })();
         var cloudPairs = results[0].exists ? (results[0].data().items || []) : [];
         var cloudProjects = results[1].exists ? (results[1].data().items || []) : [];
         var cloudMixNotes = results[2].exists ? (results[2].data().items || {}) : {};
+        var cloudViewerPos = results[3].exists ? (results[3].data().items || {}) : {};
         var out = {
           pairs: _mergeById(localPairs, cloudPairs),
           projects: _mergeById(localProjects, cloudProjects),
           mixNotes: Object.assign({}, cloudMixNotes, localMixNotes), // 備註：本地優先、雲端補缺
-          cloud: { pairs: results[0].exists, projects: results[1].exists, mixmatch: results[2].exists }
+          viewerPos: Object.assign({}, cloudViewerPos, localViewerPos), // 檢視位置：本地優先、雲端補缺
+          cloud: { pairs: results[0].exists, projects: results[1].exists, mixmatch: results[2].exists, viewerPos: results[3].exists }
         };
         lsWrite(LS_PAIRS, out.pairs);
         lsWrite(LS_PROJECTS, out.projects);
         localStorage.setItem('t1-mixmatch-notes', JSON.stringify(out.mixNotes));
+        localStorage.setItem('t1-viewer-positions', JSON.stringify(out.viewerPos));
         return out;
       }).catch(function(err) {
         console.warn('[T1 Firestore] loadAll failed, falling back to localStorage:', err.message);
@@ -122,6 +127,14 @@
       this.db.collection(COLLECTION).doc('mixmatch')
         .set({ items: notes || {}, updatedAt: new Date().toISOString() })
         .catch(function(e) { console.warn('[T1 Firestore] saveMixNotes failed:', e.message); });
+    },
+
+    // 檢視器儲存位置 → Firestore（doc 'viewerPos'，雲端備份，跨設備保留）
+    saveViewerPos: function(positions) {
+      if (!this.db) return;
+      this.db.collection(COLLECTION).doc('viewerPos')
+        .set({ items: positions || {}, updatedAt: new Date().toISOString() })
+        .catch(function(e) { console.warn('[T1 Firestore] saveViewerPos failed:', e.message); });
     },
 
     _fallback: function() {

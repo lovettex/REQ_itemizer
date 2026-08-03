@@ -156,6 +156,22 @@ const localPair = [{ id: 'lp1', name: '本地配對 Y' }];
     await context.close();
   }
 
+  // --- 5. saveViewerPos writes to Firestore (cross-device positions) ---
+  {
+    const { page, context } = await openPage(browser, {
+      cloudPairs: null, cloudProjects: null, localPairs: null, localProjects: null,
+    });
+    await page.evaluate(() => {
+      const fs = (window.T1 || {}).firestore;
+      fs.saveViewerPos({ 'GF - 1': { scale: 2.5, tx: 120, ty: -30 } });
+    });
+    await page.waitForTimeout(300);
+    const r = await page.evaluate(() => ({ cloud: window.__cloud.viewerPos }));
+    console.log('5. saveViewerPos cloud:', JSON.stringify(r));
+    if (!r.cloud || !r.cloud['GF - 1'] || r.cloud['GF - 1'].scale !== 2.5) throw new Error('saveViewerPos should be written to cloud');
+    await context.close();
+  }
+
   await browser.close();
   console.log('\nE2E FIRESTORE READ-ONLY TEST PASSED');
 })().catch(e => { console.error('E2E FAILED:', e.message); process.exit(1); });
