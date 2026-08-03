@@ -12,6 +12,11 @@
  */
 export default {
   async fetch(request, env) {
+    // CORS preflight (browser sends OPTIONS before a cross-origin POST)
+    if (request.method === 'OPTIONS') {
+      return new Response(null, { status: 204, headers: cors() });
+    }
+
     // Only POST is supported
     if (request.method !== 'POST') {
       return new Response('Method Not Allowed', { status: 405, headers: cors() });
