@@ -58,7 +58,8 @@ export default {
       const text = await res.text();
       if (!res.ok) {
         console.error('[worker] Resend error', res.status, text);
-        return json({ ok: false, error: 'Resend rejected: ' + res.status }, 502);
+        // Include Resend's detail so the frontend/console can pinpoint the cause
+        return json({ ok: false, error: 'Resend rejected: ' + res.status + ' ' + text.slice(0, 300) }, 502);
       }
       return json({ ok: true, id: text }, 200);
     } catch (err) {
