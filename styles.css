@@ -489,3 +489,44 @@ input,select,textarea,.ow-row input,.ow-row select,.ow-row textarea,.ow-project-
 }
 .zip-upload-label .zip-choose-btn:hover{background:#ceead7}
 .zip-file-status{font-size:11px;color:#53606d;font-weight:400;grid-column:1/-1}
+
+/* === Mix & Match — 6-box picker above catalog search === */
+.mixmatch-section{padding:10px 0 6px}
+.mixmatch-head{display:flex;align-items:baseline;gap:10px;margin-bottom:8px}
+.mixmatch-title{font-size:12px;font-weight:800;color:#17202a;letter-spacing:.04em}
+.mixmatch-head small{font-size:10px;color:#7a8896}
+.mixmatch-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.mix-box{
+  position:relative;aspect-ratio:4/3;
+  border:1px dashed rgba(13,89,50,.35);border-radius:8px;
+  background:rgba(255,255,255,.45);
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;
+}
+.mix-box.empty .mix-empty-label{font-size:20px;color:#b6c2cd;font-weight:700}
+.mix-box.filled{
+  border-style:solid;border-color:#d8bb7d;background:#fffcf6;
+  animation:mix-pop .28s ease;
+}
+.mix-box.filled img{width:100%;height:100%;object-fit:cover;display:block}
+.mix-box.filled .mix-code{
+  position:absolute;left:0;right:0;bottom:0;
+  font-size:9px;font-weight:700;color:#fff;
+  background:rgba(13,24,34,.62);padding:2px 4px;text-align:center;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.mix-box.filled .mix-remove{
+  position:absolute;top:2px;right:2px;
+  width:18px;height:18px;border:0;border-radius:50%;
+  background:rgba(155,85,85,.9);color:#fff;font-size:10px;line-height:1;
+  cursor:pointer;display:grid;place-items:center;
+}
+.mix-box.filled .mix-remove:hover{background:#9b5555}
+@keyframes mix-pop{from{transform:scale(.7);opacity:.3}to{transform:scale(1);opacity:1}}
+.mix-fly{
+  position:fixed;z-index:9999;width:40px;height:40px;
+  object-fit:cover;border-radius:6px;pointer-events:none;
+  box-shadow:0 6px 16px rgba(31,58,92,.35);
+  transition:transform .5s cubic-bezier(.22,.61,.36,1),opacity .5s ease;
+}
+@media(max-width:620px){.mixmatch-grid{grid-template-columns:repeat(3,1fr)}}
