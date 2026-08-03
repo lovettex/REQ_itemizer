@@ -1,0 +1,7 @@
+{
+  "name": "rfq-email-worker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Cloudflare Worker — RFQ email sender via Resend API"
+}
