@@ -74,9 +74,18 @@
     ].join('');
   }
 
+  // Build a simple HTML wrapper for a plain-text mail content (Mail Request).
+  // Newlines are preserved and content is escaped.
+  function buildMailRequestHtml(content) {
+    return '<div style="font-family:Inter,Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;border:1px solid #e5e9ee;border-radius:10px;padding:22px 26px;">' +
+      '<pre style="white-space:pre-wrap;font-family:inherit;font-size:13px;color:#17202a;margin:0;line-height:1.6;">' + escHtml(content) + '</pre>' +
+      '</div>';
+  }
+
   global.T1 = global.T1 || {};
   global.T1.emailTemplate = {
     buildEmailSubject: buildEmailSubject,
-    buildEmailHtml: buildEmailHtml
+    buildEmailHtml: buildEmailHtml,
+    buildMailRequestHtml: buildMailRequestHtml
   };
 })(window);

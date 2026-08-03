@@ -93,7 +93,81 @@ const profileState = {query:'',category:''};
 function renderProfileFilters(){ $('profileFilters').innerHTML=profileCategories.map(x=>`<button class="filter ${profileState.category===x?'active':''}" data-pcat="${esc(x)}">${esc(x)}</button>`).join('');document.querySelectorAll('[data-pcat]').forEach(b=>b.onclick=()=>{profileState.category=profileState.category===b.dataset.pcat?'':b.dataset.pcat;renderProfileFilters();renderProfileResults()}) }
 function renderProfileResults(){const q=profileState.query.toLowerCase().replace(/\s/g,'');let shown=[];if(q||profileState.category){shown=profileProducts.filter(p=>(!profileState.category||p.category===profileState.category)&&(`${p.code}${p.category}`.toLowerCase().replace(/\s/g,'').includes(q)))};$('profileResultCount').textContent=`${shown.length} results`;$('profileEmpty').hidden=shown.length>0;$('profileEmpty').textContent=(!q&&!profileState.category)?'輸入檢索關鍵字或點選分類標籤以顯示內容':'No matching profiles.';$('profileResults').innerHTML=shown.map((p,n)=>`<article class="card"><img src="${p.image}" alt="${esc(p.code)}" data-profile-view="${profileProducts.indexOf(p)}" loading="${n>8?'lazy':'eager'}"><div class="card-body"><div class="code">${esc(p.code)}</div><div class="meta">${esc(p.category)}</div><div class="actions"><button data-mix-add-profile="${profileProducts.indexOf(p)}">Mix</button></div></div></article>`).join('');document.querySelectorAll('[data-profile-view]').forEach(x=>x.onclick=()=>openViewer(profileProducts[x.dataset.profileView]))}
 
-// === Mix & Match — 6 格搭配方框（存 localStorage，可管理移除、每格專屬備註）===
+// === Mail Request — per-project email composition + send (new feature) ===
+function buildMailContent(p){
+  const lines = [];
+  lines.push('=== CLIENT INFO ===');
+  lines.push('Project: ' + (p.name || ''));
+  lines.push('Sales: ' + (p.sales || '-'));
+  lines.push('Delivery Mode: ' + (p.priority || '-'));
+  if (p.deadline) lines.push('Deadline: ' + p.deadline);
+  lines.push('Address: ' + (p.address || '-'));
+  lines.push('Tenderer: ' + (p.tenderer || '-'));
+  lines.push('Attn: ' + (p.attn || '-'));
+  lines.push('Tel: ' + (p.tel || '-'));
+  lines.push('Email: ' + (p.email || '-'));
+  lines.push('Mobile: ' + (p.mobile || '-'));
+  lines.push('Fax: ' + (p.fax || '-'));
+  if (p.briefing) {
+    if (p.briefing.general) lines.push('Briefing General: ' + p.briefing.general);
+    if (p.briefing.layout) lines.push('Briefing Layout: ' + p.briefing.layout);
+  }
+  if (p.zipMeta) {
+    lines.push('');
+    lines.push('=== ZIP FILE ===');
+    lines.push('File: ' + (p.zipMeta.name || '') + ' (' + ((p.zipMeta.size || 0) / 1024).toFixed(1) + ' KB)' + (p.zipMeta.downloadUrl ? ' [Uploaded]' : ''));
+  }
+  ['PARTITION', 'DOOR', 'OPERABLE_WALL'].forEach(function(type) {
+    const items = (p.items || []).filter(i => i.type === type);
+    if (!items.length) return;
+    lines.push('');
+    lines.push('=== ' + type + ' (' + items.length + ') ===');
+    items.forEach(function(item, idx) {
+      const extra = item.extra || {};
+      const detail = Object.keys(extra).filter(k => extra[k]).map(k => k + ': ' + extra[k]).join(' | ');
+      const label = (item.pair && item.pair.name) ? item.pair.name : '';
+      lines.push((idx + 1) + '. ' + label + (detail ? ' — ' + detail : ''));
+    });
+  });
+  if ((p.workLogs || []).length) {
+    lines.push('');
+    lines.push('=== WORK LOG ===');
+    (p.workLogs || []).forEach(function(l) {
+      lines.push('[' + (l.status || 'submited') + '] ' + (l.summary || '') + ' (' + (l.createdAt || '').slice(0, 10) + ')');
+    });
+  }
+  return lines.join('\n');
+}
+// Send Mail Request — recipients (TO+CC, comma separated) each receive the composed email
+document.addEventListener('click', e => {
+  const btn = e.target.closest('[data-mail-send]');
+  if (!btn) return;
+  const p = state.projects.find(x => x.id === btn.dataset.mailSend);
+  if (!p) return;
+  const card = btn.closest('[data-mail-request]');
+  if (!card) return;
+  const toRaw = card.querySelector('[data-mail-to]').value;
+  const ccRaw = card.querySelector('[data-mail-cc]').value;
+  const subject = card.querySelector('[data-mail-subject]').value.trim();
+  const content = card.querySelector('[data-mail-content]').value;
+  const recipients = (toRaw + ',' + ccRaw).split(',').map(s => s.trim()).filter(Boolean);
+  if (!recipients.length) { toast('請輸入 TO 或 CC 收件人'); return; }
+  if (!subject) { toast('請輸入 Subject'); return; }
+  const es = (window.T1 || {}).emailService;
+  const et = (window.T1 || {}).emailTemplate;
+  if (!es || !es.sendEmail) { toast('Email 服務未就緒'); return; }
+  const html = et && et.buildMailRequestHtml ? et.buildMailRequestHtml(content) : '<pre>' + esc(content) + '</pre>';
+  btn.disabled = true; btn.textContent = 'Sending…';
+  Promise.all(recipients.map(function(to) {
+    return es.sendEmail({ to: to, subject: subject, html: html }).then(function(ok) { return ok; });
+  })).then(function(results) {
+    btn.disabled = false; btn.textContent = 'Send Email';
+    const okCount = results.filter(Boolean).length;
+    toast(okCount === recipients.length ? 'Email 已寄出 (' + okCount + '/' + recipients.length + ')' : '部分寄送失敗 (' + okCount + '/' + recipients.length + ')');
+  });
+});
+
+
 var mixState = _lsRead('t1-mixmatch');
 var mixNotes = (function(){ try { return JSON.parse(localStorage.getItem('t1-mixmatch-notes') || '{}'); } catch(e) { return {}; } })();
 var selectedMix = null;
@@ -230,7 +304,7 @@ function itemExtraBody(project,item){const type=item.type||'',extra=item.extra||
 function matchedItemsTable(project){const items=project.items.filter(i=>!i.type);if(!items.length)return'<div class="project-empty">尚無未分類商品。</div>';return'<div class="item-table-wrap"><table class="item-table"><thead><tr><th>#</th><th>商品名稱</th><th>配對資訊</th><th>分類</th><th></th></tr></thead><tbody>'+items.map((item,i)=>{const pairInfo=descriptionLine(item.pair);return'<tr><td>'+(i+1)+'</td><td>'+esc(item.pair.name)+'</td><td><small>'+pairInfo+'</small></td><td><select class="matched-type-select" data-matched-classify="'+project.id+'|'+item.id+'"><option value="">選擇分類</option><option value="PARTITION">PARTITION</option><option value="DOOR">DOOR</option></select></td><td class="item-actions"><button data-item-delete="'+project.id+'|'+item.id+'" class="project-delete">刪</button></td></tr>';}).join('')+'</tbody></table></div>';}
 function itemTable(project,type){const items=project.items.filter(i=>i.type===type);if(!items.length)return'<div class="project-empty">尚無 '+type+' 項目。</div>';const fields=extraFields[type]||[];const thead='<thead><tr><th>#</th>'+fields.map(([,l])=>'<th>'+l+'</th>').join('')+'<th>配對資訊</th><th></th></tr></thead>';const tbody='<tbody>'+items.map((item,i)=>{const CLICKABLE_KEYS=['verticalSection','horizontalSection','doorFrame','doorPanel'];const tds=fields.map(([k])=>{const v=item.extra[k];return'<td>'+(v?CLICKABLE_KEYS.includes(k)?'<span class="item-field-link" data-item-field-view="'+esc(v)+'">'+esc(v)+'</span>':esc(v):'—')+'</td>'}).join('');const pairInfo=descriptionLine(item.pair);const actions='<button data-up="'+project.id+'|'+item.id+'"'+(i===0?' disabled':'')+'>▲</button><button data-down="'+project.id+'|'+item.id+'"'+(i===items.length-1?' disabled':'')+'>▼</button><button data-item-delete="'+project.id+'|'+item.id+'" class="project-delete">刪</button><button data-item-edit="'+project.id+'|'+item.id+'" class="item-edit-btn">'+(item.extra&&Object.keys(item.extra).length?'編輯':'設定')+'</button>';return'<tr><td>'+(i+1)+'</td>'+tds+'<td>'+esc(item.pair.name)+'<br><small>'+pairInfo+'</small></td><td class="item-actions">'+actions+'</td></tr>'}).join('')+'</tbody>';const forms=items.map(item=>'<div class="item-extra-display" data-item-summary="'+project.id+'|'+item.id+'" style="display:none">'+itemExtraSummary(item)+'</div><form class="project-extra" data-item-extra-key="'+project.id+'|'+item.id+'" style="display:none">'+itemExtraBody(project,item)+'</form>').join('');return'<div class="item-table-wrap"><table class="item-table">'+thead+tbody+'</table></div>'+forms}
 function renderProjects(){state.projects.forEach(p=>{p.items=Array.isArray(p.items)?p.items:[];if(!Array.isArray(p.workLogs))p.workLogs=[];if(p.workLogSummary){if(!p.workLogs.length)p.workLogs=[{id:id(),summary:p.workLogSummary,status:'submited',createdAt:new Date().toISOString()}];delete p.workLogSummary}});$('projectCount')&&($('projectCount').textContent=state.projects.length?`(${state.projects.length})`:'');const openIds=new Set();document.querySelectorAll('.project-card[open]').forEach(el=>{const pid=el.dataset.projectCard;if(pid)openIds.add(pid)});$('projectList').innerHTML=state.projects.length?state.projects.map(p=>`<details class="project-card" ${openIds.has(p.id)?'open':''} data-project-card="${p.id}"><summary${p.priority==='URGENT'&&p.status!=='Completed'?' style="background:#b2fc58;color:#000"':''}><span>${esc(p.name)}<span class="pc-count">${p.items.length} 項配對</span></span><span class="pc-qs"><select class="assign-qs-select" data-assign-qs="${p.id}"><option value="">QS</option><option value="Ben" ${p.assignedQs==='Ben'?'selected':''}>Ben</option><option value="Mary" ${p.assignedQs==='Mary'?'selected':''}>Mary</option><option value="Bella" ${p.assignedQs==='Bella'?'selected':''}>Bella</option><option value="Shih Min" ${p.assignedQs==='Shih Min'?'selected':''}>Shih Min</option></select><select class="assign-status-select" data-assign-status="${p.id}"><option value="">Status</option><option value="Pending info" ${p.status==='Pending info'?'selected':''}>Pending info</option><option value="Pending supplier quote" ${p.status==='Pending supplier quote'?'selected':''}>Pending supplier quote</option><option value="On the queue" ${p.status==='On the queue'?'selected':''}>On the queue</option><option value="Processing" ${p.status==='Processing'?'selected':''}>Processing</option><option value="Double check" ${p.status==='Double check'?'selected':''}>Double check</option><option value="Completed" ${p.status==='Completed'?'selected':''}>Completed</option><option value="On hold" ${p.status==='On hold'?'selected':''}>On hold</option></select>${(Array.isArray(p.workLogs)?p.workLogs:[]).filter(l=>l.status==='confirmed').map(l=>`<span class="pc-log" title="Log Summary">${esc(l.summary)}</span>`).join('')}</span></summary><div class="project-detail">${p.zipMeta&&p.zipMeta.storagePath?`<div class="zip-bar"><span>📦 ${esc(p.zipMeta.name)} (${(p.zipMeta.size/1024).toFixed(1)} KB)${p.zipMeta.downloadUrl?' ✓ 已上傳':''}</span><button type="button" class="zip-download-btn" data-zip-download="${p.id}">⬇ Download file</button></div>`:''}
-<div class="p-inner-tabs"><button class="p-inner-tab active" data-ptab="${p.id}" data-ptab-panel="info">Client info:<em></em></button><button class="p-inner-tab" data-ptab="${p.id}" data-ptab-panel="matched">Matched Items<em></em></button><button class="p-inner-tab" data-ptab="${p.id}" data-ptab-panel="partition">PARTITION<em></em></button><button class="p-inner-tab" data-ptab="${p.id}" data-ptab-panel="door">DOOR<em></em></button><button class="p-inner-tab" data-ptab="${p.id}" data-ptab-panel="ow">OW<em></em></button><button class="p-inner-tab" data-ptab="${p.id}" data-ptab-panel="notes">Work Log</button></div>
+<div class="p-inner-tabs"><button class="p-inner-tab active" data-ptab="${p.id}" data-ptab-panel="info">Client info:<em></em></button><button class="p-inner-tab" data-ptab="${p.id}" data-ptab-panel="matched">Matched Items<em></em></button><button class="p-inner-tab" data-ptab="${p.id}" data-ptab-panel="partition">PARTITION<em></em></button><button class="p-inner-tab" data-ptab="${p.id}" data-ptab-panel="door">DOOR<em></em></button><button class="p-inner-tab" data-ptab="${p.id}" data-ptab-panel="ow">OW<em></em></button><button class="p-inner-tab" data-ptab="${p.id}" data-ptab-panel="notes">Work Log</button><button class="p-inner-tab" data-ptab="${p.id}" data-ptab-panel="mail">Mail Request</button></div>
 <div class="p-inner-panel" data-ptab-panel="${p.id}|info">
 ${projectInputs(p)}<div class="project-info"><div>Sales: ${esc(p.sales||'-')}</div><div>等級: ${esc(p.priority||'-')}</div>${p.deadline?`<div>Deadline: ${esc(p.deadline)}</div>`:''}<div>QS: ${esc(p.assignedQs||'-')}</div><div>Status: ${esc(p.status||'-')}</div><div>Address: ${esc(p.address||'-')}</div><div>Tenderer: ${esc(p.tenderer||'-')}</div><div>Attn: ${esc(p.attn||'-')}</div><div>Tel: ${esc(p.tel||'-')}</div><div>Email: ${esc(p.email||'-')}</div><div>Mobile: ${esc(p.mobile||'-')}</div><div>Fax: ${esc(p.fax||'-')}</div></div></div>
 <div class="p-inner-panel" data-ptab-panel="${p.id}|matched" style="display:none">${matchedItemsTable(p)}</div>
@@ -244,6 +318,7 @@ ${itemTable(p,'DOOR')}</div>
 <div class="item-scan-row"><button class="item-scan-btn" data-scan-items="${p.id}" type="button">📄 掃描 Excel</button><small class="item-scan-hint">從 Excel 匯入 OPERABLE WALL 項目</small></div>
 ${itemTable(p,'OPERABLE_WALL')}</div>
 <div class="p-inner-panel" data-ptab-panel="${p.id}|notes" style="display:none">${worklogFormHtml(p)}</div>
+<div class="p-inner-panel" data-ptab-panel="${p.id}|mail" style="display:none"><div class="mail-request-form" data-mail-request="${p.id}"><div class="mail-field"><label>TO:</label><input data-mail-to placeholder="name@example.com, name2@example.com"><small>使用逗號分隔多個收件人</small></div><div class="mail-field"><label>CC:</label><input data-mail-cc placeholder="cc@example.com"></div><div class="mail-field"><label>Subject:</label><input data-mail-subject placeholder="Email Subject"></div><div class="mail-field"><label>Content:</label><textarea data-mail-content rows="12">${esc(buildMailContent(p))}</textarea></div><button type="button" class="primary mail-send-btn" data-mail-send="${p.id}">Send Email</button></div></div>
 <button class="project-delete" data-project-delete="${p.id}">刪除 Project</button></div></details>`).join(''):'<div class="project-empty">尚未儲存 Project。</div>';document.querySelectorAll('[data-project-edit]').forEach(form=>form.onsubmit=async e=>{e.preventDefault();const p=state.projects.find(x=>x.id===form.dataset.projectEdit),f=new FormData(form);['name','sales','priority','deadline','address','tenderer','attn','tel','email','mobile','fax'].forEach(k=>{p[k]=f.get(k);if(k==='deadline'&&p[k])p[k]=p[k]+' EOD'});p.briefing={general:f.get('briefingGeneral')||'',layout:f.get('briefingLayout')||''};const zipInput=form.querySelector('[data-zip-upload]');const zipFile=zipInput&&zipInput.files[0];const _st=(window.T1||{}).storage;let zipUpdating=false;if(zipFile){const submitBtn=form.querySelector('button[type="submit"]');if(_st&&_st.ready){zipUpdating=true;if(submitBtn){submitBtn.disabled=true;submitBtn.textContent='上傳中…'}try{const up=await _st.uploadZip(p.id,zipFile);p.zipMeta={name:zipFile.name,size:zipFile.size,lastModified:zipFile.lastModified,storagePath:up.storagePath,downloadUrl:up.downloadUrl,uploadedAt:new Date().toISOString()}}catch(err){console.warn('[Zip] upload failed:',err.message);p.zipMeta={name:zipFile.name,size:zipFile.size,lastModified:zipFile.lastModified};toast('ZIP 上傳失敗，僅存檔案資訊')}finally{if(submitBtn){submitBtn.disabled=false;submitBtn.textContent='儲存修改'}}}else{p.zipMeta={name:zipFile.name,size:zipFile.size,lastModified:zipFile.lastModified}}}save();renderProjects();renderPairs();toast(zipFile?(zipUpdating?`Project 已更新 (含 ${zipFile.name})`:`Project 已更新 (含 ${zipFile.name})`):'Project 已更新')});document.querySelectorAll('[data-priority-select]').forEach(sel=>sel.onchange=()=>{const dl=sel.closest('form').querySelector('.deadline-label');if(dl)dl.style.display=sel.value==='CERTAIN DEADLINE'?'':'none'});document.querySelectorAll('[data-item-edit]').forEach(btn=>btn.onclick=()=>{const [projectId,itemId]=btn.dataset.itemEdit.split('|');const form=document.querySelector(`[data-item-extra-key="${projectId}|${itemId}"]`);const summary=document.querySelector(`[data-item-summary="${projectId}|${itemId}"]`);if(form.style.display==='none'){form.style.display='';summary.style.display='none';btn.textContent='收起'}else{form.style.display='none';summary.style.display='';btn.textContent=document.querySelector(`[data-item-summary="${projectId}|${itemId}"] .item-type-badge`)?.classList.contains('none')?'設定類別':'編輯資料'}});document.querySelectorAll('[data-project-delete]').forEach(b=>b.onclick=()=>{state.projects=state.projects.filter(p=>p.id!==b.dataset.projectDelete);save();renderProjects();renderPairs();toast('已刪除 Project')});document.querySelectorAll('[data-item-delete]').forEach(b=>b.onclick=()=>{const [projectId,itemId]=b.dataset.itemDelete.split('|');const p=state.projects.find(x=>x.id===projectId);p.items=p.items.filter(x=>x.id!==itemId);save();renderProjects();toast('已刪除項目')});[['data-up',-1],['data-down',1]].forEach(([attribute,delta])=>document.querySelectorAll(`[${attribute}]`).forEach(b=>b.onclick=()=>{const [projectId,itemId]=b.getAttribute(attribute).split('|');const p=state.projects.find(x=>x.id===projectId);const i=p.items.findIndex(x=>x.id===itemId);[p.items[i],p.items[i+delta]]=[p.items[i+delta],p.items[i]];save();renderProjects()}));refreshPairProjectSelect();setTimeout(restoreProjectTabs,0); setTimeout(function(){if(typeof wikiRender==="function")wikiRender()},100) }
 
 function renderDashboard(){
@@ -740,7 +815,7 @@ document.addEventListener('click',e=>{
 });
 // Project inner-tab state persistence
 let projectTabState={};
-document.addEventListener('click',e=>{const btn=e.target.closest('[data-ptab]');if(!btn)return;const pid=btn.dataset.ptab;projectTabState[pid]=btn.dataset.ptabPanel;document.querySelectorAll(`[data-ptab="${pid}"]`).forEach(t=>t.classList.remove('active'));btn.classList.add('active');const panel=btn.dataset.ptabPanel;document.querySelectorAll(`[data-ptab-panel="${pid}|info"],[data-ptab-panel="${pid}|matched"],[data-ptab-panel="${pid}|partition"],[data-ptab-panel="${pid}|door"],[data-ptab-panel="${pid}|ow"],[data-ptab-panel="${pid}|notes"]`).forEach(p=>{p.style.display=p.dataset.ptabPanel===`${pid}|${panel}`?'':'none'});});
+document.addEventListener('click',e=>{const btn=e.target.closest('[data-ptab]');if(!btn)return;const pid=btn.dataset.ptab;projectTabState[pid]=btn.dataset.ptabPanel;document.querySelectorAll(`[data-ptab="${pid}"]`).forEach(t=>t.classList.remove('active'));btn.classList.add('active');const panel=btn.dataset.ptabPanel;document.querySelectorAll(`[data-ptab-panel="${pid}|info"],[data-ptab-panel="${pid}|matched"],[data-ptab-panel="${pid}|partition"],[data-ptab-panel="${pid}|door"],[data-ptab-panel="${pid}|ow"],[data-ptab-panel="${pid}|notes"],[data-ptab-panel="${pid}|mail"]`).forEach(p=>{p.style.display=p.dataset.ptabPanel===`${pid}|${panel}`?'':'none'});});
 function restoreProjectTabs(){state.projects.forEach(p=>{const tab=projectTabState[p.id]||'info';const btn=document.querySelector(`[data-ptab="${p.id}"][data-ptab-panel="${tab}"]`);if(btn)btn.click()})}
 // Global helpers for scan.js
 window.T1 = window.T1 || {};
