@@ -530,3 +530,19 @@ input,select,textarea,.ow-row input,.ow-row select,.ow-row textarea,.ow-project-
   transition:transform .5s cubic-bezier(.22,.61,.36,1),opacity .5s ease;
 }
 @media(max-width:620px){.mixmatch-grid{grid-template-columns:repeat(3,1fr)}}
+
+/* === Mix & Match notes (3 fields + Save Profile) === */
+.mixmatch-notes{display:grid;grid-template-columns:repeat(3,1fr) auto;gap:8px;margin-top:10px}
+.mix-note{
+  height:36px;border:1px solid #d5dbe1;border-radius:6px;
+  padding:0 10px;font:inherit;font-size:12px;background:rgba(255,255,255,.82);color:#17202a;
+}
+.mix-note:focus{border-color:#0d5932;outline:2px solid rgba(13,89,50,.28)}
+.mix-save-btn{
+  border:1px solid #0d5932;border-radius:6px;background:#e8f5ee;color:#0d5932;
+  padding:0 16px;font:inherit;font-size:12px;font-weight:700;cursor:pointer;transition:.12s;
+}
+.mix-save-btn:hover{background:#ceead7}
+.mix-box.filled{cursor:pointer}
+.mix-box.filled.selected{outline:2px solid #0d5932;outline-offset:2px}
+@media(max-width:620px){.mixmatch-notes{grid-template-columns:1fr}}

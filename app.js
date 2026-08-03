@@ -93,9 +93,12 @@ const profileState = {query:'',category:''};
 function renderProfileFilters(){ $('profileFilters').innerHTML=profileCategories.map(x=>`<button class="filter ${profileState.category===x?'active':''}" data-pcat="${esc(x)}">${esc(x)}</button>`).join('');document.querySelectorAll('[data-pcat]').forEach(b=>b.onclick=()=>{profileState.category=profileState.category===b.dataset.pcat?'':b.dataset.pcat;renderProfileFilters();renderProfileResults()}) }
 function renderProfileResults(){const q=profileState.query.toLowerCase().replace(/\s/g,'');let shown=[];if(q||profileState.category){shown=profileProducts.filter(p=>(!profileState.category||p.category===profileState.category)&&(`${p.code}${p.category}`.toLowerCase().replace(/\s/g,'').includes(q)))};$('profileResultCount').textContent=`${shown.length} results`;$('profileEmpty').hidden=shown.length>0;$('profileEmpty').textContent=(!q&&!profileState.category)?'輸入檢索關鍵字或點選分類標籤以顯示內容':'No matching profiles.';$('profileResults').innerHTML=shown.map((p,n)=>`<article class="card"><img src="${p.image}" alt="${esc(p.code)}" data-profile-view="${profileProducts.indexOf(p)}" loading="${n>8?'lazy':'eager'}"><div class="card-body"><div class="code">${esc(p.code)}</div><div class="meta">${esc(p.category)}</div><div class="actions"><button data-mix-add-profile="${profileProducts.indexOf(p)}">Mix</button></div></div></article>`).join('');document.querySelectorAll('[data-profile-view]').forEach(x=>x.onclick=()=>openViewer(profileProducts[x.dataset.profileView]))}
 
-// === Mix & Match — 6 格搭配方框（存 localStorage，可管理移除）===
+// === Mix & Match — 6 格搭配方框（存 localStorage，可管理移除、每格專屬備註）===
 var mixState = _lsRead('t1-mixmatch');
+var mixNotes = (function(){ try { return JSON.parse(localStorage.getItem('t1-mixmatch-notes') || '{}'); } catch(e) { return {}; } })();
+var selectedMix = null;
 function saveMix(){ localStorage.setItem('t1-mixmatch', JSON.stringify(mixState)); }
+function saveMixNotes(){ localStorage.setItem('t1-mixmatch-notes', JSON.stringify(mixNotes)); }
 function renderMixMatch(){
   const grid = document.getElementById('mixMatchGrid');
   if (!grid) return;
@@ -103,7 +106,7 @@ function renderMixMatch(){
   for (let i = 0; i < 6; i++) {
     const it = mixState[i];
     html += it
-      ? `<div class="mix-box filled"><img src="${esc(it.image)}" alt="${esc(it.code)}"><span class="mix-code">${esc(it.code)}</span><button type="button" class="mix-remove" data-mix-remove="${i}" title="移除">✕</button></div>`
+      ? `<div class="mix-box filled${selectedMix === i ? ' selected' : ''}" data-mix-view="${i}"><img src="${esc(it.image)}" alt="${esc(it.code)}"><span class="mix-code">${esc(it.code)}</span><button type="button" class="mix-remove" data-mix-remove="${i}" title="移除">✕</button></div>`
       : `<div class="mix-box empty"><span class="mix-empty-label">+</span></div>`;
   }
   grid.innerHTML = html;
@@ -112,10 +115,17 @@ function addToMixMatch(item){
   while (mixState.length < 6) mixState.push(null); // 確保有 6 個位置
   const idx = mixState.findIndex(x => !x);
   if (idx === -1) { toast('Mix & Match 已滿，請先移除項目'); return false; }
-  mixState[idx] = { code: item.code, category: item.category, image: item.image };
+  mixState[idx] = { code: item.code, category: item.category, image: item.image, page: item.page, pos: item.pos };
   saveMix();
   renderMixMatch();
   return true;
+}
+function loadMixNotesIntoFields(item){
+  const n = (item && mixNotes[item.code]) || {};
+  const f1 = document.getElementById('mixNote1'), f2 = document.getElementById('mixNote2'), f3 = document.getElementById('mixNote3');
+  if (f1) f1.value = n.r1 || '';
+  if (f2) f2.value = n.r2 || '';
+  if (f3) f3.value = n.r3 || '';
 }
 document.addEventListener('click', e => {
   const btn = e.target.closest('[data-mix-add]');
@@ -149,9 +159,30 @@ document.addEventListener('click', e => {
   const del = e.target.closest('[data-mix-remove]');
   if (!del) return;
   mixState[+del.dataset.mixRemove] = null;
+  if (selectedMix === +del.dataset.mixRemove) { selectedMix = null; loadMixNotesIntoFields(null); }
   saveMix();
   renderMixMatch();
   toast('已從 Mix & Match 移除');
+});
+// 點選方框 → 放大檢視（同 Profile 檢視）+ 載入該 item 的專屬備註
+document.addEventListener('click', e => {
+  const box = e.target.closest('[data-mix-view]');
+  if (!box || e.target.closest('.mix-remove')) return;
+  const item = mixState[+box.dataset.mixView];
+  if (!item) return;
+  openViewer(item);
+  selectedMix = +box.dataset.mixView;
+  renderMixMatch();
+  loadMixNotesIntoFields(item);
+});
+// Save Profile — 儲存目前選中方框 item 的備註（移除方框後備註仍保留）
+document.getElementById('mixSaveNotes') && document.getElementById('mixSaveNotes').addEventListener('click', function() {
+  if (selectedMix == null || !mixState[selectedMix]) { toast('請先點選一個方框'); return; }
+  const item = mixState[selectedMix];
+  const f1 = document.getElementById('mixNote1'), f2 = document.getElementById('mixNote2'), f3 = document.getElementById('mixNote3');
+  mixNotes[item.code] = { r1: f1 ? f1.value : '', r2: f2 ? f2.value : '', r3: f3 ? f3.value : '' };
+  saveMixNotes();
+  toast('Profile 備註已儲存');
 });
 function slotHtml(slot){const p=state[slot];if(!p)return `<div class="slot-label">ITEM ${slot.toUpperCase()}</div>Select from left panel and set to ${slot.toUpperCase()}`;return `<div class="slot-label">ITEM ${slot.toUpperCase()}</div><img src="${p.image}" alt="" data-slot-view="${slot}"><strong>${esc(p.code)}</strong><br><span class="meta">${esc(p.category)}</span><br><button data-remove="${slot}">DELETE</button>`}
 function renderSlots(){['a1','a2'].forEach(slot=>{const el=$(slot==='a1'?'slotA1':'slotA2');el.className=`slot ${state[slot]?'filled':''}`;el.innerHTML=slotHtml(slot)});$('inventoryOptions').innerHTML=inventoryOptions();$('inventoryA1').value=state.inventoryA1;$('inventoryA2').value=state.inventoryA2;$('savePair').disabled=!(state.a1||state.a2);const sel=$('pairProjectSelect');if(sel){$('pairCopyBtn').disabled=!sel.value||!(state.a1||state.a2)}document.querySelectorAll('[data-remove]').forEach(b=>b.onclick=()=>{state[b.dataset.remove]=null;renderSlots()})}
