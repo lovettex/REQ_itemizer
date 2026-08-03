@@ -140,6 +140,22 @@ const localPair = [{ id: 'lp1', name: '本地配對 Y' }];
     await context.close();
   }
 
+  // --- 4. saveMixNotes writes to Firestore (cloud backup) ---
+  {
+    const { page, context } = await openPage(browser, {
+      cloudPairs: null, cloudProjects: null, localPairs: null, localProjects: null,
+    });
+    await page.evaluate(() => {
+      const fs = (window.T1 || {}).firestore;
+      fs.saveMixNotes({ 'CODE-1': { r1: 'a', r2: 'b', r3: 'c' } });
+    });
+    await page.waitForTimeout(300);
+    const r = await page.evaluate(() => ({ cloud: window.__cloud.mixmatch }));
+    console.log('4. saveMixNotes cloud:', JSON.stringify(r));
+    if (!r.cloud || !r.cloud['CODE-1'] || r.cloud['CODE-1'].r1 !== 'a') throw new Error('saveMixNotes should be written to cloud');
+    await context.close();
+  }
+
   await browser.close();
   console.log('\nE2E FIRESTORE READ-ONLY TEST PASSED');
 })().catch(e => { console.error('E2E FAILED:', e.message); process.exit(1); });
