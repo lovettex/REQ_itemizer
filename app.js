@@ -113,7 +113,7 @@ function renderMixMatch(){
     const box = it
       ? `<div class="mix-box filled${selectedMix === i ? ' selected' : ''}" data-mix-view="${i}"><img src="${esc(it.image)}" alt="${esc(it.code)}"><span class="mix-code">${esc(it.code)}</span><button type="button" class="mix-remove" data-mix-remove="${i}" title="移除">✕</button></div>`
       : `<div class="mix-box empty"><span class="mix-empty-label">+</span></div>`;
-    html += `<div class="mix-card">${box}<div class="mix-notes"><input class="mix-note" data-mix-note="${i}" data-mix-note-idx="0" placeholder="備註 1" value="${esc(n.r1 || '')}" ${it ? '' : 'disabled'}><input class="mix-note" data-mix-note="${i}" data-mix-note-idx="1" placeholder="備註 2" value="${esc(n.r2 || '')}" ${it ? '' : 'disabled'}><input class="mix-note" data-mix-note="${i}" data-mix-note-idx="2" placeholder="備註 3" value="${esc(n.r3 || '')}" ${it ? '' : 'disabled'}><button type="button" class="mix-save-btn" data-mix-save="${i}" ${it ? '' : 'disabled'}>Save Profile</button></div></div>`;
+    html += `<div class="mix-card">${box}<div class="mix-notes"><input class="mix-note" data-mix-note="${i}" data-mix-note-idx="0" placeholder="name 1" value="${esc(n.r1 || '')}" ${it ? '' : 'disabled'}><input class="mix-note" data-mix-note="${i}" data-mix-note-idx="1" placeholder="name 2" value="${esc(n.r2 || '')}" ${it ? '' : 'disabled'}><input class="mix-note" data-mix-note="${i}" data-mix-note-idx="2" placeholder="name 3" value="${esc(n.r3 || '')}" ${it ? '' : 'disabled'}><button type="button" class="mix-save-btn" data-mix-save="${i}" ${it ? '' : 'disabled'}>Save Profile</button></div></div>`;
   }
   grid.innerHTML = html;
 }
