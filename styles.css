@@ -546,3 +546,13 @@ input,select,textarea,.ow-row input,.ow-row select,.ow-row textarea,.ow-project-
 .mix-box.filled{cursor:pointer}
 .mix-box.filled.selected{outline:2px solid #0d5932;outline-offset:2px}
 @media(max-width:620px){.mixmatch-notes{grid-template-columns:1fr}}
+
+/* === Mix & Match per-box notes (3 fields + Save Profile under each box) === */
+.mixmatch-grid{grid-template-columns:repeat(3,1fr);gap:12px}
+.mix-card{display:grid;gap:6px}
+.mix-notes{display:grid;gap:5px}
+.mix-note{width:100%;height:30px;font-size:11px}
+.mix-save-btn{width:100%;padding:6px 8px;font-size:11px}
+.mix-note:disabled,.mix-save-btn:disabled{opacity:.45;cursor:not-allowed}
+@media(max-width:900px){.mixmatch-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:620px){.mixmatch-grid{grid-template-columns:1fr}}

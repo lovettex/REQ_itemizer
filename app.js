@@ -105,9 +105,11 @@ function renderMixMatch(){
   let html = '';
   for (let i = 0; i < 6; i++) {
     const it = mixState[i];
-    html += it
+    const n = (it && mixNotes[it.code]) || {};
+    const box = it
       ? `<div class="mix-box filled${selectedMix === i ? ' selected' : ''}" data-mix-view="${i}"><img src="${esc(it.image)}" alt="${esc(it.code)}"><span class="mix-code">${esc(it.code)}</span><button type="button" class="mix-remove" data-mix-remove="${i}" title="移除">✕</button></div>`
       : `<div class="mix-box empty"><span class="mix-empty-label">+</span></div>`;
+    html += `<div class="mix-card">${box}<div class="mix-notes"><input class="mix-note" data-mix-note="${i}" data-mix-note-idx="0" placeholder="備註 1" value="${esc(n.r1 || '')}" ${it ? '' : 'disabled'}><input class="mix-note" data-mix-note="${i}" data-mix-note-idx="1" placeholder="備註 2" value="${esc(n.r2 || '')}" ${it ? '' : 'disabled'}><input class="mix-note" data-mix-note="${i}" data-mix-note-idx="2" placeholder="備註 3" value="${esc(n.r3 || '')}" ${it ? '' : 'disabled'}><button type="button" class="mix-save-btn" data-mix-save="${i}" ${it ? '' : 'disabled'}>Save Profile</button></div></div>`;
   }
   grid.innerHTML = html;
 }
@@ -119,13 +121,6 @@ function addToMixMatch(item){
   saveMix();
   renderMixMatch();
   return true;
-}
-function loadMixNotesIntoFields(item){
-  const n = (item && mixNotes[item.code]) || {};
-  const f1 = document.getElementById('mixNote1'), f2 = document.getElementById('mixNote2'), f3 = document.getElementById('mixNote3');
-  if (f1) f1.value = n.r1 || '';
-  if (f2) f2.value = n.r2 || '';
-  if (f3) f3.value = n.r3 || '';
 }
 document.addEventListener('click', e => {
   const btn = e.target.closest('[data-mix-add]');
@@ -159,7 +154,7 @@ document.addEventListener('click', e => {
   const del = e.target.closest('[data-mix-remove]');
   if (!del) return;
   mixState[+del.dataset.mixRemove] = null;
-  if (selectedMix === +del.dataset.mixRemove) { selectedMix = null; loadMixNotesIntoFields(null); }
+  if (selectedMix === +del.dataset.mixRemove) selectedMix = null;
   saveMix();
   renderMixMatch();
   toast('已從 Mix & Match 移除');
@@ -173,14 +168,21 @@ document.addEventListener('click', e => {
   openViewer(item);
   selectedMix = +box.dataset.mixView;
   renderMixMatch();
-  loadMixNotesIntoFields(item);
 });
-// Save Profile — 儲存目前選中方框 item 的備註（移除方框後備註仍保留）
-document.getElementById('mixSaveNotes') && document.getElementById('mixSaveNotes').addEventListener('click', function() {
-  if (selectedMix == null || !mixState[selectedMix]) { toast('請先點選一個方框'); return; }
-  const item = mixState[selectedMix];
-  const f1 = document.getElementById('mixNote1'), f2 = document.getElementById('mixNote2'), f3 = document.getElementById('mixNote3');
-  mixNotes[item.code] = { r1: f1 ? f1.value : '', r2: f2 ? f2.value : '', r3: f3 ? f3.value : '' };
+// Save Profile — 儲存該方框 item 的備註（移除方框後備註仍保留、再加入自動帶回）
+document.addEventListener('click', e => {
+  const saveBtn = e.target.closest('[data-mix-save]');
+  if (!saveBtn) return;
+  const i = +saveBtn.dataset.mixSave;
+  const item = mixState[i];
+  if (!item) { toast('該方框無項目'); return; }
+  const card = saveBtn.closest('.mix-card');
+  const inputs = card ? card.querySelectorAll('.mix-note') : [];
+  mixNotes[item.code] = {
+    r1: inputs[0] ? inputs[0].value : '',
+    r2: inputs[1] ? inputs[1].value : '',
+    r3: inputs[2] ? inputs[2].value : ''
+  };
   saveMixNotes();
   toast('Profile 備註已儲存');
 });

@@ -99,20 +99,23 @@ const { chromium } = require('playwright');
   const viewState = await page.evaluate(() => ({
     viewerOpen: !!document.getElementById('viewer').open,
     selectedBoxes: document.querySelectorAll('.mix-box.selected').length,
-    note1: document.getElementById('mixNote1').value,
+    noteCount: document.querySelectorAll('.mix-card .mix-note').length,
   }));
   console.log('After box click:', JSON.stringify(viewState));
   if (!viewState.viewerOpen) throw new Error('viewer should open on box click');
   if (viewState.selectedBoxes !== 1) throw new Error('box should be selected');
+  if (viewState.noteCount !== 18) throw new Error('should be 6 boxes × 3 notes = 18 inputs, got ' + viewState.noteCount);
   // close viewer
   await page.evaluate(() => document.getElementById('viewer').close());
 
-  // --- 8. Enter 3 notes + Save Profile → stored per item ---
+  // --- 8. Enter 3 notes on the FIRST filled box + Save Profile → stored per item ---
   await page.evaluate(() => {
-    document.getElementById('mixNote1').value = '備註A';
-    document.getElementById('mixNote2').value = '備註B';
-    document.getElementById('mixNote3').value = '備註C';
-    document.getElementById('mixSaveNotes').click();
+    const card = document.querySelector('.mix-card .mix-box.filled').closest('.mix-card');
+    const inputs = card.querySelectorAll('.mix-note');
+    inputs[0].value = '備註A';
+    inputs[1].value = '備註B';
+    inputs[2].value = '備註C';
+    card.querySelector('.mix-save-btn').click();
   });
   await page.waitForTimeout(200);
   const savedNotes = await page.evaluate(() => {
@@ -122,7 +125,7 @@ const { chromium } = require('playwright');
   console.log('Saved notes:', JSON.stringify(savedNotes));
   if (savedNotes.length !== 1 || savedNotes[0].r1 !== '備註A' || savedNotes[0].r3 !== '備註C') throw new Error('notes not saved: ' + JSON.stringify(savedNotes));
 
-  // --- 9. Remove the box → notes survive; re-add same item → notes auto-loaded ---
+  // --- 9. Remove the box → notes survive; re-add same item → notes auto-loaded in ITS fields ---
   const removedCode = await page.evaluate(() => {
     const code = document.querySelector('.mix-box.filled .mix-code').textContent;
     document.querySelector('.mix-box.filled .mix-remove').click();
@@ -137,20 +140,18 @@ const { chromium } = require('playwright');
   if (afterRemove2.filled !== 4) throw new Error('box should be removed');
   if (afterRemove2.notesStill !== 1) throw new Error('notes should survive box removal');
 
-  // re-add the SAME item from search results (search by its code) then click it
+  // re-add the SAME item from search results (search by its code)
   await page.evaluate((code) => {
     const s = document.getElementById('search'); s.value = code; s.dispatchEvent(new Event('input'));
   }, removedCode);
   await page.waitForTimeout(200);
   await page.evaluate(() => document.querySelector('[data-mix-add]').click());
   await page.waitForTimeout(700);
-  await page.evaluate(() => document.querySelector('.mix-box.filled').click());
-  await page.waitForTimeout(300);
-  const reloadedNotes = await page.evaluate(() => ({
-    n1: document.getElementById('mixNote1').value,
-    n2: document.getElementById('mixNote2').value,
-    n3: document.getElementById('mixNote3').value,
-  }));
+  const reloadedNotes = await page.evaluate(() => {
+    const card = document.querySelector('.mix-card .mix-box.filled').closest('.mix-card');
+    const inputs = card.querySelectorAll('.mix-note');
+    return { n1: inputs[0].value, n2: inputs[1].value, n3: inputs[2].value };
+  });
   console.log('Notes after re-add:', JSON.stringify(reloadedNotes));
   if (reloadedNotes.n1 !== '備註A' || reloadedNotes.n3 !== '備註C') throw new Error('notes should auto-load on re-add');
 
