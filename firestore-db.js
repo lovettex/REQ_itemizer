@@ -121,6 +121,15 @@
         .catch(function(e) { console.warn('[T1 Firestore] saveProjects failed:', e.message); });
     },
 
+    // Awaitable variant of saveProjects — returns the .set() Promise so callers
+    // can wait for the Firestore write to complete (e.g. before sending email).
+    // Does NOT modify the existing saveProjects behaviour.
+    saveProjectsAwait: function(projects) {
+      if (!this.db) return Promise.reject(new Error('[T1 Firestore] db not ready'));
+      return this.db.collection(COLLECTION).doc('projects')
+        .set({ items: projects, updatedAt: new Date().toISOString() });
+    },
+
     // Mix & Match 備註 → Firestore（doc 'mixmatch'，雲端備份）
     saveMixNotes: function(notes) {
       if (!this.db) return;
