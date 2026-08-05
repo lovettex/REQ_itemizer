@@ -574,3 +574,7 @@ input,select,textarea,.ow-row input,.ow-row select,.ow-row textarea,.ow-project-
 .ps-dropdown,.ow-dropdown,.wiki-dropdown,.ps-dropdown *,.ow-dropdown *{
   overscroll-behavior: contain;
 }
+
+/* === Mix & Match inside the side workspace (3-col fits the narrow panel) === */
+.tab-panel[data-tab="mixmatch"] .mixmatch-section{padding:8px 2px}
+.tab-panel[data-tab="mixmatch"] .mixmatch-grid{grid-template-columns:repeat(3,1fr);gap:8px}

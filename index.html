@@ -54,10 +54,6 @@
   <main class="layout">
     <section class="panel catalog">
       <div class="catalog-tab-bar"><button class="catalog-tab active" data-catalog-tab="master">Master template</button><button class="catalog-tab" data-catalog-tab="profile">Profile template</button></div>
-      <div class="mixmatch-section">
-        <div class="mixmatch-head"><span class="mixmatch-title">Mix &amp; Match</span><small>Click the Mix button on the card to add an item; click the box to enlarge the view, and under each box you can edit personalized notes</small></div>
-        <div class="mixmatch-grid" id="mixMatchGrid"></div>
-      </div>
       <div class="catalog-tab-panel active" data-catalog-tab-panel="master">
       <div class="heading"><div><p>CONFIGURATION FINDER</p></div><span id="resultCount"></span></div>
       <label class="search"><span>⌕</span><input id="search" placeholder="PROFILING ITEMS" autocomplete="off"><button id="clearSearch" type="button">×</button></label>
@@ -70,7 +66,7 @@
       </div>
     </section>
     <aside class="workspace">
-      <div class="tab-bar"><button class="tab active" data-tab="ow">OPERABLE WALL</button><button class="tab" data-tab="pair">CURRENT SET</button><button class="tab" data-tab="saved">SAVED LIBRARY</button></div>
+      <div class="tab-bar"><button class="tab active" data-tab="ow">OPERABLE WALL</button><button class="tab" data-tab="pair">CURRENT SET</button><button class="tab" data-tab="saved">SAVED LIBRARY</button><button class="tab" data-tab="mixmatch">Mix &amp; Match</button></div>
       <div class="tab-panel active" data-tab="ow">
       <section class="panel operable-wall">
         <div class="heading"><div><p>OPERABLE WALL</p><h2>OPERABLE WALL ITEMS</h2></div><span id="operableWallCount">17</span></div>
@@ -178,6 +174,12 @@
         <div class="heading"><div><p>SAVED LIBRARY</p></div><span id="savedCount"></span></div><div id="savedPairs" class="saved-list"></div><div class="pagination" id="savedPagination"></div>
         <div class="backup"><button id="exportPairs" type="button">EXPORT</button><label>IMPORT<input id="importPairs" type="file" accept="application/json" hidden></label></div>
       </section>
+      </div>
+      <div class="tab-panel" data-tab="mixmatch" style="display:none">
+        <div class="mixmatch-section">
+          <div class="mixmatch-head"><span class="mixmatch-title">Mix &amp; Match</span><small>Click the Mix button on the card to add an item; click the box to enlarge the view, and under each box you can edit personalized notes</small></div>
+          <div class="mixmatch-grid" id="mixMatchGrid"></div>
+        </div>
       </div>
     </aside>
   </main>
