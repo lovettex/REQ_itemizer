@@ -11,7 +11,8 @@ const { chromium } = require('playwright');
     }
   });
 
-  await page.goto('http://localhost:3000');
+    await page.route('**/auth.js', r => r.fulfill({ status: 200, contentType: 'application/javascript', body: "window.T1 = window.T1 || {}; window.T1.auth = { available: true, init: () => Promise.resolve(), onAuthChange: cb => cb({ email: 'u@x.com' }), currentUser: () => ({ email: 'u@x.com' }), handleLogin: () => Promise.resolve(null), signOut: () => {} };" }));
+await page.goto('http://localhost:3000');
   await page.waitForTimeout(1000);
 
   // Check if RFQ Wiki tab exists

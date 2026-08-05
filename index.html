@@ -218,15 +218,15 @@
   <script src="https://cdn.jsdelivr.net/npm/lenis@1/dist/lenis.min.js"></script>
   <script src="js/lenis-init.js"></script>
   <script>
-    // 登入守衛：未登入自動跳回 login.html（auth SDK 不可用時放行，不影響既有功能）
+    // 登入守衛：未登入一律導回 login.html（auth SDK 不可用也導回，關閉 fail-open）
     // 只依賴 onAuthStateChanged 回呼（session 恢復完成後的正確狀態），
     // 避免在恢復前同步檢查 currentUser() 誤判 null 而把已登入用戶彈回 login。
     (function() {
       var auth = (window.T1 || {}).auth;
-      if (!auth || !auth.init) return; // auth.js 未載入 → 放行
+      if (!auth || !auth.init) { window.location.replace('login.html'); return; } // auth.js 未載入 → 導回 login
       auth.init();
       auth.onAuthChange(function(user) {
-        if (!auth.available) return;   // SDK 不可用 → 放行
+        if (!auth.available) { window.location.replace('login.html'); return; }   // SDK 不可用 → 導回 login
         // 顯示登入使用者名稱（displayName 或 email）在 Logout 旁
         var userEl = document.getElementById('topbarUser');
         if (user) {
@@ -237,6 +237,13 @@
         }
         if (!user) {
           console.log('[T1 Auth] 未登入，導向 login.html');
+          window.location.replace('login.html');
+        }
+      });
+      // SDK 載入失敗時 onAuthStateChanged 不會回呼 → 依 init 結果主動導回
+      auth.init().then(function() {
+        if (!auth.available) {
+          console.log('[T1 Auth] SDK 不可用，導向 login.html');
           window.location.replace('login.html');
         }
       });
