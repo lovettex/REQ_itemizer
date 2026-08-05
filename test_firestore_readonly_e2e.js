@@ -208,6 +208,56 @@ const localPair = [{ id: 'lp1', name: '本地配對 Y' }];
     await context.close();
   }
 
+  // --- 8. Full project (workLogs + confirmSummary) loads from cloud → all views ---
+  {
+    const fullProject = [{
+      id: 'fp1', name: '完整專案', sales: 'S1', assignedQs: 'Ben', status: 'Processing',
+      items: [{ id: 'i1', type: 'PARTITION', pair: { name: 'P' }, extra: { height: '3000' } }],
+      workLogs: [
+        { id: 'w1', summary: 'A2VO3', status: 'confirmed', createdAt: '2026-08-01T00:00:00Z' },
+        { id: 'w2', summary: 'B1', status: 'submited', createdAt: '2026-08-02T00:00:00Z' }
+      ],
+      confirmSummary: [{ id: 'c1', label: 'PICKLIST (DO)', value: 'DO5', createdAt: '2026-08-01T00:00:00Z' }]
+    }];
+    const { page, context } = await openPage(browser, {
+      cloudPairs: null, cloudProjects: fullProject, localPairs: null, localProjects: null,
+    });
+    await page.waitForTimeout(900);
+    const r = await page.evaluate(() => {
+      const p = JSON.parse(localStorage.getItem('t1-projects') || '[]')[0];
+      return {
+        projectName: p ? p.name : null,
+        workLogs: p ? (p.workLogs || []).length : 0,
+        confirmSummary: p ? (p.confirmSummary || []).length : 0,
+        // Listed Projects 視圖
+        listedCard: Array.from(document.querySelectorAll('.project-card summary')).some(s => s.textContent.indexOf('完整專案') !== -1),
+        // Dashboard 視圖（處理中狀態）
+        dashShowsProject: Array.from(document.querySelectorAll('#dashboardList *')).some(el => el.textContent && el.textContent.indexOf('完整專案') !== -1),
+      };
+    });
+    console.log('8. Full project views:', JSON.stringify(r));
+    if (r.projectName !== '完整專案' || r.workLogs !== 2 || r.confirmSummary !== 1) throw new Error('cloud project not fully loaded');
+    if (!r.listedCard) throw new Error('Listed Projects should show cloud project');
+    if (!r.dashShowsProject) throw new Error('Dashboard should show cloud project');
+    await context.close();
+  }
+
+  // --- 9. Pair (Saved Library) writes to Firestore ---
+  {
+    const { page, context } = await openPage(browser, {
+      cloudPairs: null, cloudProjects: null, localPairs: null, localProjects: null,
+    });
+    await page.evaluate(() => {
+      const fs = (window.T1 || {}).firestore;
+      fs.savePairs([{ id: 'pair1', name: 'Saved Pair' }]);
+    });
+    await page.waitForTimeout(300);
+    const r = await page.evaluate(() => ({ cloud: window.__cloud.pairs }));
+    console.log('9. savePairs cloud:', JSON.stringify(r));
+    if (!r.cloud || !Array.isArray(r.cloud) || r.cloud[0].name !== 'Saved Pair') throw new Error('savePairs should be written to cloud');
+    await context.close();
+  }
+
   await browser.close();
   console.log('\nE2E FIRESTORE READ-ONLY TEST PASSED');
 })().catch(e => { console.error('E2E FAILED:', e.message); process.exit(1); });
