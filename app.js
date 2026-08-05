@@ -209,6 +209,9 @@ document.addEventListener('click', e => {
   if (!item) return;
   const targetBox = document.querySelector('#mixMatchGrid .mix-box.empty');
   if (!targetBox) { toast('Mix & Match 已滿，請先移除項目'); return; }
+  // 自動切換到側邊 Mix & Match 分頁（panel 顯示後，飛行動畫目標位置才正確）
+  const mmTab = document.querySelector('.tab-bar .tab[data-tab="mixmatch"]');
+  if (mmTab && !mmTab.classList.contains('active')) mmTab.click();
   // 飛行動畫：從 Mix 按鈕飛向目標方框
   const src = btn || btnP;
   const sr = src.getBoundingClientRect();
