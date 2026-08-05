@@ -325,6 +325,7 @@ input,select,textarea,.ow-row input,.ow-row select,.ow-row textarea,.ow-project-
   -webkit-backdrop-filter:none;
   backdrop-filter:none;
   box-shadow:none;
+  padding:17px 0;
 }
 .project-wide .project-card{
   border:none;
