@@ -10,8 +10,9 @@ async function openPage(browser, opts) {
     // seed localStorage (runs before app.js)
     if (o.localPairs) localStorage.setItem('t1-product-pairs', JSON.stringify(o.localPairs));
     if (o.localProjects) localStorage.setItem('t1-projects', JSON.stringify(o.localProjects));
+    if (o.localWiki) localStorage.setItem('t1-wiki-entries', JSON.stringify(o.localWiki));
     window.__fsWriteCalls = 0;
-    window.__cloud = { pairs: o.cloudPairs, projects: o.cloudProjects };
+    window.__cloud = { pairs: o.cloudPairs, projects: o.cloudProjects, mixmatch: o.cloudMixmatch, wiki: o.cloudWiki };
     window.firebase = {
       apps: [],
       initializeApp: () => {},
@@ -169,6 +170,41 @@ const localPair = [{ id: 'lp1', name: '本地配對 Y' }];
     const r = await page.evaluate(() => ({ cloud: window.__cloud.viewerPos }));
     console.log('5. saveViewerPos cloud:', JSON.stringify(r));
     if (!r.cloud || !r.cloud['GF - 1'] || r.cloud['GF - 1'].scale !== 2.5) throw new Error('saveViewerPos should be written to cloud');
+    await context.close();
+  }
+
+  // --- 6. saveWiki writes to Firestore (wiki cross-device backup) ---
+  {
+    const { page, context } = await openPage(browser, {
+      cloudPairs: null, cloudProjects: null, localPairs: null, localProjects: null,
+    });
+    await page.evaluate(() => {
+      const fs = (window.T1 || {}).firestore;
+      fs.saveWiki([{ id: 'w1', title: 'Wiki Note', category: 'PO' }]);
+    });
+    await page.waitForTimeout(300);
+    const r = await page.evaluate(() => ({ cloud: window.__cloud.wiki }));
+    console.log('6. saveWiki cloud:', JSON.stringify(r));
+    if (!r.cloud || !Array.isArray(r.cloud) || r.cloud[0].title !== 'Wiki Note') throw new Error('saveWiki should be written to cloud');
+    await context.close();
+  }
+
+  // --- 7. Wiki merge: cloud + local both survive ---
+  {
+    const { page, context } = await openPage(browser, {
+      cloudPairs: null, cloudProjects: null, localPairs: null, localProjects: null,
+      cloudWiki: [{ id: 'cw1', title: '雲端 Wiki' }],
+      localWiki: [{ id: 'lw1', title: '本地 Wiki' }],
+    });
+    await page.waitForTimeout(800);
+    const r = await page.evaluate(() => {
+      const ls = JSON.parse(localStorage.getItem('t1-wiki-entries') || '[]');
+      return { titles: ls.map(x => x.title), count: ls.length };
+    });
+    console.log('7. Wiki merge:', JSON.stringify(r));
+    if (r.count !== 2 || !r.titles.includes('雲端 Wiki') || !r.titles.includes('本地 Wiki')) {
+      throw new Error('wiki merge should keep both: ' + JSON.stringify(r));
+    }
     await context.close();
   }
 

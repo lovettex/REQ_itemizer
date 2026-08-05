@@ -74,7 +74,8 @@
         self.db.collection(COLLECTION).doc('pairs').get(),
         self.db.collection(COLLECTION).doc('projects').get(),
         self.db.collection(COLLECTION).doc('mixmatch').get(),
-        self.db.collection(COLLECTION).doc('viewerPos').get()
+        self.db.collection(COLLECTION).doc('viewerPos').get(),
+        self.db.collection(COLLECTION).doc('wiki').get()
       ]).then(function(results) {
         // 合併模式：本地（最近操作）與雲端（先前快照）以 id 合併，
         // 同 id 本地優先、雲端補缺 —— 任何一方的資料都不因重新載入而丟失
@@ -82,21 +83,25 @@
         var localProjects = lsRead(LS_PROJECTS);
         var localMixNotes = (function(){ try { return JSON.parse(localStorage.getItem('t1-mixmatch-notes') || '{}'); } catch(e) { return {}; } })();
         var localViewerPos = (function(){ try { return JSON.parse(localStorage.getItem('t1-viewer-positions') || '{}'); } catch(e) { return {}; } })();
+        var localWiki = (function(){ try { return JSON.parse(localStorage.getItem('t1-wiki-entries') || '[]'); } catch(e) { return []; } })();
         var cloudPairs = results[0].exists ? (results[0].data().items || []) : [];
         var cloudProjects = results[1].exists ? (results[1].data().items || []) : [];
         var cloudMixNotes = results[2].exists ? (results[2].data().items || {}) : {};
         var cloudViewerPos = results[3].exists ? (results[3].data().items || {}) : {};
+        var cloudWiki = results[4].exists ? (results[4].data().items || []) : [];
         var out = {
           pairs: _mergeById(localPairs, cloudPairs),
           projects: _mergeById(localProjects, cloudProjects),
           mixNotes: Object.assign({}, cloudMixNotes, localMixNotes), // 備註：本地優先、雲端補缺
           viewerPos: Object.assign({}, cloudViewerPos, localViewerPos), // 檢視位置：本地優先、雲端補缺
-          cloud: { pairs: results[0].exists, projects: results[1].exists, mixmatch: results[2].exists, viewerPos: results[3].exists }
+          wiki: _mergeById(localWiki, cloudWiki), // wiki：本地優先、雲端補缺
+          cloud: { pairs: results[0].exists, projects: results[1].exists, mixmatch: results[2].exists, viewerPos: results[3].exists, wiki: results[4].exists }
         };
         lsWrite(LS_PAIRS, out.pairs);
         lsWrite(LS_PROJECTS, out.projects);
         localStorage.setItem('t1-mixmatch-notes', JSON.stringify(out.mixNotes));
         localStorage.setItem('t1-viewer-positions', JSON.stringify(out.viewerPos));
+        localStorage.setItem('t1-wiki-entries', JSON.stringify(out.wiki));
         return out;
       }).catch(function(err) {
         console.warn('[T1 Firestore] loadAll failed, falling back to localStorage:', err.message);
@@ -110,7 +115,7 @@
       if (!this.db) return;
       this.db.collection(COLLECTION).doc('pairs')
         .set({ items: pairs, updatedAt: new Date().toISOString() })
-        .catch(function(e) { console.warn('[T1 Firestore] savePairs failed:', e.message); });
+        .catch(function(e) { console.warn('[T1 Firestore] savePairs failed:', e.message); if (typeof toast === 'function') toast('雲端同步失敗，資料僅存本機'); });
     },
 
     saveProjects: function(projects) {
@@ -118,7 +123,7 @@
       if (!this.db) return;
       this.db.collection(COLLECTION).doc('projects')
         .set({ items: projects, updatedAt: new Date().toISOString() })
-        .catch(function(e) { console.warn('[T1 Firestore] saveProjects failed:', e.message); });
+        .catch(function(e) { console.warn('[T1 Firestore] saveProjects failed:', e.message); if (typeof toast === 'function') toast('雲端同步失敗，資料僅存本機'); });
     },
 
     // Awaitable variant of saveProjects — returns the .set() Promise so callers
@@ -144,6 +149,14 @@
       this.db.collection(COLLECTION).doc('viewerPos')
         .set({ items: positions || {}, updatedAt: new Date().toISOString() })
         .catch(function(e) { console.warn('[T1 Firestore] saveViewerPos failed:', e.message); });
+    },
+
+    // RFQ Wiki entries → Firestore（doc 'wiki'，雲端備份，跨設備保留）
+    saveWiki: function(entries) {
+      if (!this.db) return;
+      this.db.collection(COLLECTION).doc('wiki')
+        .set({ items: entries || [], updatedAt: new Date().toISOString() })
+        .catch(function(e) { console.warn('[T1 Firestore] saveWiki failed:', e.message); if (typeof toast === 'function') toast('雲端同步失敗，資料僅存本機'); });
     },
 
     _fallback: function() {
