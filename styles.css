@@ -578,3 +578,16 @@ input,select,textarea,.ow-row input,.ow-row select,.ow-row textarea,.ow-project-
 /* === Mix & Match inside the side workspace (3-col fits the narrow panel) === */
 .tab-panel[data-tab="mixmatch"] .mixmatch-section{padding:8px 2px}
 .tab-panel[data-tab="mixmatch"] .mixmatch-grid{grid-template-columns:repeat(3,1fr);gap:8px}
+
+/* === Work log QTN NUM input + display === */
+.worklog-qtn{
+  margin-left:10px;padding:5px 10px;border:1px solid rgba(255,255,255,.22);
+  border-radius:6px;background:rgba(255,255,255,.07);color:inherit;
+  font:inherit;font-size:12px;width:170px;outline:none;
+}
+.worklog-qtn::placeholder{color:rgba(255,255,255,.38)}
+.worklog-item-qtn{
+  font-size:11px;color:#7fd0a8;background:rgba(13,89,50,.22);
+  border:1px solid rgba(125,211,168,.35);padding:1px 7px;border-radius:99px;
+  white-space:nowrap;
+}
