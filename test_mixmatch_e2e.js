@@ -39,10 +39,15 @@ const { chromium } = require('playwright');
   const after1 = await page.evaluate(() => ({
     filled: document.querySelectorAll('.mix-box.filled').length,
     code: document.querySelector('.mix-box.filled .mix-code') ? document.querySelector('.mix-box.filled .mix-code').textContent : null,
+    // Mix 按鈕應自動切換側邊分頁到 Mix & Match
+    activeSideTab: (() => { const t = document.querySelector('.tab-bar .tab.active'); return t ? t.dataset.tab : null; })(),
+    mixPanelVisible: (() => { const pn = document.querySelector('.tab-panel[data-tab="mixmatch"]'); return pn ? pn.style.display !== 'none' : false; })(),
   }));
   console.log('After 1 mix:', JSON.stringify(after1));
   if (after1.filled !== 1) throw new Error('one box should be filled');
   if (!after1.code) throw new Error('filled box should show code');
+  if (after1.activeSideTab !== 'mixmatch') throw new Error('Mix should auto-switch sidebar to Mix & Match, got ' + after1.activeSideTab);
+  if (!after1.mixPanelVisible) throw new Error('Mix & Match panel should be visible after Mix');
 
   // 3. Fill all 6, 7th → toast "已滿"
   for (let i = 1; i < 6; i++) {
