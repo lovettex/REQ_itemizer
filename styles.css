@@ -601,3 +601,14 @@ input,select,textarea,.ow-row input,.ow-row select,.ow-row textarea,.ow-project-
   padding:3px 4px;cursor:pointer;letter-spacing:.02em;
 }
 .saved-head .saved-title{flex:1;min-width:0;overflow-wrap:anywhere}
+
+/* === Saved Library sub-tabs PARTITION | DOOR === */
+.saved-subtabs{display:flex;gap:6px;margin:2px 0 10px}
+.saved-subtab{
+  flex:1;border:1px solid rgba(13,89,50,.4);border-radius:6px;
+  background:rgba(232,245,238,.6);color:#0d5932;
+  padding:7px 0;font:inherit;font-size:11px;font-weight:800;
+  cursor:pointer;letter-spacing:.05em;transition:.12s;
+}
+.saved-subtab:hover{background:#ceead7}
+.saved-subtab.active{background:#0d5932;color:#fff}
