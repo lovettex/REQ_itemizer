@@ -569,3 +569,8 @@ input,select,textarea,.ow-row input,.ow-row select,.ow-row textarea,.ow-project-
 .mail-field input:focus,.mail-field textarea:focus{border-color:#0d5932;outline:2px solid rgba(13,89,50,.28)}
 .mail-field small{font-weight:400;color:#7a8896}
 .mail-send-btn{width:auto;justify-self:start;padding:11px 28px}
+
+/* === Lenis smooth scroll compat: keep inner dropdown scrolling self-contained === */
+.ps-dropdown,.ow-dropdown,.wiki-dropdown,.ps-dropdown *,.ow-dropdown *{
+  overscroll-behavior: contain;
+}
