@@ -115,7 +115,7 @@
       if (!this.db) return;
       this.db.collection(COLLECTION).doc('pairs')
         .set({ items: pairs, updatedAt: new Date().toISOString() })
-        .catch(function(e) { console.warn('[T1 Firestore] savePairs failed:', e.message); if (typeof toast === 'function') toast('雲端同步失敗，資料僅存本機'); });
+        .catch(function(e) { console.warn('[T1 Firestore] savePairs failed:', e.message); if (typeof toast === 'function') toast('雲端同步失敗（未登入時請先登入），資料僅存本機'); });
     },
 
     saveProjects: function(projects) {
@@ -123,7 +123,7 @@
       if (!this.db) return;
       this.db.collection(COLLECTION).doc('projects')
         .set({ items: projects, updatedAt: new Date().toISOString() })
-        .catch(function(e) { console.warn('[T1 Firestore] saveProjects failed:', e.message); if (typeof toast === 'function') toast('雲端同步失敗，資料僅存本機'); });
+        .catch(function(e) { console.warn('[T1 Firestore] saveProjects failed:', e.message); if (typeof toast === 'function') toast('雲端同步失敗（未登入時請先登入），資料僅存本機'); });
     },
 
     // Awaitable variant of saveProjects — returns the .set() Promise so callers
@@ -156,7 +156,7 @@
       if (!this.db) return;
       this.db.collection(COLLECTION).doc('wiki')
         .set({ items: entries || [], updatedAt: new Date().toISOString() })
-        .catch(function(e) { console.warn('[T1 Firestore] saveWiki failed:', e.message); if (typeof toast === 'function') toast('雲端同步失敗，資料僅存本機'); });
+        .catch(function(e) { console.warn('[T1 Firestore] saveWiki failed:', e.message); if (typeof toast === 'function') toast('雲端同步失敗（未登入時請先登入），資料僅存本機'); });
     },
 
     _fallback: function() {
