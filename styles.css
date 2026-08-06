@@ -607,19 +607,55 @@ input,select,textarea,.ow-row input,.ow-row select,.ow-row textarea,.ow-project-
 /* === Saved Library sub-tabs PARTITION | DOOR (glass style) === */
 .saved-subtabs{
   display:flex;gap:0;margin:2px 0 12px;overflow:hidden;
-  border:1px solid rgba(255,255,255,.14);border-radius:9px;
-  background:rgba(255,255,255,.07);
+  border:1px solid rgba(0,0,0,.10);border-radius:9px;
+  background:rgba(255,255,255,.55);
   -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
 }
 .saved-subtab{
   flex:1;border:0;background:transparent;padding:9px 8px;
   font:inherit;font-size:11px;font-weight:800;letter-spacing:.06em;
-  color:rgba(255,255,255,.62);cursor:pointer;position:relative;transition:.15s;
+  color:#3a4755;cursor:pointer;position:relative;transition:.15s;
 }
-.saved-subtab+.saved-subtab{border-left:1px solid rgba(255,255,255,.12)}
-.saved-subtab:hover{background:rgba(255,255,255,.16);color:#fff}
+.saved-subtab+.saved-subtab{border-left:1px solid rgba(0,0,0,.08)}
+.saved-subtab:hover{background:rgba(255,255,255,.8);color:#17202a}
 .saved-subtab.active{
-  color:#fff;background:rgba(255,255,255,.10);
-  box-shadow:inset 0 -2px 0 #05F7F7;text-shadow:0 1px 2px rgba(0,0,0,.35);
+  color:#17202a;background:#fff;
+  box-shadow:inset 0 -2px 0 #05F7F7;
 }
 .saved-subtab[data-saved-filter="DOOR"].active{box-shadow:inset 0 -2px 0 #33BD92}
+
+/* === ACCESS MANAGEMENT (replaces RFQ Wiki tab UI) === */
+.access-mgmt{padding:4px 2px}
+.access-mgmt-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.access-mgmt-head h3{margin:0;font-size:15px;letter-spacing:.04em}
+.access-add{width:auto;padding:9px 16px;font-size:12px}
+.access-form{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;
+  padding:14px;margin-bottom:14px;border-radius:10px;
+  background:rgba(255,255,255,.5);border:1px solid rgba(0,0,0,.10);
+}
+.access-field{display:grid;gap:5px;font-size:11px;font-weight:700;color:#53606d}
+.access-field input{height:36px;border:1px solid #d5dbe1;border-radius:6px;padding:0 9px;background:#fff;font:inherit;font-size:12px;color:var(--ink)}
+.access-field input:focus{border-color:#0d5932;outline:2px solid rgba(13,89,50,.25)}
+.access-eof-submit{grid-column:1/-1;width:auto;justify-self:end;background:#0d5932}
+.access-list{display:grid;gap:10px}
+.access-flow{
+  padding:12px 14px;border-radius:10px;
+  background:rgba(255,255,255,.5);border:1px solid rgba(0,0,0,.10);
+}
+.access-flow-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.access-flow-head strong{font-size:14px;color:var(--deep)}
+.access-eof-badge{
+  font-size:10px;font-weight:800;color:#0d5932;background:#e8f5ee;
+  border:1px solid rgba(13,89,50,.35);padding:2px 8px;border-radius:99px;
+}
+.access-flow-row{display:grid;gap:2px;margin-top:6px;font-size:12px;color:#2a3a4a}
+.access-flow-row label{font-size:10px;font-weight:800;letter-spacing:.05em;color:#8a6a2e}
+.access-flow-row a{color:#1a5fd7;word-break:break-all}
+.access-flow-actions{display:flex;gap:8px;align-items:center;margin-top:10px}
+.access-eof{
+  border:1px solid #0d5932;border-radius:6px;background:#e8f5ee;color:#0d5932;
+  padding:5px 12px;font:inherit;font-size:11px;font-weight:800;cursor:pointer;transition:.12s;
+}
+.access-eof:hover{background:#ceead7}
+.access-empty{color:var(--muted);font-size:12px;padding:10px 0}
