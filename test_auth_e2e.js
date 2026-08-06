@@ -39,14 +39,18 @@ window.T1.auth = {
   const errors = [];
   page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
 
-  // --- 1. Unauthenticated → opening index.html redirects to login.html ---
+  // --- 1. Unauthenticated → opening index.html stays on main site (read-access, guard allows) ---
   await page.goto('http://localhost:3000/index.html', { waitUntil: 'domcontentloaded' });
-  await page.waitForURL('**/login.html', { timeout: 5000 }).catch(() => {});
+  await page.waitForTimeout(1200);
   const afterGuard = page.url();
-  console.log('1. Guard redirect:', afterGuard);
-  if (afterGuard.indexOf('login.html') === -1) throw new Error('index.html should redirect to login.html when unauthenticated');
+  console.log('1. Guard (unauthenticated):', afterGuard);
+  if (afterGuard.indexOf('login.html') !== -1) throw new Error('unauthenticated should be allowed into main site (read-open rules)');
+  const guardTab = await page.evaluate(() => document.querySelector('.project-tab[data-project-tab="wiki"]') ? document.querySelector('.project-tab[data-project-tab="wiki"]').textContent.trim() : null);
+  if (guardTab !== 'ACCESS MANAGEMENT') throw new Error('ACCESS MANAGEMENT tab should be visible unauthenticated');
 
   // --- 2. Login failure → Firebase error message shown, no redirect ---
+  await page.goto('http://localhost:3000/login.html', { waitUntil: 'domcontentloaded' });
+  await page.waitForTimeout(3500);
   await page.evaluate(() => { window.T1.auth.loginResult = 'Firebase: Error (auth/invalid-credential).'; });
   await page.fill('input[name="email"]', 'bad@user.com');
   await page.fill('input[name="password"]', 'wrongpass');
