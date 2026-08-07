@@ -23,10 +23,18 @@ window.T1.auth = {
       // onAuthStateChanged 會等待 session 從 persistence 恢復完成後才回呼，
       // 因此回呼的 user 才是正確狀態（不可用同步 currentUser() 判斷）
       r.authMod.onAuthStateChanged(r.auth, function(user) {
-        console.log('[T1 Auth] Auth State Changed:', user ? user.email : 'null');
+        console.log('[T1 Auth] Auth State Changed:', user ? (user.email || (user.isAnonymous ? 'anonymous' : '?')) : 'null');
         self._lastUser = user;
         self._initialized = true;
         self._notify(user);
+        // 未登入（無 session）→ 自動匿名登入：
+        // 讓任何設備（未登入）也能寫入雲端（Firestore 規則 request.auth != null 對匿名成立）。
+        // 用戶之後以 Email/Password 登入即取代匿名身分。
+        if (!user) {
+          r.authMod.signInAnonymously(r.auth).catch(function(e) {
+            console.warn('[T1 Auth] anonymous sign-in failed (需在 Firebase Console 啟用 Anonymous 登入):', e && e.message ? e.message : e);
+          });
+        }
       });
     });
     return self._init;

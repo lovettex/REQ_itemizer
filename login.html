@@ -288,10 +288,11 @@
       if (!auth || !auth.init) return;
       auth.init();
       auth.onAuthChange(function(user) {
-        if (auth.available && user) {
+        if (auth.available && user && !user.isAnonymous) {
           console.log('[T1 Auth] 已登入，導向 index.html');
           window.location.replace('index.html');
         }
+        // 匿名用戶（自動登入）留在登入頁，可選擇以 Email/Password 登入正式帳號
       });
     })();
   </script>
