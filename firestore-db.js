@@ -83,12 +83,14 @@
         var localPairs = lsRead(LS_PAIRS);
         var localProjects = lsRead(LS_PROJECTS);
         var localMixNotes = (function(){ try { return JSON.parse(localStorage.getItem('t1-mixmatch-notes') || '{}'); } catch(e) { return {}; } })();
+        var localMixState = (function(){ try { return JSON.parse(localStorage.getItem('t1-mixmatch') || '[]'); } catch(e) { return []; } })();
         var localViewerPos = (function(){ try { return JSON.parse(localStorage.getItem('t1-viewer-positions') || '{}'); } catch(e) { return {}; } })();
         var localWiki = (function(){ try { return JSON.parse(localStorage.getItem('t1-wiki-entries') || '[]'); } catch(e) { return []; } })();
         var localAccess = (function(){ try { return JSON.parse(localStorage.getItem('t1-access-mgmt') || '[]'); } catch(e) { return []; } })();
         var cloudPairs = results[0].exists ? (results[0].data().items || []) : [];
         var cloudProjects = results[1].exists ? (results[1].data().items || []) : [];
         var cloudMixNotes = results[2].exists ? (results[2].data().items || {}) : {};
+        var cloudMixState = results[2].exists ? (results[2].data().mix || null) : null;
         var cloudViewerPos = results[3].exists ? (results[3].data().items || {}) : {};
         var cloudWiki = results[4].exists ? (results[4].data().items || []) : [];
         var cloudAccess = results[5].exists ? (results[5].data().items || []) : [];
@@ -96,6 +98,7 @@
           pairs: _mergeById(localPairs, cloudPairs),
           projects: _mergeById(localProjects, cloudProjects),
           mixNotes: Object.assign({}, cloudMixNotes, localMixNotes), // 備註：本地優先、雲端補缺
+          mixState: cloudMixState !== null ? _mergeById(localMixState, cloudMixState) : localMixState, // 槽位：本地優先、雲端補缺（雲端無則用本地）
           viewerPos: Object.assign({}, cloudViewerPos, localViewerPos), // 檢視位置：本地優先、雲端補缺
           wiki: _mergeById(localWiki, cloudWiki), // wiki：本地優先、雲端補缺
           accessMgmt: _mergeById(localAccess, cloudAccess), // ACCESS MANAGEMENT flow groups：本地優先、雲端補缺
@@ -104,6 +107,7 @@
         lsWrite(LS_PAIRS, out.pairs);
         lsWrite(LS_PROJECTS, out.projects);
         localStorage.setItem('t1-mixmatch-notes', JSON.stringify(out.mixNotes));
+        localStorage.setItem('t1-mixmatch', JSON.stringify(out.mixState));
         localStorage.setItem('t1-viewer-positions', JSON.stringify(out.viewerPos));
         localStorage.setItem('t1-wiki-entries', JSON.stringify(out.wiki));
         localStorage.setItem('t1-access-mgmt', JSON.stringify(out.accessMgmt));
@@ -144,8 +148,16 @@
     saveMixNotes: function(notes) {
       if (!this.db) return;
       this.db.collection(COLLECTION).doc('mixmatch')
-        .set({ items: notes || {}, updatedAt: new Date().toISOString() })
+        .set({ items: notes || {}, updatedAt: new Date().toISOString() }, { merge: true })
         .catch(function(e) { console.warn('[T1 Firestore] saveMixNotes failed:', e.message); });
+    },
+
+    // Mix & Match 6 格槽位內容 → Firestore（doc 'mixmatch' 的 mix 欄位，merge 不覆寫備註）
+    saveMixState: function(mixState) {
+      if (!this.db) return;
+      this.db.collection(COLLECTION).doc('mixmatch')
+        .set({ mix: mixState || [], updatedAt: new Date().toISOString() }, { merge: true })
+        .catch(function(e) { console.warn('[T1 Firestore] saveMixState failed:', e.message); });
     },
 
     // 檢視器儲存位置 → Firestore（doc 'viewerPos'，雲端備份，跨設備保留）
