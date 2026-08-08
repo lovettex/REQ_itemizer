@@ -20,15 +20,17 @@
    * Send an email through the Cloudflare Worker.
    *
    * @param {Object} params
-   * @param {string} params.to      - recipient email address
-   * @param {string} params.subject - email subject
-   * @param {string} params.html    - HTML body
+   * @param {string} params.to          - recipient email address
+   * @param {string} params.subject     - email subject
+   * @param {string} params.html        - HTML body
+   * @param {Array}  [params.attachments] - [{ filename, content(base64) }] — 附加檔案
    * @returns {Promise<boolean>} true on success, false on any failure
    */
   async function sendEmail(params) {
     var to = params && params.to;
     var subject = params && params.subject;
     var html = params && params.html;
+    var attachments = params && params.attachments;
 
     // Basic guard: missing recipient/subject is a failure (do not throw)
     if (!to || !subject || !html) {
@@ -44,10 +46,13 @@
         controller.abort(); // timeout
       }, TIMEOUT_MS);
 
+      var body = { to: to, subject: subject, html: html };
+      if (Array.isArray(attachments) && attachments.length) body.attachments = attachments;
+
       var response = await fetch(EMAIL_WORKER_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ to: to, subject: subject, html: html }),
+        body: JSON.stringify(body),
         signal: controller.signal
       });
 

@@ -32,6 +32,7 @@ export default {
     const to = payload && payload.to;
     const subject = payload && payload.subject;
     const html = payload && payload.html;
+    const attachments = payload && payload.attachments;
 
     if (!to || !subject || !html) {
       return json({ ok: false, error: 'Missing to / subject / html' }, 400);
@@ -41,18 +42,25 @@ export default {
     }
 
     try {
+      const emailBody = {
+        from: env.FROM_EMAIL || 'RFQ Itemizer <onboarding@resend.dev>',
+        to: [to],
+        subject: subject,
+        html: html
+      };
+      // 附件（{ filename, content(base64) }）→ Resend attachments
+      if (Array.isArray(attachments) && attachments.length) {
+        emailBody.attachments = attachments.filter(function(a) {
+          return a && a.filename && a.content;
+        });
+      }
       const res = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ' + env.RESEND_API_KEY
         },
-        body: JSON.stringify({
-          from: env.FROM_EMAIL || 'RFQ Itemizer <onboarding@resend.dev>',
-          to: [to],
-          subject: subject,
-          html: html
-        })
+        body: JSON.stringify(emailBody)
       });
 
       const text = await res.text();

@@ -94,6 +94,41 @@ function renderProfileFilters(){ $('profileFilters').innerHTML=profileCategories
 function renderProfileResults(){const q=profileState.query.toLowerCase().replace(/\s/g,'');let shown=[];if(q||profileState.category){shown=profileProducts.filter(p=>(!profileState.category||p.category===profileState.category)&&(`${p.code}${p.category}`.toLowerCase().replace(/\s/g,'').includes(q)))};$('profileResultCount').textContent=`${shown.length} results`;$('profileEmpty').hidden=shown.length>0;$('profileEmpty').textContent=(!q&&!profileState.category)?'輸入檢索關鍵字或點選分類標籤以顯示內容':'No matching profiles.';$('profileResults').innerHTML=shown.map((p,n)=>`<article class="card"><img src="${p.image}" alt="${esc(p.code)}" data-profile-view="${profileProducts.indexOf(p)}" loading="${n>8?'lazy':'eager'}"><div class="card-body"><div class="code">${esc(p.code)}</div><div class="meta">${esc(p.category)}</div><div class="actions"><button data-mix-add-profile="${profileProducts.indexOf(p)}">Mix</button></div></div></article>`).join('');document.querySelectorAll('[data-profile-view]').forEach(x=>x.onclick=()=>openViewer(profileProducts[x.dataset.profileView]))}
 
 // === Mail Request — per-project email composition + send (new feature) ===
+function csvCell(v){ v = (v == null ? '' : String(v)); return /[",\n\r]/.test(v) ? '"' + v.replace(/"/g,'""') + '"' : v; }
+function buildMailCsv(p){
+  var rows = [];
+  var push = function(){ var cells = Array.prototype.slice.call(arguments); rows.push(cells.map(csvCell).join(',')); };
+  push('SECTION','FIELD','VALUE');
+  var client = [['Project', p.name], ['Sales', p.sales], ['Delivery Mode', p.priority]];
+  if (p.deadline) client.push(['Deadline', p.deadline]);
+  client.push(['Address', p.address], ['Tenderer', p.tenderer], ['Attn', p.attn], ['Tel', p.tel], ['Email', p.email], ['Mobile', p.mobile], ['Fax', p.fax]);
+  if (p.briefing) { if (p.briefing.general) client.push(['Briefing General', p.briefing.general]); if (p.briefing.layout) client.push(['Briefing Layout', p.briefing.layout]); }
+  client.forEach(function(c){ push('CLIENT INFO', c[0], c[1]); });
+  if (p.zipMeta) push('ZIP FILE', 'File', (p.zipMeta.name||'') + ' (' + ((p.zipMeta.size||0)/1024).toFixed(1) + ' KB)' + (p.zipMeta.downloadUrl ? ' [Uploaded]' : ''));
+  ['PARTITION','DOOR','OPERABLE_WALL'].forEach(function(type){
+    var items = (p.items||[]).filter(function(i){ return i.type === type; });
+    if (!items.length) return;
+    push(type, '#', 'Item', 'Detail');
+    items.forEach(function(item, idx){
+      var extra = item.extra || {};
+      var detail = Object.keys(extra).filter(function(k){ return extra[k]; }).map(function(k){ return k + ': ' + extra[k]; }).join(' | ');
+      push(type, String(idx+1), (item.pair && item.pair.name) || '', detail);
+    });
+  });
+  if ((p.workLogs||[]).length) {
+    push('WORK LOG', 'Summary', 'QTN', 'Status', 'Date');
+    (p.workLogs||[]).forEach(function(l){ push('WORK LOG', l.summary || l.qtnNum || '', l.qtnNum || '', l.status || '', (l.createdAt||'').slice(0,10)); });
+  }
+  return rows.join('\r\n');
+}
+function toBase64Utf8(str){
+  try {
+    var bytes = new TextEncoder().encode(str);
+    var bin = '';
+    bytes.forEach(function(b){ bin += String.fromCharCode(b); });
+    return btoa(bin);
+  } catch(e) { return btoa(unescape(encodeURIComponent(str))); }
+}
 function mailContentTable(p){
   var rows = [];
   var client = [['Project', p.name], ['Sales', p.sales || '-'], ['Delivery Mode', p.priority || '-']];
@@ -187,9 +222,15 @@ document.addEventListener('click', e => {
   const et = (window.T1 || {}).emailTemplate;
   if (!es || !es.sendEmail) { toast('Email 服務未就緒'); return; }
   const html = et && et.buildMailRequestHtml ? et.buildMailRequestHtml(content) : '<pre>' + esc(content) + '</pre>';
+  // CSV 附件（整理好的表格內容，base64）
+  var csvAtt = null;
+  try {
+    var csv = buildMailCsv(p);
+    csvAtt = { filename: ((p.name || 'project').replace(/[\\/:*?"<>|]/g, '_') || 'project') + '-mail-content.csv', content: toBase64Utf8(csv) };
+  } catch (csvErr) { console.warn('[Mail] CSV attachment build failed:', csvErr && csvErr.message ? csvErr.message : csvErr); }
   btn.disabled = true; btn.textContent = 'Sending…';
   Promise.all(recipients.map(function(to) {
-    return es.sendEmail({ to: to, subject: subject, html: html }).then(function(ok) { return ok; });
+    return es.sendEmail({ to: to, subject: subject, html: html, attachments: csvAtt ? [csvAtt] : undefined }).then(function(ok) { return ok; });
   })).then(function(results) {
     btn.disabled = false; btn.textContent = 'Send Email';
     const okCount = results.filter(Boolean).length;
@@ -351,7 +392,7 @@ ${itemTable(p,'DOOR')}</div>
 <div class="item-scan-row"><button class="item-scan-btn" data-scan-items="${p.id}" type="button">📄 掃描 Excel</button><small class="item-scan-hint">從 Excel 匯入 OPERABLE WALL 項目</small></div>
 ${itemTable(p,'OPERABLE_WALL')}</div>
 <div class="p-inner-panel" data-ptab-panel="${p.id}|notes" style="display:none">${worklogFormHtml(p)}</div>
-<div class="p-inner-panel" data-ptab-panel="${p.id}|mail" style="display:none"><div class="mail-request-form" data-mail-request="${p.id}"><div class="mail-field"><label>TO:</label><input data-mail-to placeholder="name@example.com, name2@example.com"><small>使用逗號分隔多個收件人</small></div><div class="mail-field"><label>CC:</label><input data-mail-cc placeholder="cc@example.com"></div><div class="mail-field"><label>Subject:</label><input data-mail-subject placeholder="Email Subject"></div><div class="mail-field"><label>Content:</label><div class="mail-content-box"><button type="button" class="mail-content-toggle" data-mail-toggle="1">📋 表格預覽 ▾</button><div class="mail-content-table" style="display:none">${mailContentTable(p)}</div><textarea data-mail-content rows="6">${esc(buildMailContent(p))}</textarea></div></div><button type="button" class="primary mail-send-btn" data-mail-send="${p.id}">Send Email</button></div></div>
+<div class="p-inner-panel" data-ptab-panel="${p.id}|mail" style="display:none"><div class="mail-request-form" data-mail-request="${p.id}"><div class="mail-field"><label>TO:</label><input data-mail-to placeholder="name@example.com, name2@example.com"><small>使用逗號分隔多個收件人</small></div><div class="mail-field"><label>CC:</label><input data-mail-cc placeholder="cc@example.com"></div><div class="mail-field"><label>Subject:</label><input data-mail-subject placeholder="Email Subject"></div><div class="mail-field"><label>Content:</label><div class="mail-csv-actions"><button type="button" class="mail-csv-btn" data-mail-csv="preview|${p.id}">📄 預覽 CSV</button><button type="button" class="mail-csv-btn" data-mail-csv="download|${p.id}">⬇ 下載 CSV</button></div><textarea data-mail-content rows="6">${esc(buildMailContent(p))}</textarea><div class="mail-csv-preview" style="display:none"><pre></pre></div></div><button type="button" class="primary mail-send-btn" data-mail-send="${p.id}">Send Email</button></div></div>
 <button class="project-delete" data-project-delete="${p.id}">刪除 Project</button></div></details>`).join(''):'<div class="project-empty">尚未儲存 Project。</div>';document.querySelectorAll('[data-project-edit]').forEach(form=>form.onsubmit=async e=>{e.preventDefault();const p=state.projects.find(x=>x.id===form.dataset.projectEdit),f=new FormData(form);['name','sales','priority','deadline','address','tenderer','attn','tel','email','mobile','fax'].forEach(k=>{p[k]=f.get(k);if(k==='deadline'&&p[k])p[k]=p[k]+' EOD'});p.briefing={general:f.get('briefingGeneral')||'',layout:f.get('briefingLayout')||''};const zipInput=form.querySelector('[data-zip-upload]');const zipFile=zipInput&&zipInput.files[0];const _st=(window.T1||{}).storage;let zipUpdating=false;if(zipFile){const submitBtn=form.querySelector('button[type="submit"]');if(_st&&_st.ready){zipUpdating=true;if(submitBtn){submitBtn.disabled=true;submitBtn.textContent='上傳中…'}try{const up=await _st.uploadZip(p.id,zipFile);p.zipMeta={name:zipFile.name,size:zipFile.size,lastModified:zipFile.lastModified,storagePath:up.storagePath,downloadUrl:up.downloadUrl,uploadedAt:new Date().toISOString()}}catch(err){console.warn('[Zip] upload failed:',err.message);p.zipMeta={name:zipFile.name,size:zipFile.size,lastModified:zipFile.lastModified};toast('ZIP 上傳失敗，僅存檔案資訊')}finally{if(submitBtn){submitBtn.disabled=false;submitBtn.textContent='儲存修改'}}}else{p.zipMeta={name:zipFile.name,size:zipFile.size,lastModified:zipFile.lastModified}}}save();renderProjects();renderPairs();toast(zipFile?(zipUpdating?`Project 已更新 (含 ${zipFile.name})`:`Project 已更新 (含 ${zipFile.name})`):'Project 已更新')});document.querySelectorAll('[data-priority-select]').forEach(sel=>sel.onchange=()=>{const dl=sel.closest('form').querySelector('.deadline-label');if(dl)dl.style.display=sel.value==='CERTAIN DEADLINE'?'':'none'});document.querySelectorAll('[data-item-edit]').forEach(btn=>btn.onclick=()=>{const [projectId,itemId]=btn.dataset.itemEdit.split('|');const form=document.querySelector(`[data-item-extra-key="${projectId}|${itemId}"]`);const summary=document.querySelector(`[data-item-summary="${projectId}|${itemId}"]`);if(form.style.display==='none'){form.style.display='';summary.style.display='none';btn.textContent='收起'}else{form.style.display='none';summary.style.display='';btn.textContent=document.querySelector(`[data-item-summary="${projectId}|${itemId}"] .item-type-badge`)?.classList.contains('none')?'設定類別':'編輯資料'}});document.querySelectorAll('[data-project-delete]').forEach(b=>b.onclick=()=>{state.projects=state.projects.filter(p=>p.id!==b.dataset.projectDelete);save();renderProjects();renderPairs();toast('已刪除 Project')});document.querySelectorAll('[data-item-delete]').forEach(b=>b.onclick=()=>{const [projectId,itemId]=b.dataset.itemDelete.split('|');const p=state.projects.find(x=>x.id===projectId);p.items=p.items.filter(x=>x.id!==itemId);save();renderProjects();toast('已刪除項目')});[['data-up',-1],['data-down',1]].forEach(([attribute,delta])=>document.querySelectorAll(`[${attribute}]`).forEach(b=>b.onclick=()=>{const [projectId,itemId]=b.getAttribute(attribute).split('|');const p=state.projects.find(x=>x.id===projectId);const i=p.items.findIndex(x=>x.id===itemId);[p.items[i],p.items[i+delta]]=[p.items[i+delta],p.items[i]];save();renderProjects()}));refreshPairProjectSelect();setTimeout(restoreProjectTabs,0); setTimeout(function(){if(typeof renderAccessMgmt==="function")renderAccessMgmt()},100) }
 
 function renderDashboard(){
@@ -805,7 +846,7 @@ document.addEventListener('click',e=>{const el=e.target.closest('[data-item-view
 document.addEventListener('click',e=>{const el=e.target.closest('[data-item-field-view]');if(!el)return;const raw=el.dataset.itemFieldView.trim();let p=products.find(x=>x.code===raw);if(!p){const norm=raw.replace(/\s*-\s*/g,' - ');p=products.find(x=>x.code===norm)}if(!p){p=profileProducts.find(x=>x.code===raw);if(!p){const norm=raw.replace(/\s*-\s*/g,' - ');p=profileProducts.find(x=>x.code===norm)}}if(p)openViewer(p);else toast('找不到對應圖面: '+raw)});
 
 // Delegated clicks for saved-pairs actions
-document.addEventListener('click',e=>{const btn=e.target.closest('[data-mail-toggle]');if(!btn)return;const box=btn.closest('.mail-content-box');const table=box?box.querySelector('.mail-content-table'):null;if(!table)return;const hidden=table.style.display==='none';table.style.display=hidden?'':'none';btn.textContent=hidden?'📋 表格預覽 ▴':'📋 表格預覽 ▾';});
+document.addEventListener('click',e=>{const btn=e.target.closest('[data-mail-csv]');if(!btn)return;const [action,pid]=btn.dataset.mailCsv.split('|');const p=state.projects.find(x=>x.id===pid);if(!p)return;const card=btn.closest('[data-mail-request]');if(!card)return;const csv=buildMailCsv(p);if(action==='download'){const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=((p.name||'project').replace(/[\\/:*?"<>|]/g,'_')||'project')+'-mail-content.csv';a.click();URL.revokeObjectURL(a.href);toast('CSV 已下載')}else if(action==='preview'){const wrap=card.querySelector('.mail-csv-preview');if(!wrap)return;const hidden=wrap.style.display==='none';wrap.style.display=hidden?'':'none';if(hidden){wrap.querySelector('pre').textContent=csv;btn.textContent='📄 隱藏 CSV'}else{btn.textContent='📄 預覽 CSV'}}});
 document.addEventListener('click',e=>{const btn=e.target.closest('[data-pair-view]');if(!btn)return;const pair=state.pairs.find(p=>p.id===btn.dataset.pair);openViewer(pair[btn.dataset.pairView])});
 document.addEventListener('click',e=>{const btn=e.target.closest('[data-pair-delete]');if(!btn)return;state.pairs=state.pairs.filter(p=>p.id!==btn.dataset.pairDelete);save();renderPairs();toast('已刪除配對')});
 document.addEventListener('click',e=>{const btn=e.target.closest('[data-copy]');if(!btn)return;const select=document.querySelector(`[data-project-for="${btn.dataset.copy}"]`);const project=state.projects.find(p=>p.id===select.value);const pair=state.pairs.find(p=>p.id===btn.dataset.copy);if(!project){toast('請先選擇 Project');return}project.items.push({id:id(),pair:{name:pair.name,a1:structuredClone(pair.a1),a2:structuredClone(pair.a2),inventoryA1:pair.inventoryA1,inventoryA2:pair.inventoryA2,qtn:pair.qtn||'',boq:pair.boq||''}});save();renderProjects();toast(`已複製到 ${project.name}`)});

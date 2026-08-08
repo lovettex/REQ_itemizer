@@ -683,3 +683,13 @@ input,select,textarea,.ow-row input,.ow-row select,.ow-row textarea,.ow-project-
 }
 .mail-content-toggle:hover{background:#ceead7}
 .mail-content-table{display:grid;gap:10px;max-height:300px;overflow:auto;padding:8px;border:1px dashed rgba(0,0,0,.14);border-radius:8px;background:rgba(255,255,255,.35)}
+
+/* === Mail Request CSV actions === */
+.mail-csv-actions{display:flex;gap:8px;margin-bottom:6px}
+.mail-csv-btn{
+  border:1px solid rgba(13,89,50,.4);border-radius:6px;background:#e8f5ee;color:#0d5932;
+  padding:5px 12px;font:inherit;font-size:11px;font-weight:800;cursor:pointer;transition:.12s;
+}
+.mail-csv-btn:hover{background:#ceead7}
+.mail-csv-preview{max-height:240px;overflow:auto;margin-bottom:6px;border:1px solid rgba(0,0,0,.14);border-radius:8px;background:rgba(255,255,255,.5)}
+.mail-csv-preview pre{margin:0;padding:10px;font:11px/1.5 Consolas,monospace;color:#2a3a4a;white-space:pre-wrap;word-break:break-all}
