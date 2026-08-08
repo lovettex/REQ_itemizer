@@ -659,3 +659,17 @@ input,select,textarea,.ow-row input,.ow-row select,.ow-row textarea,.ow-project-
 }
 .access-eof:hover{background:#ceead7}
 .access-empty{color:var(--muted);font-size:12px;padding:10px 0}
+
+/* === Mail Request content table preview === */
+.mail-content-table{display:grid;gap:10px;margin-bottom:8px;max-height:340px;overflow:auto;padding-right:4px}
+.mail-table{width:100%;border-collapse:collapse;font-size:11px;background:rgba(255,255,255,.5);border-radius:8px;overflow:hidden}
+.mail-table caption{
+  text-align:left;font-size:10px;font-weight:800;letter-spacing:.08em;color:#8a6a2e;
+  padding:6px 10px;background:rgba(223,191,121,.12);border:1px solid rgba(0,0,0,.08);border-bottom:0;
+}
+.mail-table th,.mail-table td{padding:5px 9px;border:1px solid rgba(0,0,0,.08);text-align:left;vertical-align:top}
+.mail-table th{background:rgba(0,0,0,.04);font-weight:800;color:#3a4a5a;white-space:nowrap}
+.mail-table td{color:#2a3a4a}
+.mail-table .mc-k{font-weight:800;color:#3a4a5a;white-space:nowrap;width:130px}
+.mail-field textarea{width:100%;border:1px solid #d5dbe1;border-radius:6px;padding:8px 10px;background:#fff;font:inherit;font-size:11px;color:var(--ink);resize:vertical}
+.mail-field small{display:block;margin-top:4px;color:var(--muted);font-size:10.5px}

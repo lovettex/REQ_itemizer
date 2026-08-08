@@ -94,6 +94,36 @@ function renderProfileFilters(){ $('profileFilters').innerHTML=profileCategories
 function renderProfileResults(){const q=profileState.query.toLowerCase().replace(/\s/g,'');let shown=[];if(q||profileState.category){shown=profileProducts.filter(p=>(!profileState.category||p.category===profileState.category)&&(`${p.code}${p.category}`.toLowerCase().replace(/\s/g,'').includes(q)))};$('profileResultCount').textContent=`${shown.length} results`;$('profileEmpty').hidden=shown.length>0;$('profileEmpty').textContent=(!q&&!profileState.category)?'輸入檢索關鍵字或點選分類標籤以顯示內容':'No matching profiles.';$('profileResults').innerHTML=shown.map((p,n)=>`<article class="card"><img src="${p.image}" alt="${esc(p.code)}" data-profile-view="${profileProducts.indexOf(p)}" loading="${n>8?'lazy':'eager'}"><div class="card-body"><div class="code">${esc(p.code)}</div><div class="meta">${esc(p.category)}</div><div class="actions"><button data-mix-add-profile="${profileProducts.indexOf(p)}">Mix</button></div></div></article>`).join('');document.querySelectorAll('[data-profile-view]').forEach(x=>x.onclick=()=>openViewer(profileProducts[x.dataset.profileView]))}
 
 // === Mail Request — per-project email composition + send (new feature) ===
+function mailContentTable(p){
+  var rows = [];
+  var client = [['Project', p.name], ['Sales', p.sales || '-'], ['Delivery Mode', p.priority || '-']];
+  if (p.deadline) client.push(['Deadline', p.deadline]);
+  client.push(['Address', p.address || '-'], ['Tenderer', p.tenderer || '-'], ['Attn', p.attn || '-'], ['Tel', p.tel || '-'], ['Email', p.email || '-'], ['Mobile', p.mobile || '-'], ['Fax', p.fax || '-']);
+  if (p.briefing) { if (p.briefing.general) client.push(['Briefing General', p.briefing.general]); if (p.briefing.layout) client.push(['Briefing Layout', p.briefing.layout]); }
+  var clientRows = client.map(function(r){ return '<tr><td class="mc-k">'+esc(r[0])+'</td><td>'+esc(r[1])+'</td></tr>'; }).join('');
+  rows.push('<table class="mail-table"><caption>CLIENT INFO</caption><tbody>'+clientRows+'</tbody></table>');
+  if (p.zipMeta) {
+    rows.push('<table class="mail-table"><caption>ZIP FILE</caption><tbody><tr><td class="mc-k">File</td><td>'+esc(p.zipMeta.name||'')+' ('+((p.zipMeta.size||0)/1024).toFixed(1)+' KB)'+(p.zipMeta.downloadUrl?' [Uploaded]':'')+'</td></tr></tbody></table>');
+  }
+  ['PARTITION','DOOR','OPERABLE_WALL'].forEach(function(type){
+    var items = (p.items||[]).filter(function(i){ return i.type === type; });
+    if (!items.length) return;
+    var body = items.map(function(item, idx){
+      var extra = item.extra || {};
+      var detail = Object.keys(extra).filter(function(k){ return extra[k]; }).map(function(k){ return k + ': ' + extra[k]; }).join(' | ');
+      var label = (item.pair && item.pair.name) ? item.pair.name : '';
+      return '<tr><td>'+(idx+1)+'</td><td>'+esc(label)+'</td><td>'+esc(detail)+'</td></tr>';
+    }).join('');
+    rows.push('<table class="mail-table"><caption>'+type+' ('+items.length+')</caption><thead><tr><th>#</th><th>Item</th><th>Detail</th></tr></thead><tbody>'+body+'</tbody></table>');
+  });
+  if ((p.workLogs||[]).length) {
+    var wbody = (p.workLogs||[]).map(function(l){
+      return '<tr><td>'+esc(l.summary||l.qtnNum||'—')+'</td><td>'+(l.qtnNum?esc(l.qtnNum):'')+'</td><td>'+esc(l.status||'')+'</td><td>'+esc((l.createdAt||'').slice(0,10))+'</td></tr>';
+    }).join('');
+    rows.push('<table class="mail-table"><caption>WORK LOG ('+(p.workLogs||[]).length+')</caption><thead><tr><th>Summary</th><th>QTN</th><th>Status</th><th>Date</th></tr></thead><tbody>'+wbody+'</tbody></table>');
+  }
+  return rows.join('');
+}
 function buildMailContent(p){
   const lines = [];
   lines.push('=== CLIENT INFO ===');
@@ -321,7 +351,7 @@ ${itemTable(p,'DOOR')}</div>
 <div class="item-scan-row"><button class="item-scan-btn" data-scan-items="${p.id}" type="button">📄 掃描 Excel</button><small class="item-scan-hint">從 Excel 匯入 OPERABLE WALL 項目</small></div>
 ${itemTable(p,'OPERABLE_WALL')}</div>
 <div class="p-inner-panel" data-ptab-panel="${p.id}|notes" style="display:none">${worklogFormHtml(p)}</div>
-<div class="p-inner-panel" data-ptab-panel="${p.id}|mail" style="display:none"><div class="mail-request-form" data-mail-request="${p.id}"><div class="mail-field"><label>TO:</label><input data-mail-to placeholder="name@example.com, name2@example.com"><small>使用逗號分隔多個收件人</small></div><div class="mail-field"><label>CC:</label><input data-mail-cc placeholder="cc@example.com"></div><div class="mail-field"><label>Subject:</label><input data-mail-subject placeholder="Email Subject"></div><div class="mail-field"><label>Content:</label><textarea data-mail-content rows="12">${esc(buildMailContent(p))}</textarea></div><button type="button" class="primary mail-send-btn" data-mail-send="${p.id}">Send Email</button></div></div>
+<div class="p-inner-panel" data-ptab-panel="${p.id}|mail" style="display:none"><div class="mail-request-form" data-mail-request="${p.id}"><div class="mail-field"><label>TO:</label><input data-mail-to placeholder="name@example.com, name2@example.com"><small>使用逗號分隔多個收件人</small></div><div class="mail-field"><label>CC:</label><input data-mail-cc placeholder="cc@example.com"></div><div class="mail-field"><label>Subject:</label><input data-mail-subject placeholder="Email Subject"></div><div class="mail-field"><label>Content:</label><div class="mail-content-table">${mailContentTable(p)}</div><textarea data-mail-content rows="6">${esc(buildMailContent(p))}</textarea><small>以上為表格預覽；寄送內容使用下方文字，可編輯自訂。</small></div><button type="button" class="primary mail-send-btn" data-mail-send="${p.id}">Send Email</button></div></div>
 <button class="project-delete" data-project-delete="${p.id}">刪除 Project</button></div></details>`).join(''):'<div class="project-empty">尚未儲存 Project。</div>';document.querySelectorAll('[data-project-edit]').forEach(form=>form.onsubmit=async e=>{e.preventDefault();const p=state.projects.find(x=>x.id===form.dataset.projectEdit),f=new FormData(form);['name','sales','priority','deadline','address','tenderer','attn','tel','email','mobile','fax'].forEach(k=>{p[k]=f.get(k);if(k==='deadline'&&p[k])p[k]=p[k]+' EOD'});p.briefing={general:f.get('briefingGeneral')||'',layout:f.get('briefingLayout')||''};const zipInput=form.querySelector('[data-zip-upload]');const zipFile=zipInput&&zipInput.files[0];const _st=(window.T1||{}).storage;let zipUpdating=false;if(zipFile){const submitBtn=form.querySelector('button[type="submit"]');if(_st&&_st.ready){zipUpdating=true;if(submitBtn){submitBtn.disabled=true;submitBtn.textContent='上傳中…'}try{const up=await _st.uploadZip(p.id,zipFile);p.zipMeta={name:zipFile.name,size:zipFile.size,lastModified:zipFile.lastModified,storagePath:up.storagePath,downloadUrl:up.downloadUrl,uploadedAt:new Date().toISOString()}}catch(err){console.warn('[Zip] upload failed:',err.message);p.zipMeta={name:zipFile.name,size:zipFile.size,lastModified:zipFile.lastModified};toast('ZIP 上傳失敗，僅存檔案資訊')}finally{if(submitBtn){submitBtn.disabled=false;submitBtn.textContent='儲存修改'}}}else{p.zipMeta={name:zipFile.name,size:zipFile.size,lastModified:zipFile.lastModified}}}save();renderProjects();renderPairs();toast(zipFile?(zipUpdating?`Project 已更新 (含 ${zipFile.name})`:`Project 已更新 (含 ${zipFile.name})`):'Project 已更新')});document.querySelectorAll('[data-priority-select]').forEach(sel=>sel.onchange=()=>{const dl=sel.closest('form').querySelector('.deadline-label');if(dl)dl.style.display=sel.value==='CERTAIN DEADLINE'?'':'none'});document.querySelectorAll('[data-item-edit]').forEach(btn=>btn.onclick=()=>{const [projectId,itemId]=btn.dataset.itemEdit.split('|');const form=document.querySelector(`[data-item-extra-key="${projectId}|${itemId}"]`);const summary=document.querySelector(`[data-item-summary="${projectId}|${itemId}"]`);if(form.style.display==='none'){form.style.display='';summary.style.display='none';btn.textContent='收起'}else{form.style.display='none';summary.style.display='';btn.textContent=document.querySelector(`[data-item-summary="${projectId}|${itemId}"] .item-type-badge`)?.classList.contains('none')?'設定類別':'編輯資料'}});document.querySelectorAll('[data-project-delete]').forEach(b=>b.onclick=()=>{state.projects=state.projects.filter(p=>p.id!==b.dataset.projectDelete);save();renderProjects();renderPairs();toast('已刪除 Project')});document.querySelectorAll('[data-item-delete]').forEach(b=>b.onclick=()=>{const [projectId,itemId]=b.dataset.itemDelete.split('|');const p=state.projects.find(x=>x.id===projectId);p.items=p.items.filter(x=>x.id!==itemId);save();renderProjects();toast('已刪除項目')});[['data-up',-1],['data-down',1]].forEach(([attribute,delta])=>document.querySelectorAll(`[${attribute}]`).forEach(b=>b.onclick=()=>{const [projectId,itemId]=b.getAttribute(attribute).split('|');const p=state.projects.find(x=>x.id===projectId);const i=p.items.findIndex(x=>x.id===itemId);[p.items[i],p.items[i+delta]]=[p.items[i+delta],p.items[i]];save();renderProjects()}));refreshPairProjectSelect();setTimeout(restoreProjectTabs,0); setTimeout(function(){if(typeof renderAccessMgmt==="function")renderAccessMgmt()},100) }
 
 function renderDashboard(){
