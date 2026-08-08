@@ -673,3 +673,13 @@ input,select,textarea,.ow-row input,.ow-row select,.ow-row textarea,.ow-project-
 .mail-table .mc-k{font-weight:800;color:#3a4a5a;white-space:nowrap;width:130px}
 .mail-field textarea{width:100%;border:1px solid #d5dbe1;border-radius:6px;padding:8px 10px;background:#fff;font:inherit;font-size:11px;color:var(--ink);resize:vertical}
 .mail-field small{display:block;margin-top:4px;color:var(--muted);font-size:10.5px}
+
+/* === Mail Request content box (textarea + collapsible table preview) === */
+.mail-content-box{display:grid;gap:6px}
+.mail-content-toggle{
+  justify-self:start;border:1px solid rgba(13,89,50,.4);border-radius:6px;
+  background:#e8f5ee;color:#0d5932;padding:5px 12px;
+  font:inherit;font-size:11px;font-weight:800;cursor:pointer;transition:.12s;
+}
+.mail-content-toggle:hover{background:#ceead7}
+.mail-content-table{display:grid;gap:10px;max-height:300px;overflow:auto;padding:8px;border:1px dashed rgba(0,0,0,.14);border-radius:8px;background:rgba(255,255,255,.35)}
