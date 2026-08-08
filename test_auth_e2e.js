@@ -45,8 +45,8 @@ window.T1.auth = {
   const afterGuard = page.url();
   console.log('1. Guard (unauthenticated):', afterGuard);
   if (afterGuard.indexOf('login.html') !== -1) throw new Error('unauthenticated should be allowed into main site (read-open rules)');
-  const guardTab = await page.evaluate(() => document.querySelector('.project-tab[data-project-tab="wiki"]') ? document.querySelector('.project-tab[data-project-tab="wiki"]').textContent.trim() : null);
-  if (guardTab !== 'ACCESS MANAGEMENT') throw new Error('ACCESS MANAGEMENT tab should be visible unauthenticated');
+  const guardTab = await page.evaluate(() => document.querySelector('.project-tab[data-project-tab="saved"]') ? document.querySelector('.project-tab[data-project-tab="saved"]').textContent.trim() : null);
+  if (guardTab !== 'LISTED PROJECTS') throw new Error('main tabs should be visible unauthenticated');
 
   // --- 2. Login failure → Firebase error message shown, no redirect ---
   await page.goto('http://localhost:3000/login.html', { waitUntil: 'domcontentloaded' });

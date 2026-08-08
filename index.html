@@ -25,7 +25,6 @@
       <button class="project-tab active" data-project-tab="saved"><span>LISTED PROJECTS</span></button>
       <button class="project-tab" data-project-tab="dashboard"><span>DASHBOARD IN CHARGE</span></button>
       <button class="project-tab" data-project-tab="confirmed"><span>PROJECT CONFIRMED</span></button>
-      <button class="project-tab" data-project-tab="wiki"><span>ACCESS MANAGEMENT</span></button>
     </div>
     <div class="project-tab-panel" data-project-tab-panel="new" style="display:none">
     <div class="project-section-body"><form id="projectForm" class="project-form"><label>Project<input name="name" required placeholder="Project name"></label><label>Sales<input name="sales" list="salesList" autocomplete="off" placeholder="選擇或輸入 Sales"></label><datalist id="salesList"><option value="Glen Tew"><option value="Gerry Lee"><option value="Eugene Ng"><option value="Jim Lim"><option value="Kelvin Tjia"><option value="Benjamin Seng"><option value="Lim Zhi Kang Louis"><option value="Bella"><option value="Jensen"><option value="Rayven Leong"><option value="Zac Lee"><option value="Naomi"></datalist><label>Delivery mode<select name="priority" data-priority-select><option value="">CASE</option><option value="REGULAR">REGULAR</option><option value="URGENT">URGENT</option><option value="CERTAIN DEADLINE">CERTAIN DEADLINE</option></select></label><label class="deadline-label" style="display:none">Deadline<input name="deadline" type="date" data-deadline-input></label><label>Address<input name="address"></label><label>Tenderer 1<input name="tenderer"></label><label>Attn<input name="attn"></label><label>Tel<input name="tel"></label><label>Email<input name="email" type="email"></label><label>Mobile<input name="mobile"></label><label>Fax<input name="fax"></label><label class="zip-upload-label"><span>📦 Upload Zip file</span><input name="zipFile" type="file" accept=".zip" data-zip-upload hidden><span class="zip-choose-btn">Choose Zip file</span><small class="zip-file-status" data-zip-status>No file selected yet</small></label><div class="briefing-block"><div class="briefing-title">Project Briefing</div><div class="briefing-hint">*Please sorted out your files into folders, and pinpoint the main target content to save time for evaluating and analyzing data</div><label class="briefing-field">General briefing<textarea name="briefingGeneral" rows="4" placeholder="輸入 General briefing..."></textarea></label><label class="briefing-field">Layout &amp; file highlight<textarea name="briefingLayout" rows="4" placeholder="輸入 Layout &amp; file highlight..."></textarea></label></div><label class="scan-label"><span>📄 Scan RFQ file</span><input id="excelScanInput" type="file" accept=".xlsx,.xls,.csv" hidden><button id="scanBtn" class="primary scan-btn" type="button">Scan RFQ file</button><small>掃描 Excel 自動填入表單</small></label><button class="primary" type="submit">SAVE</button></form>
@@ -41,13 +40,6 @@
     <div class="project-section-body">
       <div class="ps-search-wrap"><div class="ps-search-inner"><input type="text" id="confirmedSearch" placeholder="檢索 Project..." autocomplete="off"><span class="ps-arrow">▾</span></div><div class="ps-dropdown" id="confirmedDropdown"></div></div>
       <div id="confirmedList" class="confirmed-list"></div>
-    </div>
-    </div>
-    <div class="project-tab-panel" data-project-tab-panel="wiki" style="display:none">
-    <div class="project-section-body">
-      <div id="wikiContent">
-        <!-- Wiki sub-tabs bar and panels — rendered dynamically by app.js -->
-      </div>
     </div>
     </div>
   </section>
