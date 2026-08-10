@@ -77,20 +77,20 @@ const localPair = [{ id: 'lp1', name: '本地配對 Y' }];
     await context.close();
   }
 
-  // --- 1b. Same id in cloud & local → LOCAL wins (most recently operated) ---
+  // --- 1b. Same id in cloud & local → CLOUD wins (cloud is the latest authority across devices) ---
   {
     const { page, context } = await openPage(browser, {
       cloudPairs: null,
-      cloudProjects: [{ id: 'same-1', name: '雲端舊名稱', items: [] }],
+      cloudProjects: [{ id: 'same-1', name: '雲端最新名稱', items: [] }],
       localPairs: null,
-      localProjects: [{ id: 'same-1', name: '本地新名稱', items: [] }],
+      localProjects: [{ id: 'same-1', name: '本地舊快照', items: [] }],
     });
     const r = await page.evaluate(() => {
       const lsP = JSON.parse(localStorage.getItem('t1-projects') || '[]');
       return { names: lsP.map(x => x.name), count: lsP.length };
     });
     console.log('1b. Same-id conflict:', JSON.stringify(r));
-    if (r.count !== 1 || r.names[0] !== '本地新名稱') throw new Error('local should win on same id: ' + JSON.stringify(r.names));
+    if (r.count !== 1 || r.names[0] !== '雲端最新名稱') throw new Error('cloud should win on same id: ' + JSON.stringify(r.names));
     await context.close();
   }
 

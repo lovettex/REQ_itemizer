@@ -15,8 +15,8 @@
   }
 
   // 合併本地與雲端兩份陣列（以 id 去重）：
-  // - 同 id 衝突 → 本地優先（本地為最近操作的一方）
-  // - 雲端有而本地沒有的 → 補進來（不丟失雲端資料）
+  // - 同 id 衝突 → 雲端優先（雲端為多裝置寫入的最新權威；本地僅為離線快取）
+  // - 本地有而雲端沒有的 → 補進來（保留離線建立的資料）
   // - 任一來源非陣列則忽略該來源
   function _mergeById(localArr, cloudArr) {
     var local = Array.isArray(localArr) ? localArr : [];
@@ -30,9 +30,9 @@
       if (!(key in map)) order.push(item);
       map[key] = item;
     }
-    // 本地先（衝突時本地優先），雲端後（補缺）
-    local.forEach(put);
+    // 雲端先（衝突時雲端優先），本地後（補缺）
     cloud.forEach(put);
+    local.forEach(put);
     return order;
   }
 
@@ -97,9 +97,9 @@
         var out = {
           pairs: _mergeById(localPairs, cloudPairs),
           projects: _mergeById(localProjects, cloudProjects),
-          mixNotes: Object.assign({}, cloudMixNotes, localMixNotes), // 備註：本地優先、雲端補缺
-          mixState: cloudMixState !== null ? _mergeById(localMixState, cloudMixState) : localMixState, // 槽位：本地優先、雲端補缺（雲端無則用本地）
-          viewerPos: Object.assign({}, cloudViewerPos, localViewerPos), // 檢視位置：本地優先、雲端補缺
+          mixNotes: Object.assign({}, localMixNotes, cloudMixNotes), // 備註：雲端優先、本地補缺
+          mixState: cloudMixState !== null ? _mergeById(localMixState, cloudMixState) : localMixState, // 槽位：雲端優先、本地補缺（雲端無則用本地）
+          viewerPos: Object.assign({}, localViewerPos, cloudViewerPos), // 檢視位置：雲端優先、本地補缺
           wiki: _mergeById(localWiki, cloudWiki), // wiki：本地優先、雲端補缺
           accessMgmt: _mergeById(localAccess, cloudAccess), // ACCESS MANAGEMENT flow groups：本地優先、雲端補缺
           cloud: { pairs: results[0].exists, projects: results[1].exists, mixmatch: results[2].exists, viewerPos: results[3].exists, wiki: results[4].exists, accessMgmt: results[5].exists }
