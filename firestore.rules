@@ -2,10 +2,9 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // RFQ ITEMIZER data — read open (跨設備同步顯示), write requires sign-in
+    // RFQ ITEMIZER data — open read/write (不用登入即可儲存與讀取)
     match /t1_data/{document} {
-      allow read: if true;
-      allow write: if request.auth != null;
+      allow read, write: if true;
     }
 
     // Existing wordcloud demo (legacy)
