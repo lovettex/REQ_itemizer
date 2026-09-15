@@ -693,3 +693,29 @@ input,select,textarea,.ow-row input,.ow-row select,.ow-row textarea,.ow-project-
 .mail-csv-btn:hover{background:#ceead7}
 .mail-csv-preview{max-height:240px;overflow:auto;margin-bottom:6px;border:1px solid rgba(0,0,0,.14);border-radius:8px;background:rgba(255,255,255,.5)}
 .mail-csv-preview pre{margin:0;padding:10px;font:11px/1.5 Consolas,monospace;color:#2a3a4a;white-space:pre-wrap;word-break:break-all}
+
+/* === Hide the "Made with Zite" floating badge of the QS formulizer slider ===
+ * The badge is rendered INSIDE the cross-origin (*.zite.so) iframe that
+ * https://server.fillout.com/embed/v2-zite/ injects for the "QS formulizer"
+ * slider button, so it cannot be removed from this document's DOM. It is
+ * covered visually here instead — the embed markup, its data-zite-* settings
+ * and the Zite account are left completely untouched.
+ * Tuning: if the badge is still partly visible, raise the width/height below;
+ * if the cover starts hiding useful form content, lower them. --zite-badge-cover-bg
+ * must match the form background for the cover to stay invisible. */
+:root{
+  --zite-badge-cover-w:200px;
+  --zite-badge-cover-h:72px;
+  --zite-badge-cover-bg:#f6f7f9;
+}
+.fillout-embed-slider .fillout-embed-iframe-container::after{
+  content:"";
+  position:absolute;
+  right:0;
+  bottom:0;
+  width:var(--zite-badge-cover-w);
+  height:var(--zite-badge-cover-h);
+  background:var(--zite-badge-cover-bg);
+  pointer-events:none;
+  z-index:3;
+}
