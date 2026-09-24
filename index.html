@@ -7,7 +7,10 @@
   <link rel="icon" type="image/png" sizes="32x32" href="data/favicon-32.png">
   <link rel="icon" type="image/png" sizes="48x48" href="data/favicon-48.png">
   <link rel="apple-touch-icon" sizes="180x180" href="data/favicon-48.png">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=20260924">
+  <!-- 部署提醒：每次更新後，請把本檔內所有 ?v=YYYYMMDD 的日期改成當天日期並重新 push。
+       這樣瀏覽器才會立刻抓新的 app.js／styles.css，不用等 GitHub Pages 的 10 分鐘快取。 -->
+  <script>window.T1_EXPECT_ASSETS = '20260924';</script>
   <script type="importmap">
   {
     "imports": {
@@ -203,16 +206,44 @@
     <div class="t1-loading-spinner"></div>
     <div class="t1-loading-text">正在載入資料…</div>
   </div>
+  <!-- 安全網：萬一 app.js 因任何原因未能完成啟動（最常見是瀏覽器仍快取舊版 app.js），
+       載入遮罩會自動移除並提示強制重新整理，避免使用者只看到一片空白。
+       與 app.js 無關，即使 app.js 載入失敗或拋出例外仍會生效。 -->
+  <script>
+    setTimeout(function () {
+      var overlay = document.getElementById('t1Loading');
+      if (!overlay) return;
+      overlay.remove();
+      var warn = document.createElement('div');
+      warn.setAttribute('style', 'position:fixed;left:50%;top:16px;transform:translateX(-50%);z-index:99999;max-width:90vw;padding:10px 16px;border-radius:8px;background:#7f1d1d;color:#fff;font:12px/1.5 Inter,"Microsoft JhengHei",Arial,sans-serif;box-shadow:0 6px 20px rgba(0,0,0,.3)');
+      warn.textContent = '載入逾時，畫面可能不是最新版本。請按 Ctrl+Shift+R（Mac：Cmd+Shift+R）強制重新整理。';
+      document.body.appendChild(warn);
+    }, 12000);
+  </script>
   <script src="https://www.gstatic.com/firebasejs/11.9.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/11.9.0/firebase-firestore-compat.js"></script>
-  <script src="firestore-db.js"></script>
-  <script src="firebase.js"></script>
-  <script src="auth.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script><script src="inventory.js"></script><script src="app.js"></script><script src="scan.js"></script>
-  <script src="js/emailService.js"></script>
-  <script src="js/emailTemplate.js"></script>
+  <script src="firestore-db.js?v=20260924"></script>
+  <script src="firebase.js?v=20260924"></script>
+  <script src="auth.js?v=20260924"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script><script src="inventory.js?v=20260924"></script><script src="app.js?v=20260924"></script><script src="scan.js?v=20260924"></script>
+  <script src="js/emailService.js?v=20260924"></script>
+  <script src="js/emailTemplate.js?v=20260924"></script>
   <script src="https://cdn.jsdelivr.net/npm/lenis@1/dist/lenis.min.js"></script>
-  <script src="js/lenis-init.js"></script>
+  <script src="js/lenis-init.js?v=20260924"></script>
+  <!-- 舊快取自癒：app.js 若因瀏覽器快取舊版／載入失敗而未設定版本標記，帶 cache-buster 重載一次
+       （每個 session 只重載一次，避免無限迴圈）。 -->
+  <script>
+    (function () {
+      if ((window.T1 || {}).assetVersion === window.T1_EXPECT_ASSETS) return;
+      try {
+        if (sessionStorage.getItem('t1_asset_reload')) return;
+        sessionStorage.setItem('t1_asset_reload', '1');
+      } catch (e) {}
+      var u = new URL(window.location.href);
+      u.searchParams.set('v', Date.now());
+      window.location.replace(u.toString());
+    })();
+  </script>
   <script>
     // 登入狀態：僅顯示使用者名稱；未登入/SDK 不可用一律放行進入主站（讀取模式）。
     // Firestore 規則為「讀開放、寫需登入」，未登入設備仍可讀取雲端資料；寫入時由規則拒絕並提示登入。

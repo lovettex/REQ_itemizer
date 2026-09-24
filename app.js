@@ -1,3 +1,8 @@
+// 資產版本標記：需與 index.html 的 ?v= 及 window.T1_EXPECT_ASSETS 一致。
+// 供 index.html 偵測「瀏覽器仍使用舊快取 app.js」時自動重載。
+window.T1 = window.T1 || {};
+window.T1.assetVersion = '20260924';
+
 const groups = [
   // PG 01-02: Glass Frame — Vertical Section (MST/001-002)
   ['Glass frame',1,['GF - 1','GF - 2','GF - 3','GF - 4','GF - 5','GF - 6','GF - 7','GF - 8']],['Glass frame',2,['GF - 9','GF - 10','GF - 11','GF - 12','GF - 13']],
