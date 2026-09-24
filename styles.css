@@ -727,3 +727,12 @@ html.lenis,html.lenis body{height:auto}
 .confirmed-number{width:150px;height:26px;border:1px solid #c8d0d8;border-radius:5px;padding:0 7px;font:inherit;font-size:11px;font-weight:700;letter-spacing:.03em;background:#fff;color:#17202a}
 .confirmed-number:focus{border-color:#0d5932;outline:2px solid #0d5932}
 .listing-number{font-size:11px;font-weight:800;color:#3a4a5a;background:#eef1f4;border:1px solid #d5dbe1;border-radius:4px;padding:1px 6px;white-space:nowrap}
+
+/* === 讓下方 .layout 兩個區塊的外緣與上方 .project-wide 面板一致 ===
+   上方面板在所有寬度都是「滿版」：它的 padding:22px 4vw 算在卡片「內」，
+   卡片外緣貼齊視窗（註：@media(max-width:980px) 的 .project-wide{margin:15px 4vw 0}
+   已被稍後同特異度的 .project-wide{margin:26px auto 0} 覆寫，故不會內縮）。
+   下方 .layout 原本左右各留間距，使下方兩張卡片比上方窄
+   （實測 1400px：上方 0→1400、下方 56→1344）。
+   這裡只覆寫左右的長寫屬性、保留上下既有 padding，因此不影響各斷點的垂直間距。 */
+.layout{padding-left:0;padding-right:0}
