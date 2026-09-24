@@ -527,9 +527,15 @@ input,select,textarea,.ow-row input,.ow-row select,.ow-row textarea,.ow-project-
 .mail-send-btn{width:auto;justify-self:start;padding:11px 28px}
 
 /* === Lenis smooth scroll compat: keep inner dropdown scrolling self-contained === */
-.ps-dropdown,.ow-dropdown,.wiki-dropdown,.ps-dropdown *,.ow-dropdown *{
+.ps-dropdown,.ow-dropdown,.wiki-dropdown,.qtn-dropdown,.item-table-wrap,
+.ps-dropdown *,.ow-dropdown *,.qtn-dropdown *,.item-table-wrap *{
   overscroll-behavior: contain;
 }
+/* === Lenis 官方建議樣式（v1 走原生 scroll，這些為保險用） === */
+html.lenis,html.lenis body{height:auto}
+.lenis.lenis-smooth{scroll-behavior:auto!important}
+.lenis.lenis-smooth [data-lenis-prevent]{overscroll-behavior:contain}
+.lenis.lenis-stopped{overflow:hidden}
 
 /* === Mix & Match inside the side workspace (3-col fits the narrow panel) === */
 .tab-panel[data-tab="mixmatch"] .mixmatch-section{padding:8px 2px}

@@ -33,7 +33,7 @@
 <input id="itemScanInput" type="file" accept=".xlsx,.xls,.csv" hidden></div>
     </div>
     <div class="project-tab-panel active" data-project-tab-panel="saved">
-    <div class="project-section-body"><div class="ps-search-wrap"><div class="ps-search-inner"><input type="text" id="projectSearch" placeholder="搜尋 Project..." autocomplete="off"><span class="ps-arrow">▾</span></div><div class="ps-dropdown" id="projectDropdown"></div></div><div id="projectList" class="project-list"></div><div class="backup"><button id="exportProjects" type="button">匯出 Projects</button><label>匯入 Projects<input id="importProjects" type="file" accept="application/json" hidden></label></div></div>
+    <div class="project-section-body"><div class="ps-search-wrap"><div class="ps-search-inner"><input type="text" id="projectSearch" placeholder="搜尋 Project..." autocomplete="off"><span class="ps-arrow">▾</span></div><div class="ps-dropdown" id="projectDropdown" data-lenis-prevent></div></div><div id="projectList" class="project-list"></div><div class="backup"><button id="exportProjects" type="button">匯出 Projects</button><label>匯入 Projects<input id="importProjects" type="file" accept="application/json" hidden></label></div></div>
     </div>
     <div class="project-tab-panel" data-project-tab-panel="confirmed" style="display:none">
     <div class="project-section-body">
@@ -45,7 +45,7 @@
         <div class="pagination" id="confirmedListingPagination"></div>
       </div>
       <div class="confirmed-view-panel" data-confirmed-view-panel="index" style="display:none">
-        <div class="ps-search-wrap"><div class="ps-search-inner"><input type="text" id="confirmedSearch" placeholder="檢索 Project..." autocomplete="off"><span class="ps-arrow">▾</span></div><div class="ps-dropdown" id="confirmedDropdown"></div></div>
+        <div class="ps-search-wrap"><div class="ps-search-inner"><input type="text" id="confirmedSearch" placeholder="檢索 Project..." autocomplete="off"><span class="ps-arrow">▾</span></div><div class="ps-dropdown" id="confirmedDropdown" data-lenis-prevent></div></div>
         <div id="confirmedList" class="confirmed-list"></div>
       </div>
     </div>
@@ -75,7 +75,7 @@
             <input type="text" id="sourcingSearch" placeholder="搜尋 Sourcing..." autocomplete="off">
             <span class="ow-arrow">▾</span>
           </div>
-          <div class="ow-dropdown" id="sourcingDropdown">
+          <div class="ow-dropdown" id="sourcingDropdown" data-lenis-prevent>
             <div class="ow-item" data-value="DGL OP (China)">DGL OP (China)</div>
             <div class="ow-item" data-value="SOLID OP (China)">SOLID OP (China)</div>
             <div class="ow-item" data-value="DGL OP (Malaysia)">DGL OP (Malaysia)</div>
@@ -89,7 +89,7 @@
             <input type="text" id="operableWallSearch" placeholder="搜尋 Operable Wall..." autocomplete="off">
             <span class="ow-arrow">▾</span>
           </div>
-          <div class="ow-dropdown" id="operableWallDropdown">
+          <div class="ow-dropdown" id="operableWallDropdown" data-lenis-prevent>
             <div class="ow-group">
               <div class="ow-group-label">T1 Series — 85mm</div>
               <div class="ow-item" data-value="T1 (Single Glaze) 85mm — Tempered Glass">T1 (Single Glaze) 85mm — Tempered Glass</div>
@@ -151,7 +151,7 @@
               <input type="text" id="qtnSearch" placeholder="搜尋 QTN 產品..." autocomplete="off">
               <span class="qtn-arrow">▾</span>
             </div>
-            <div class="qtn-dropdown" id="qtnDropdown"></div>
+            <div class="qtn-dropdown" id="qtnDropdown" data-lenis-prevent></div>
           </div>
         </label>
         <label class="field">QS ONLY-BOQ
@@ -160,7 +160,7 @@
               <input type="text" id="boqSearch" placeholder="搜尋 BOQ 產品..." autocomplete="off">
               <span class="qtn-arrow">▾</span>
             </div>
-            <div class="qtn-dropdown" id="boqDropdown"></div>
+            <div class="qtn-dropdown" id="boqDropdown" data-lenis-prevent></div>
           </div>
         </label>
         <div class="slots"><div id="slotA1" class="slot"></div><div class="plus">＋</div><div id="slotA2" class="slot"></div></div>
@@ -183,7 +183,8 @@
       </div>
     </aside>
   </main>
-  <dialog id="viewer">
+  <!-- data-lenis-prevent：檢視器內滾輪只做縮放，不讓 Lenis 同時捲動背後頁面 -->
+  <dialog id="viewer" data-lenis-prevent>
     <div id="viewerWrapper">
       <div id="viewerToolbar">
         <strong id="viewerTitle"></strong>
