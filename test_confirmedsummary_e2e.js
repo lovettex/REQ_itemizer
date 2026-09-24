@@ -85,8 +85,8 @@ await page.goto('http://localhost:3000', { waitUntil: 'domcontentloaded' });
   if (JSON.stringify(cardUI.selects[2].options) !== JSON.stringify(['','NOT YET','DO1','DO2','DO3','DO4','DO5','DO6','D07','DO8','DO9','DO10','D011'])) {
     throw new Error('DD3 options wrong: ' + JSON.stringify(cardUI.selects[2].options));
   }
-  if (cardUI.summaryDisplay !== 'none') throw new Error('Summary must be collapsed by default');
-  if (cardUI.toggleText.indexOf('▶') !== 0) throw new Error('Toggle should start collapsed');
+  if (cardUI.summaryDisplay === 'none') throw new Error('Summary must be expanded by default');
+  if (cardUI.toggleText.indexOf('▼') !== 0) throw new Error('Toggle should start expanded');
 
   // Pick PICKLIST (DO)=DO5 → summary record added
   await page.evaluate(() => {
@@ -116,7 +116,7 @@ await page.goto('http://localhost:3000', { waitUntil: 'domcontentloaded' });
   if (afterPick.records.length !== 2) throw new Error('Expected 2 summary records');
   if (afterPick.records[0].label !== 'PICKLIST (DO)' || afterPick.records[0].value !== 'DO5') throw new Error('Record 1 wrong: ' + JSON.stringify(afterPick.records[0]));
   if (afterPick.records[1].label !== 'Ironmongery Sign Off (4DWGS)' || afterPick.records[1].value !== 'DONE') throw new Error('Record 2 wrong: ' + JSON.stringify(afterPick.records[1]));
-  if (afterPick.summaryDisplay !== 'none') throw new Error('Summary should stay collapsed after adding');
+  if (afterPick.summaryDisplay === 'none') throw new Error('Summary should stay expanded after adding');
 
   // Expand toggle
   await page.evaluate(() => document.querySelector('[data-confirmed-toggle]').click());
@@ -180,7 +180,7 @@ await page.goto('http://localhost:3000', { waitUntil: 'domcontentloaded' });
   });
   console.log('After reload:', JSON.stringify(reloadState));
   if (JSON.stringify(reloadState.records) !== JSON.stringify(['DONE'])) throw new Error('Records not persisted: ' + JSON.stringify(reloadState.records));
-  if (reloadState.summaryDisplay !== 'none') throw new Error('Summary should be collapsed by default after reload');
+  if (reloadState.summaryDisplay === 'none') throw new Error('Summary should be expanded by default after reload');
 
   if (errors.length) {
     console.log('BROWSER ERRORS:', errors.slice(0, 5));

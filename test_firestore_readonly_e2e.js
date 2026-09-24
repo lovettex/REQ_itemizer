@@ -232,14 +232,14 @@ const localPair = [{ id: 'lp1', name: '本地配對 Y' }];
         confirmSummary: p ? (p.confirmSummary || []).length : 0,
         // Listed Projects 視圖
         listedCard: Array.from(document.querySelectorAll('.project-card summary')).some(s => s.textContent.indexOf('完整專案') !== -1),
-        // Dashboard 視圖（處理中狀態）
-        dashShowsProject: Array.from(document.querySelectorAll('#dashboardList *')).some(el => el.textContent && el.textContent.indexOf('完整專案') !== -1),
+        // LISTING VIEW 視圖（PROJECT CONFIRMED）
+        listingShowsProject: Array.from(document.querySelectorAll('#confirmedListingList *')).some(el => el.textContent && el.textContent.indexOf('完整專案') !== -1),
       };
     });
     console.log('8. Full project views:', JSON.stringify(r));
     if (r.projectName !== '完整專案' || r.workLogs !== 2 || r.confirmSummary !== 1) throw new Error('cloud project not fully loaded');
     if (!r.listedCard) throw new Error('Listed Projects should show cloud project');
-    if (!r.dashShowsProject) throw new Error('Dashboard should show cloud project');
+    if (!r.listingShowsProject) throw new Error('PROJECT CONFIRMED listing should show cloud project');
     await context.close();
   }
 
