@@ -13,39 +13,50 @@
   var TYPE_PANEL = { PARTITION: 'partition', DOOR: 'door', OPERABLE_WALL: 'ow' };
   var TYPE_LABEL = { PARTITION: 'PARTITION', DOOR: 'DOOR', OPERABLE_WALL: 'OW' };
 
-  // 各欄位的別名（正規化後比對；標籤本身取自 extraFields）
+  // 各欄位的別名（比對前會正規化：只留英數與中文）。
+  // 額外收錄 OCR 常見的縮寫／掉字寫法與中文標籤，因為掃描圖常是規格表而非制式表單。
   var ALIASES = {
     PARTITION: {
-      verticalSection: ['vs', 'vsection', 'vertical'],
-      horizontalSection: ['hs', 'hsection', 'horizontal'],
-      squarePost: ['sqpost', 'post'],
-      powerColumn: ['pc', 'powercol'],
-      glass1: ['glass', 'glass1', 'glazing1', 'glassno1'],
-      glass2: ['glass2', 'glazing2', 'glassno2'],
-      sizePc: ['size', 'sizepc', 'pc size'],
-      remark: ['remarks', 'remarkifany', 'note', 'notes'],
-      finishes: ['finish', 'framefinish', 'framefinishes']
+      legend: ['legend', 'legend manual', 'legend no', '圖例', '代號', '代号'],
+      finishes: ['finish', 'frame finish', 'frame finishes', 'surface finish', '表面處理', '表面处理', '塗裝', '涂装', '飾面', '饰面'],
+      height: ['ht', 'overall height', '高度'],
+      verticalSection: ['vertical', 'vertical section', 'vert section', 'vert. section', 'v section', 'vsection', 'vs', '垂直剖面', '垂直剖', '竖剖', '豎剖'],
+      horizontalSection: ['horizontal', 'horizontal section', 'horiz section', 'horiz. section', 'h section', 'hsection', 'hs', '水平剖面', '水平剖', '横剖', '橫剖'],
+      transom: ['transoms', 'horizontal bar', '橫檔', '横档', '橫料'],
+      mullion: ['mullions', 'vertical bar', '豎框', '竖框', '立柱'],
+      glass1: ['glass', 'glass 1', 'glass1', 'glass no 1', 'glass type 1', 'glazing 1', 'glazing', '玻璃1', '玻璃 1', '玻璃'],
+      glass2: ['glass 2', 'glass2', 'glass no 2', 'glass type 2', 'glazing 2', '玻璃2', '玻璃 2'],
+      squarePost: ['square post', 'sq post', 'sqpost', 'post', '方通', '方柱'],
+      powerColumn: ['power column', 'power col', 'powercolumn', '電源柱', '电源柱'],
+      sizePc: ['size pc', 'sizepc', 'pc size', 'size', '尺寸', '規格', '规格'],
+      remark: ['remark', 'remarks', 'remark if any', 'note', 'notes', '備註', '备注', '說明', '说明', '注意']
     },
     DOOR: {
-      noOfLeaf: ['leaf', 'noofleaf', 'leafno', 'noofleaves'],
-      doorFrame: ['frame', 'doorframe', 'df'],
-      doorPanel: ['panel', 'doorpanel', 'dp'],
-      glass1: ['glass', 'glass1', 'glazing1'],
-      glass2: ['glass2', 'glazing2'],
-      hwFinishes: ['hwfinish', 'hwfinishes', 'hardwarefinish', 'hardwarefinishes'],
-      hardware: ['hardwares', 'ironmongery'],
-      doorCloser: ['closer', 'doorcloser'],
-      remark: ['remarks', 'remarkifany', 'note', 'notes'],
-      finishes: ['finish', 'framefinish', 'framefinishes']
+      legend: ['legend', 'legend manual', 'legend no', '圖例', '代號', '代号'],
+      finishes: ['finish', 'frame finish', 'frame finishes', 'surface finish', '表面處理', '表面处理', '飾面', '饰面'],
+      height: ['ht', 'overall height', '高度'],
+      noOfLeaf: ['no of leaf', 'no. of leaf', 'no of leaves', 'leaf', 'leaf qty', 'door leaf', 'panel qty', '門扇數量', '门扇数量', '扇數', '扇数', '門扇', '门扇'],
+      doorFrame: ['door frame', 'df', 'frame', '門框', '门框'],
+      doorPanel: ['door panel', 'dp', 'panel', 'door leaf panel', '門板', '门板', '門扇板'],
+      transom: ['transoms', 'horizontal bar', '橫檔', '横档'],
+      mullion: ['mullions', 'vertical bar', '豎框', '竖框'],
+      glass1: ['glass', 'glass 1', 'glass1', 'glass type 1', 'glazing 1', '玻璃1', '玻璃 1', '玻璃'],
+      glass2: ['glass 2', 'glass2', 'glass type 2', 'glazing 2', '玻璃2', '玻璃 2'],
+      hardware: ['hardwares', 'ironmongery', 'hw', '五金', '五金配件'],
+      lock: ['lockset', 'lock set', 'locks', '鎖', '锁', '門鎖', '门锁'],
+      doorCloser: ['closer', 'door closers', 'overhead closer', '閉門器', '闭门器'],
+      hwFinishes: ['hw finish', 'hw finishes', 'hardware finish', 'hardware finishes', '五金飾面', '五金饰面'],
+      remark: ['remark', 'remarks', 'remark if any', 'note', 'notes', '備註', '备注', '說明', '说明']
     },
     OPERABLE_WALL: {
-      legend: ['legendmanual', 'legend'],
-      finishes: ['finish', 'finishes'],
-      operate: ['operation', 'operating'],
-      country: ['origin', 'madein'],
-      hwFinishes: ['hwfinish', 'hwfinishes', 'hardwarefinish', 'hardwarefinishes'],
-      remark: ['remarks', 'remarkifany', 'note', 'notes'],
-      type: ['model', 'series']
+      legend: ['legend manual', 'legend', 'legend no', '圖例', '代號', '代号'],
+      finishes: ['finish', 'surface finish', '表面處理', '表面处理', '飾面', '饰面'],
+      height: ['ht', 'overall height', '高度'],
+      type: ['model', 'series', 'system', '型號', '型号', '系列'],
+      operate: ['operation', 'operating', 'operation mode', 'stacking', '操作方式', '運作', '运作', '開合方式'],
+      country: ['origin', 'made in', '產地', '产地'],
+      hwFinishes: ['hw finish', 'hw finishes', 'hardware finish', 'hardware finishes', '五金飾面', '五金饰面'],
+      remark: ['remark', 'remarks', 'remark if any', 'note', 'notes', '備註', '备注', '說明', '说明']
     }
   };
 
@@ -58,38 +69,54 @@
 
   /** 去掉空白、括號、標點並轉大寫，方便比對 OCR 標籤 */
   function norm(s) {
-    return String(s || '').toUpperCase().replace(/[^A-Z0-9\u4e00-\u9fff]/g, '');
+    return (window.T1.imageScan && window.T1.imageScan.normLabel)
+      ? window.T1.imageScan.normLabel(s)
+      : String(s || '').toUpperCase().replace(/[^A-Z0-9\u4e00-\u9fff]/g, '');
   }
 
-  /** 建立 matchLabel(label) → item.extra 的 key */
-  function makeItemLabelMatcher(type) {
-    var defs = fieldDefs(type).map(function (d) { return { key: d[0], label: norm(d[1]) }; });
+  /** 欄位標籤 + 別名 → [[標籤文字, key], ...]（給比對與前綴切分器共用） */
+  function candidateLabels(type) {
+    var list = fieldDefs(type).map(function (d) { return [d[1], d[0]]; });
     var aliases = ALIASES[type] || {};
-    var aliasList = [];
     Object.keys(aliases).forEach(function (key) {
-      aliases[key].forEach(function (a) { aliasList.push({ key: key, label: norm(a) }); });
+      aliases[key].forEach(function (a) { list.push([a, key]); });
     });
+    return list;
+  }
+
+  /** labelText → item.extra 的 key（有冒號時的比對；允許 OCR 掉字） */
+  function makeItemLabelMatcher(type) {
+    var entries = candidateLabels(type)
+      .map(function (p) { return { key: p[1], text: norm(p[0]) }; })
+      .filter(function (e) { return !!e.text; });
     return function (labelText) {
       var n = norm(labelText);
       if (!n || n.length < 2) return null;
-      // 1) 完全等於欄位標籤
-      for (var i = 0; i < defs.length; i++) if (defs[i].label && n === defs[i].label) return defs[i].key;
-      // 2) OCR 標籤是欄位標籤的前綴（例如 "LEGEND" vs "LEGENDMANUAL"、"GLASS" vs "GLASS1"）
-      for (var j = 0; j < defs.length; j++) {
-        if (n.length >= 3 && defs[j].label && defs[j].label.indexOf(n) === 0) return defs[j].key;
-      }
-      // 3) 別名
-      for (var k = 0; k < aliasList.length; k++) {
-        if (aliasList[k].label === n) return aliasList[k].key;
-        if (n.length >= 4 && aliasList[k].label.indexOf(n) === 0) return aliasList[k].key;
+      var i;
+      // 1) 完全等於欄位標籤或別名
+      for (i = 0; i < entries.length; i++) if (entries[i].text === n) return entries[i].key;
+      // 2) OCR 標籤是欄位標籤的前綴（LEGEND → LEGEND (Manual)、GLASS → GLASS 1）
+      for (i = 0; i < entries.length; i++) {
+        if (n.length >= 3 && entries[i].text.length > n.length && entries[i].text.indexOf(n) === 0) return entries[i].key;
       }
       return null;
     };
   }
 
+  /** 沒有冒號時用來切開「標籤 值」的切分器（表格 OCR 最常見的排版） */
+  function makeItemSplitter(type) {
+    return (window.T1.imageScan && window.T1.imageScan.makePrefixSplitter)
+      ? window.T1.imageScan.makePrefixSplitter(candidateLabels(type), { minLen: 4 })
+      : null;
+  }
+
   /** OCR 文字 → { key: value }（依 type 的欄位標籤） */
   function parseItemFields(text, type) {
-    return window.T1.imageScan.parseLabeled(text, makeItemLabelMatcher(type), { continueKeys: [] });
+    return window.T1.imageScan.parseLabeled(text, makeItemLabelMatcher(type), {
+      continueKeys: [],
+      splitByLabel: makeItemSplitter(type),
+      splitterFirst: true // 規格表常是「標籤 值」單一空白，先切標籤才不會把 GLASS 1 切成 GLASS
+    });
   }
 
   // --- 目標項目 -------------------------------------------------------------
@@ -415,6 +442,8 @@
   window.T1.itemImageScan = {
     parseItemFields: parseItemFields,
     makeItemLabelMatcher: makeItemLabelMatcher,
+    makeItemSplitter: makeItemSplitter,
+    candidateLabels: candidateLabels,
     findOpenItem: findOpenItem,
     activeScanTarget: activeScanTarget,
     applyScan: applyScan

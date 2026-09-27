@@ -217,4 +217,74 @@ assert.strictEqual(i14.squarePost, 'SP-9', 'POST → squarePost');
 assert.strictEqual(i14.verticalSection, 'GF - 9', 'VS → verticalSection');
 assert.strictEqual(i14.remark, 'check site', 'NOTE → remark');
 
+// --- 15. 真實 OCR 排版：規格表被讀成「標籤 值」只隔一個空白（最常見的失敗情境） ---
+const tableText = [
+  'T1 SINGLE GLAZED PARTITION (T-108)',
+  'LEGEND P-01',
+  'FRAME FINISHES Powder Coat Black (Matt)',
+  'HEIGHT 3000mm',
+  'VERTICAL SECTION GF - 5',
+  'HORIZONTAL SECTION GF - A',
+  'TRANSOM TS - 1',
+  'MULLION MU - 1',
+  'GLASS 1 10mm Clear Tempered',
+  'GLASS 2 6.38mm Laminated',
+  'SQUARE POST SP - 2',
+  'POWER COLUMN PC - 1',
+  'SIZE PC 1200 x 3000',
+  'REMARK IF ANY Provide 2H transom'
+].join('\n');
+const i15 = I.parseItemFields(tableText, 'PARTITION');
+console.log('15. table (single space):', JSON.stringify(i15));
+assert.deepStrictEqual(i15, {
+  legend: 'P-01',
+  finishes: 'Powder Coat Black (Matt)',
+  height: '3000mm',
+  verticalSection: 'GF - 5',
+  horizontalSection: 'GF - A',
+  transom: 'TS - 1',
+  mullion: 'MU - 1',
+  glass1: '10mm Clear Tempered',
+  glass2: '6.38mm Laminated',
+  squarePost: 'SP - 2',
+  powerColumn: 'PC - 1',
+  sizePc: '1200 x 3000',
+  remark: 'Provide 2H transom'
+}, '單一空白的規格表要全部填入（GLASS 1 不可被切成 GLASS + 1 …）');
+
+// --- 16. 標籤與值各佔一行 ---
+const i16 = I.parseItemFields(['LEGEND', 'P-09', 'HEIGHT', '2400mm', 'REMARK IF ANY', 'Check site'].join('\n'), 'PARTITION');
+console.log('16. label/value on separate lines:', JSON.stringify(i16));
+assert.deepStrictEqual(i16, { legend: 'P-09', height: '2400mm', remark: 'Check site' }, '標籤單獨一行時取下一行當值');
+
+// --- 17. 短橫線分隔 ---
+const i17 = I.parseItemFields(['LEGEND - P-03', 'HEIGHT - 2700mm', 'GLASS 1 - 12mm Clear'].join('\n'), 'PARTITION');
+console.log('17. dash separator:', JSON.stringify(i17));
+assert.deepStrictEqual(i17, { legend: 'P-03', height: '2700mm', glass1: '12mm Clear' }, '標籤 - 值 的分隔要能去除多餘的橫線');
+
+// --- 18. OCR 縮寫（VERT. / HORIZ. / FRAME FINISH） ---
+const i18 = I.parseItemFields(['LEGEND: P-05', 'VERT. SECTION: GF - 9', 'HORIZ. SECTION: GF - J', 'FRAME FINISH: Anodized'].join('\n'), 'PARTITION');
+console.log('18. OCR abbreviations:', JSON.stringify(i18));
+assert.strictEqual(i18.verticalSection, 'GF - 9', 'VERT. SECTION');
+assert.strictEqual(i18.horizontalSection, 'GF - J', 'HORIZ. SECTION');
+assert.strictEqual(i18.finishes, 'Anodized', 'FRAME FINISH');
+
+// --- 19. 中文標籤 ---
+const i19 = I.parseItemFields(['圖例：P-07', '高度：3000mm', '表面處理：粉體塗裝', '玻璃1：10mm 強化玻璃', '備註：確認現場尺寸'].join('\n'), 'PARTITION');
+console.log('19. chinese labels:', JSON.stringify(i19));
+assert.strictEqual(i19.legend, 'P-07', '中文圖例');
+assert.strictEqual(i19.height, '3000mm', '中文高度');
+assert.strictEqual(i19.finishes, '粉體塗裝', '中文表面處理');
+assert.strictEqual(i19.glass1, '10mm 強化玻璃', '中文玻璃1');
+assert.strictEqual(i19.remark, '確認現場尺寸', '中文備註');
+
+// --- 20. 值的行不應被誤認為標籤（沒有對應欄位時不亂填） ---
+assert.deepStrictEqual(I.parseItemFields(['GF - 5', 'SP - 2', 'Powder Coat Black'].join('\n'), 'PARTITION'), {}, '純值的行不應被當成標籤');
+// 23. New Project 也要能吃「標籤 值」只有一個空白的排版
+const f20 = S.parseFields(['Project Marina Bay Tower', 'Sales Kelvin Tjia', 'Tel 07-5566 7788'].join('\n'));
+console.log('20. New Project single space:', JSON.stringify(f20));
+assert.strictEqual(f20.name, 'Marina Bay Tower', 'Project 單一空白');
+assert.strictEqual(f20.sales, 'Kelvin Tjia', 'Sales 單一空白');
+assert.strictEqual(f20.tel, '07-5566 7788', 'Tel 單一空白');
+
 console.log('\nIMAGE SCAN UNIT TESTS PASSED');

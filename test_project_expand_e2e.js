@@ -53,13 +53,15 @@ const TOTAL = CONFIRMED + OPEN;
       expandedAttr: btn ? btn.getAttribute('aria-expanded') : null,
       layoutDisplay: getComputedStyle(document.querySelector('.layout')).display,
       browseDisplay: browse ? getComputedStyle(browse).display : null,
-      cards: document.querySelectorAll('.project-card').length
+      cards: document.querySelectorAll('.project-card').length,
+      headBg: getComputedStyle(document.querySelector('.project-card > summary')).backgroundColor
     };
   });
   console.log('Collapsed:', JSON.stringify(collapsed));
   if (!collapsed.hasBtn || !collapsed.insideBar || !collapsed.rightmost) throw new Error('展開 icon 未放在 tab 區塊右上角');
   if (collapsed.expandedAttr !== 'false') throw new Error('aria-expanded 初始應為 false');
   if (collapsed.browseDisplay !== 'none') throw new Error('收合時展開清單應隱藏');
+  if (collapsed.headBg !== 'rgb(137, 191, 103)') throw new Error('project 名稱標題列底色應為 #89BF67，實際 ' + collapsed.headBg);
   if (collapsed.cards !== TOTAL) throw new Error(`收合時應有 ${TOTAL} 張 project 卡片，實際 ${collapsed.cards}`);
 
   // 1. 點 icon → 展開（先捲動頁面，確認展開時回到頂端、topbar 不會被切掉）

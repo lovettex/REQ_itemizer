@@ -62,51 +62,134 @@
   // 地址續行判斷用：句子開頭字（避免把「Please contact us…」接到地址後面）
   var CONT_STOP = /^(?:please|pls|kindly|for|note|thanks|thank|regards|if|should|we|our|you|your|contact|attached|attachment|see|refer|best|hi|dear|from|to|subject|date|re)\b/i;
 
+  /** 標籤正規化：只留英數與中文字，方便比對 OCR 的各種寫法（大小寫／標點／空白差異） */
+  function normLabel(s) {
+    return String(s || '').toUpperCase().replace(/[^A-Z0-9\u4e00-\u9fff]/g, '');
+  }
+
+  /** 標籤是否夠特別到可以在「沒有冒號」時用來切開整行（避免把值誤認成標籤） */
+  function isDistinctLabel(n, minLen) {
+    if (!n) return false;
+    var cjk = (n.match(/[\u4e00-\u9fff]/g) || []).length;
+    return n.length >= (minLen || 4) || cjk >= 2;
+  }
+
+  /**
+   * 產生「已知標籤前綴」切分器：pairs = [[標籤文字, key], ...]
+   * 回傳 function(line, nextLine) → { key, value }｜{ key, value, consumeNext:true }｜null
+   * 主要處理 OCR 最常見的排版：標籤與值只隔一個空白（表格被讀成一行），或標籤單獨一行、值在下一行。
+   */
+  function makePrefixSplitter(pairs, opts) {
+    var minLen = (opts && opts.minLen) || 4;
+    var entries = (pairs || [])
+      .map(function (p) { return { key: p[1], text: normLabel(p[0]) }; })
+      .filter(function (e) { return !!e.text; });
+
+    function findKey(n) {
+      if (!n) return null;
+      for (var i = 0; i < entries.length; i++) if (entries[i].text === n) return entries[i].key;
+      // OCR 掉字（例如 FRAME FINISH → FRAME FINISHES）也算
+      for (var j = 0; j < entries.length; j++) {
+        if (n.length >= 5 && entries[j].text.length > n.length && entries[j].text.indexOf(n) === 0) return entries[j].key;
+      }
+      return null;
+    }
+
+    return function (line, nextLine) {
+      var words = String(line || '').split(' ').filter(Boolean);
+      if (!words.length) return null;
+      var best = null;
+      // 由長到短找最長的已知標籤前綴（GLASS 1 會比 GLASS 更優先）
+      for (var n = Math.min(words.length, 5); n >= 1; n--) {
+        var pn = normLabel(words.slice(0, n).join(' '));
+        if (!isDistinctLabel(pn, minLen)) continue;
+        var key = findKey(pn);
+        if (key) { best = { key: key, n: n }; break; }
+      }
+      if (!best) return null;
+      var rest = words.slice(best.n).join(' ').replace(/^[\-–—:：|•·,;]+\s*/, '').trim();
+      if (rest) return { key: best.key, value: rest };
+      // 標籤單獨一行 → 用下一行當值（下一行本身若是標籤就不吃）
+      var nx = String(nextLine || '').trim();
+      if (nx && !/[:：]/.test(nx) && !findKey(normLabel(nx.split(' ')[0]))) {
+        return { key: best.key, value: nx, consumeNext: true };
+      }
+      return null;
+    };
+  }
+
   /**
    * 泛用解析：逐行找「標籤: 值」，用 matchLabel(label文字) 決定要放進哪個欄位（回傳 key 或 null）。
    * opts.continueKeys: 允許值續行的欄位（例如 address）。
-   * 同一欄位以第一次出現為準；支援全形冒號、「值在下一行」與空白對齊。
+   * opts.splitByLabel: makePrefixSplitter() 產生的切分器；沒有冒號時用它切開整行。
+   * 同一欄位以第一次出現為準；支援全形冒號、「值在下一行」、空白對齊與標籤前綴切分。
    */
   function parseLabeled(text, matchLabel, opts) {
     var out = {};
-    var contKeys = (opts && opts.continueKeys) || [];
+    var o = opts || {};
+    var contKeys = o.continueKeys || [];
+    var splitByLabel = typeof o.splitByLabel === 'function' ? o.splitByLabel : null;
     var raw = String(text || '').replace(/\r/g, '');
     // 保留原始空白（判斷「標籤   值」用），比對標籤時再正規化
     var raws = raw.split('\n').map(function (l) { return l.replace(/^[ \t]+|[ \t]+$/g, ''); }).filter(Boolean);
+    var nextLineOf = function (idx) { return raws[idx + 1] ? raws[idx + 1].replace(/\s+/g, ' ') : ''; };
 
     for (var i = 0; i < raws.length; i++) {
       var line = raws[i].replace(/\s+/g, ' ');
+      if (typeof o.skipLine === 'function' && o.skipLine(line)) continue;
       var field = null;
       var value = '';
+      var consumeNext = false;
 
       // (a)「標籤: 值」／「標籤：值」
       var m = line.match(/^(.{1,40}?)\s*[:：]\s*(.+)$/);
       if (m) {
         field = matchLabel(m[1]);
         value = m[2].trim();
-      } else {
-        // (b)「標籤:」值在下一行
+      }
+
+      // (b)「標籤:」值在下一行
+      if (!field) {
         var m2 = line.match(/^(.{1,40}?)\s*[:：]\s*$/);
         if (m2) {
           var f2 = matchLabel(m2[1]);
-          var next = raws[i + 1] ? raws[i + 1].replace(/\s+/g, ' ') : '';
+          var next = nextLineOf(i);
           if (f2 && next && !/[:：]/.test(next) && !matchLabel(next)) {
             field = f2;
-            value = next.trim();
-            i++;
-          }
-        } else {
-          // (c) 沒有冒號：標籤與值之間有兩個以上空白（OCR 常見的欄位排版），
-          //     或只有一個空白但值以數字／+／( 開頭（例如「Mobile 019-8887777」）
-          var m3 = raws[i].match(/^(.{1,40}?)\s{2,}(.+)$/) || raws[i].match(/^(.{1,40}?)\s(\+?[\d(].*)$/);
-          if (m3) {
-            field = matchLabel(m3[1]);
-            value = m3[2].replace(/\s+/g, ' ').trim();
+            value = next;
+            consumeNext = true;
           }
         }
       }
 
+      // (c) 沒有冒號：標籤與值之間有兩個以上空白（OCR 常見的欄位排版），
+      //     或只有一個空白但值以數字／+／( 開頭（例如「Mobile 019-8887777」）
+      //     opts.splitterFirst = true 時先讓 (d) 的標籤切分器處理，避免「GLASS 1 10mm」被切成 GLASS + 1 10mm
+      var splitterFirst = !!(o && o.splitterFirst) && splitByLabel;
+      if (!field && splitterFirst) {
+        var spFirst = splitByLabel(line, nextLineOf(i));
+        if (spFirst) { field = spFirst.key; value = spFirst.value; consumeNext = !!spFirst.consumeNext; }
+      }
+      if (!field) {
+        var m3 = raws[i].match(/^(.{1,40}?)\s{2,}(.+)$/) || raws[i].match(/^(.{1,40}?)\s(\+?[\d(].*)$/);
+        if (m3) {
+          field = matchLabel(m3[1]);
+          value = m3[2].replace(/\s+/g, ' ').trim();
+        }
+      }
+
+      // (d) 用已知標籤前綴切開：表格 OCR 常把「標籤 值」讀成只隔一個空白，
+      //     或標籤與值各佔一行。只認已定義的標籤（且有長度門檻），避免把值誤認成標籤。
+      if ((!field || !value) && splitByLabel && !splitterFirst) {
+        var sp = splitByLabel(line, nextLineOf(i));
+        if (sp) {
+          field = sp.key;
+          value = sp.value;
+          consumeNext = !!sp.consumeNext;
+        }
+      }
       if (!field || !value) continue;
+      if (consumeNext) i++;
       if (out[field]) continue; // 第一次出現為準
       out[field] = value;
 
@@ -128,12 +211,39 @@
     return out;
   }
 
+  // New Project 表單可接受的標籤寫法（給「沒有冒號」時的標籤前綴切分器用）
+  var FORM_LABEL_CANDIDATES = [
+    ['project name', 'name'], ['project title', 'name'], ['project', 'name'],
+    ['sales person', 'sales'], ['sales executive', 'sales'], ['sales rep', 'sales'], ['salesperson', 'sales'], ['sales', 'sales'],
+    ['project address', 'address'], ['site address', 'address'], ['address', 'address'], ['addr', 'address'],
+    ['tenderer 1', 'tenderer'], ['tenderer', 'tenderer'], ['main contractor', 'tenderer'], ['main con', 'tenderer'], ['contractor', 'tenderer'],
+    ['contact person', 'attn'], ['contact name', 'attn'], ['attention', 'attn'], ['attn', 'attn'],
+    ['telephone', 'tel'], ['tel no', 'tel'], ['tel', 'tel'], ['phone no', 'tel'], ['phone', 'tel'],
+    ['e-mail', 'email'], ['email', 'email'],
+    ['mobile no', 'mobile'], ['handphone', 'mobile'], ['mobile', 'mobile'], ['hp', 'mobile'],
+    ['fax no', 'fax'], ['fax', 'fax'],
+    ['案名', 'name'], ['專案名稱', 'name'], ['項目名稱', 'name'],
+    ['地址', 'address'], ['地點', 'address'],
+    ['業務', 'sales'], ['業務人員', 'sales'],
+    ['投標方', 'tenderer'], ['承包商', 'tenderer'], ['公司', 'tenderer'],
+    ['聯絡人', 'attn'], ['联系人', 'attn'],
+    ['電話', 'tel'], ['电话', 'tel'],
+    ['電子郵件', 'email'], ['电子邮件', 'email'],
+    ['手機', 'mobile'], ['手机', 'mobile'],
+    ['傳真', 'fax'], ['传真', 'fax']
+  ];
+
   /**
    * New Project 表單用：解析 OCR 文字 → { name, sales, address, ... }
    * 另有 email 備援（沒有 Email 標籤時，抓整段文字中第一個 email）。
    */
   function parseFields(text) {
-    var out = parseLabeled(text, labelToField, { continueKeys: ['address'] });
+    var out = parseLabeled(text, labelToField, {
+      continueKeys: ['address'],
+      splitByLabel: makePrefixSplitter(FORM_LABEL_CANDIDATES, { minLen: 4 }),
+      // 「Project No / Ref / Number」是編號不是案名，整行略過（避免被切成 Project + No: xxx）
+      skipLine: function (line) { return /^project\s*(?:no\.?|number|ref(?:erence)?|code)\b/i.test(line); }
+    });
     if (!out.email) {
       var e = String(text || '').match(/[\w.+-]+@[\w-]+\.[\w.-]+/);
       if (e) out.email = e[0];
@@ -402,6 +512,8 @@
     parseFields: parseFields,
     parseLabeled: parseLabeled,
     labelToField: labelToField,
+    normLabel: normLabel,
+    makePrefixSplitter: makePrefixSplitter,
     fillForm: fillForm,
     prepareImage: prepareImage,
     callOcr: callOcr,

@@ -17,15 +17,15 @@ const PART_TEXT = [
   'REMARK IF ANY: Provide 2H transom'
 ].join('\n');
 
-const PART_TEXT_2 = ['LEGEND: P-02', 'HEIGHT: 2700mm', 'MULLION: MU - 3'].join('\n');
+const PART_TEXT_2 = ['LEGEND P-02', 'HEIGHT 2700mm', 'MULLION MU - 3'].join('\n'); // 真實 OCR：標籤與值只隔一個空白
 
 const DOOR_TEXT = [
   'DOOR SCHEDULE',
   'LEGEND: D-01',
-  'NO OF LEAF: 1',
-  'DOOR FRAME: SWING DF - A',
-  'DOOR PANEL: SWING DP - A1',
-  'HW FINISHES: SSS'
+  'NO OF LEAF 1',
+  'DOOR FRAME SWING DF - A',
+  'DOOR PANEL SWING DP - A1',
+  'HW FINISHES SSS'
 ].join('\n');
 
 const EXPECTED_PARTITION_HEADERS = ['LEGEND', 'FRAME FINISHES', 'HEIGHT', 'VERTICAL SECTION', 'HORIZONTAL SECTION', 'TRANSOM', 'MULLION', 'GLASS 1', 'GLASS 2', 'SQUARE POST', 'POWER COLUMN', 'SIZE PC', 'REMARK IF ANY'];
