@@ -63,11 +63,13 @@
   var CONT_STOP = /^(?:please|pls|kindly|for|note|thanks|thank|regards|if|should|we|our|you|your|contact|attached|attachment|see|refer|best|hi|dear|from|to|subject|date|re)\b/i;
 
   /**
-   * 解析 OCR 文字 → { name, sales, address, ... }
-   * 只取「標籤: 值」形式（同一欄位以第一次出現為準），並處理值換行、地址續行與 email 備援。
+   * 泛用解析：逐行找「標籤: 值」，用 matchLabel(label文字) 決定要放進哪個欄位（回傳 key 或 null）。
+   * opts.continueKeys: 允許值續行的欄位（例如 address）。
+   * 同一欄位以第一次出現為準；支援全形冒號、「值在下一行」與空白對齊。
    */
-  function parseFields(text) {
+  function parseLabeled(text, matchLabel, opts) {
     var out = {};
+    var contKeys = (opts && opts.continueKeys) || [];
     var raw = String(text || '').replace(/\r/g, '');
     // 保留原始空白（判斷「標籤   值」用），比對標籤時再正規化
     var raws = raw.split('\n').map(function (l) { return l.replace(/^[ \t]+|[ \t]+$/g, ''); }).filter(Boolean);
@@ -80,15 +82,15 @@
       // (a)「標籤: 值」／「標籤：值」
       var m = line.match(/^(.{1,40}?)\s*[:：]\s*(.+)$/);
       if (m) {
-        field = labelToField(m[1]);
+        field = matchLabel(m[1]);
         value = m[2].trim();
       } else {
         // (b)「標籤:」值在下一行
         var m2 = line.match(/^(.{1,40}?)\s*[:：]\s*$/);
         if (m2) {
-          var f2 = labelToField(m2[1]);
+          var f2 = matchLabel(m2[1]);
           var next = raws[i + 1] ? raws[i + 1].replace(/\s+/g, ' ') : '';
-          if (f2 && next && !/[:：]/.test(next) && !labelToField(next)) {
+          if (f2 && next && !/[:：]/.test(next) && !matchLabel(next)) {
             field = f2;
             value = next.trim();
             i++;
@@ -98,7 +100,7 @@
           //     或只有一個空白但值以數字／+／( 開頭（例如「Mobile 019-8887777」）
           var m3 = raws[i].match(/^(.{1,40}?)\s{2,}(.+)$/) || raws[i].match(/^(.{1,40}?)\s(\+?[\d(].*)$/);
           if (m3) {
-            field = labelToField(m3[1]);
+            field = matchLabel(m3[1]);
             value = m3[2].replace(/\s+/g, ' ').trim();
           }
         }
@@ -108,24 +110,32 @@
       if (out[field]) continue; // 第一次出現為準
       out[field] = value;
 
-      // 地址常被截成兩行（下一行沒有標籤、沒有冒號、不是電話／句子）
-      if (field === 'address' && i + 1 < raws.length) {
+      // 允許續行的欄位（地址常被截成兩行：下一行沒有標籤、沒有冒號、不是電話／句子）
+      if (contKeys.indexOf(field) !== -1 && i + 1 < raws.length) {
         var cont = raws[i + 1].replace(/\s+/g, ' ');
         if (cont && cont.length <= 80 && cont.indexOf('@') === -1 &&
             !/[:：]/.test(cont) &&                          // 有冒號 → 可能是下一個欄位
             !/^[\d+()\-\s]{6,}$/.test(cont) &&             // 純電話號碼
             !/(?:\+\d|\d{2,}[\s-]\d{3,})/.test(cont) &&    // 內含電話樣式
             !CONT_STOP.test(cont) &&                       // 句子開頭（Please / For / Note…）
-            !labelToField(cont)) {
+            !matchLabel(cont)) {
           out[field] += /[,;]$/.test(out[field]) ? ' ' + cont : ', ' + cont;
           i++;
         }
       }
     }
 
-    // 備援：整段文字抓第一個 email
+    return out;
+  }
+
+  /**
+   * New Project 表單用：解析 OCR 文字 → { name, sales, address, ... }
+   * 另有 email 備援（沒有 Email 標籤時，抓整段文字中第一個 email）。
+   */
+  function parseFields(text) {
+    var out = parseLabeled(text, labelToField, { continueKeys: ['address'] });
     if (!out.email) {
-      var e = raw.match(/[\w.+-]+@[\w-]+\.[\w.-]+/);
+      var e = String(text || '').match(/[\w.+-]+@[\w-]+\.[\w.-]+/);
       if (e) out.email = e[0];
     }
     return out;
@@ -390,6 +400,7 @@
     apiKey: OCR_API_KEY,
     endpoint: OCR_ENDPOINT,
     parseFields: parseFields,
+    parseLabeled: parseLabeled,
     labelToField: labelToField,
     fillForm: fillForm,
     prepareImage: prepareImage,

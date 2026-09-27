@@ -903,3 +903,47 @@ body.project-expanded .project-browse{display:block;margin:6px 0 16px}
 /* 辨識後填入的欄位短暫高亮 */
 .image-scan-filled{animation:imageScanFilled 1.8s ease}
 @keyframes imageScanFilled{0%{background:#DFFF69}100%{background:rgba(255,255,255,.66)}}
+
+/* === PARTITION / DOOR / OW：Image scan、手動新增、永遠顯示表頭 === */
+.item-image-scan-btn{
+  border:1px solid #0d5932;
+  border-radius:5px;
+  background:#eaf7ef;
+  color:#0d5932;
+  padding:6px 14px;
+  font:inherit;
+  font-size:11px;
+  font-weight:700;
+  cursor:pointer;
+  white-space:nowrap;
+}
+.item-image-scan-btn:hover{background:#ceead7}
+.item-image-scan-btn:focus-visible{outline:2px solid #0d5932;outline-offset:1px}
+.item-add-btn{
+  border:1px dashed #9fc3b0;
+  border-radius:5px;
+  background:#fff;
+  color:#0d5932;
+  padding:6px 12px;
+  font:inherit;
+  font-size:11px;
+  font-weight:700;
+  cursor:pointer;
+  white-space:nowrap;
+}
+.item-add-btn:hover{background:#f4fbf7;border-color:#0d5932}
+.item-add-btn:focus-visible{outline:2px solid #0d5932;outline-offset:1px}
+.item-image-status{font-size:11px;color:#53606d;margin-bottom:6px}
+.item-image-status:empty{display:none}
+.item-image-status.ok{color:#0d5932;font-weight:700}
+.item-image-status.warn{color:#8a6d1f;font-weight:700}
+.item-image-status.error{color:#9b5555;font-weight:700}
+.item-table tbody tr.item-table-empty td{
+  padding:14px 10px;
+  font-size:11px;
+  color:#7a8896;
+  background:rgba(255,255,255,.35);
+}
+/* Image scan / 手動新增後填入的欄位短暫高亮 */
+.item-scan-filled{animation:itemScanFilled 1.8s ease}
+@keyframes itemScanFilled{0%{background:#DFFF69}100%{background:rgba(255,255,255,.82)}}

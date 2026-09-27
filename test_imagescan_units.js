@@ -109,4 +109,112 @@ assert.strictEqual(S.labelToField('Remarks'), null);
 assert.strictEqual(S.labelToField(''), null);
 assert.strictEqual(S.labelToField('Telephone'), 'tel');
 
+// ===========================================================================
+// PARTITION / DOOR / OW 的項目欄位（js/itemImageScan.js）
+// 欄位標籤取自 app.js 的 extraFields，這裡用同一份定義（stub 成 window.T1.extraFields）。
+// ===========================================================================
+global.T1.extraFields = {
+  PARTITION: [['legend','LEGEND'],['finishes','FRAME FINISHES'],['height','HEIGHT'],['verticalSection','VERTICAL SECTION'],['horizontalSection','HORIZONTAL SECTION'],['transom','TRANSOM'],['mullion','MULLION'],['glass1','GLASS 1'],['glass2','GLASS 2'],['squarePost','SQUARE POST'],['powerColumn','POWER COLUMN'],['sizePc','SIZE PC'],['remark','REMARK IF ANY']],
+  DOOR: [['legend','LEGEND'],['finishes','FRAME FINISHES'],['height','HEIGHT'],['noOfLeaf','NO OF LEAF'],['doorFrame','DOOR FRAME'],['doorPanel','DOOR PANEL'],['transom','TRANSOM'],['mullion','MULLION'],['glass1','GLASS 1'],['glass2','GLASS 2'],['hardware','HARDWARE'],['lock','LOCK'],['doorCloser','DOOR CLOSER'],['hwFinishes','HW FINISHES'],['remark','REMARK IF ANY']],
+  OPERABLE_WALL: [['legend','LEGEND (Manual)'],['finishes','FINISHES'],['height','HEIGHT'],['type','TYPE'],['operate','OPERATE'],['country','COUNTRY'],['hwFinishes','HW FINISHES'],['remark','REMARK IF ANY']]
+};
+require('./js/itemImageScan.js');
+const I = global.T1.itemImageScan;
+assert(I && typeof I.parseItemFields === 'function', 'itemImageScan module exposed');
+
+// --- 10. PARTITION 規格截圖 ---
+const partText = [
+  'T1 SINGLE GLAZED PARTITION',
+  'LEGEND: P-01 / T-108',
+  'FRAME FINISHES: Powder Coat Black (Matt)',
+  'HEIGHT: 3000mm',
+  'VERTICAL SECTION: GF - 5',
+  'HORIZONTAL SECTION: GF - A',
+  'GLASS 1: 10mm Clear Tempered',
+  'GLASS 2: 6.38mm Laminated',
+  'SQUARE POST: SP - 2',
+  'POWER COLUMN: PC - 1',
+  'SIZE PC: 1200 x 3000',
+  'REMARK IF ANY: Provide 2H transom'
+].join('\n');
+const i10 = I.parseItemFields(partText, 'PARTITION');
+console.log('10. PARTITION:', JSON.stringify(i10));
+assert.deepStrictEqual(i10, {
+  legend: 'P-01 / T-108',
+  finishes: 'Powder Coat Black (Matt)',
+  height: '3000mm',
+  verticalSection: 'GF - 5',
+  horizontalSection: 'GF - A',
+  glass1: '10mm Clear Tempered',
+  glass2: '6.38mm Laminated',
+  squarePost: 'SP - 2',
+  powerColumn: 'PC - 1',
+  sizePc: '1200 x 3000',
+  remark: 'Provide 2H transom'
+}, 'PARTITION 欄位');
+
+// --- 11. DOOR 截圖（含縮寫標籤與冒號排版） ---
+const doorText = [
+  'DOOR SCHEDULE',
+  'LEGEND  D-03',
+  'FRAME FINISHES : Anodized Silver',
+  'HEIGHT 2100mm',
+  'NO OF LEAF: 1',
+  'DOOR FRAME: SWING DF - A',
+  'DOOR PANEL: SWING DP - A1',
+  'HARDWARE: Dorma',
+  'LOCK: Euro Profile',
+  'DOOR CLOSER: TS68',
+  'HW FINISHES: SSS',
+  'REMARK: Self closing'
+].join('\n');
+const i11 = I.parseItemFields(doorText, 'DOOR');
+console.log('11. DOOR:', JSON.stringify(i11));
+assert.strictEqual(i11.legend, 'D-03', 'DOOR legend');
+assert.strictEqual(i11.finishes, 'Anodized Silver', 'DOOR frame finishes');
+assert.strictEqual(i11.height, '2100mm', 'DOOR height');
+assert.strictEqual(i11.noOfLeaf, '1', 'DOOR leaf');
+assert.strictEqual(i11.doorFrame, 'SWING DF - A', 'DOOR frame');
+assert.strictEqual(i11.doorPanel, 'SWING DP - A1', 'DOOR panel');
+assert.strictEqual(i11.hardware, 'Dorma', 'DOOR hardware');
+assert.strictEqual(i11.lock, 'Euro Profile', 'DOOR lock');
+assert.strictEqual(i11.doorCloser, 'TS68', 'DOOR closer');
+assert.strictEqual(i11.hwFinishes, 'SSS', 'DOOR hw finishes');
+assert.strictEqual(i11.remark, 'Self closing', 'DOOR remark');
+
+// --- 12. OPERABLE WALL 截圖（LEGEND (Manual) 前綴比對） ---
+const owText = [
+  'E85 SERIES OPERABLE WALL',
+  'LEGEND: OW-02',
+  'FINISHES: Laminate Maple',
+  'HEIGHT: 3600mm',
+  'TYPE: E85 (Double Glazed)',
+  'OPERATE: Centre Stack',
+  'COUNTRY: Malaysia',
+  'HW FINISHES: Black',
+  'REMARK IF ANY: Include track'
+].join('\n');
+const i12 = I.parseItemFields(owText, 'OPERABLE_WALL');
+console.log('12. OPERABLE_WALL:', JSON.stringify(i12));
+assert.strictEqual(i12.legend, 'OW-02', 'OW legend（LEGEND (Manual) 前綴比對）');
+assert.strictEqual(i12.finishes, 'Laminate Maple', 'OW finishes');
+assert.strictEqual(i12.height, '3600mm', 'OW height');
+assert.strictEqual(i12.type, 'E85 (Double Glazed)', 'OW type');
+assert.strictEqual(i12.operate, 'Centre Stack', 'OW operate');
+assert.strictEqual(i12.country, 'Malaysia', 'OW country');
+assert.strictEqual(i12.hwFinishes, 'Black', 'OW hw finishes');
+assert.strictEqual(i12.remark, 'Include track', 'OW remark');
+
+// --- 13. 沒有可對應欄位 → 空物件（不應亂填） ---
+assert.deepStrictEqual(I.parseItemFields('Hello, please find attached.', 'PARTITION'), {}, 'no item fields');
+assert.deepStrictEqual(I.parseItemFields('', 'DOOR'), {}, 'empty text → no fields');
+
+// --- 14. 別名（廠商寫法不同） ---
+const i14 = I.parseItemFields(['GLASS: 12mm Clear', 'POST: SP-9', 'VS: GF - 9', 'NOTE: check site'].join('\n'), 'PARTITION');
+console.log('14. aliases:', JSON.stringify(i14));
+assert.strictEqual(i14.glass1, '12mm Clear', 'GLASS → glass1');
+assert.strictEqual(i14.squarePost, 'SP-9', 'POST → squarePost');
+assert.strictEqual(i14.verticalSection, 'GF - 9', 'VS → verticalSection');
+assert.strictEqual(i14.remark, 'check site', 'NOTE → remark');
+
 console.log('\nIMAGE SCAN UNIT TESTS PASSED');
