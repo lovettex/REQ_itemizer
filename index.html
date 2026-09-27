@@ -7,12 +7,12 @@
   <link rel="icon" type="image/png" sizes="32x32" href="data/favicon-32.png">
   <link rel="icon" type="image/png" sizes="48x48" href="data/favicon-48.png">
   <link rel="apple-touch-icon" sizes="180x180" href="data/favicon-48.png">
-  <link rel="stylesheet" href="styles.css?v=20260927c">
+  <link rel="stylesheet" href="styles.css?v=20260927d">
   <!-- 部署提醒：每次更新後，請把本檔內所有 ?v= 與下方 T1_EXPECT_ASSETS 的版本改成新的值並重新 push。
        格式為 YYYYMMDD；同一天第二次以上部署就在後面加 b、c…（例如 20260925bb），
        否則網址沒變、瀏覽器仍用舊快取。版本改掉才會立刻抓新的 app.js／styles.css，
        不用等 GitHub Pages 的 10 分鐘快取。 -->
-  <script>window.T1_EXPECT_ASSETS = '20260927c';</script>
+  <script>window.T1_EXPECT_ASSETS = '20260927d';</script>
   <script type="importmap">
   {
     "imports": {
@@ -36,7 +36,7 @@
       </button>
     </div>
     <div class="project-tab-panel" data-project-tab-panel="new" style="display:none">
-    <div class="project-section-body"><form id="projectForm" class="project-form"><label>Project<input name="name" required placeholder="Project name"></label><label>Sales<input name="sales" list="salesList" autocomplete="off" placeholder="選擇或輸入 Sales"></label><datalist id="salesList"><option value="Glen Tew"><option value="Gerry Lee"><option value="Eugene Ng"><option value="Jim Lim"><option value="Kelvin Tjia"><option value="Benjamin Seng"><option value="Lim Zhi Kang Louis"><option value="Bella"><option value="Jensen"><option value="Rayven Leong"><option value="Zac Lee"><option value="Naomi"></datalist><label>Delivery mode<select name="priority" data-priority-select><option value="">CASE</option><option value="REGULAR">REGULAR</option><option value="URGENT">URGENT</option><option value="CERTAIN DEADLINE">CERTAIN DEADLINE</option></select></label><label class="deadline-label" style="display:none">Deadline<input name="deadline" type="date" data-deadline-input></label><label>Address<input name="address"></label><label>Tenderer 1<input name="tenderer"></label><label>Attn<input name="attn"></label><label>Tel<input name="tel"></label><label>Email<input name="email" type="email"></label><label>Mobile<input name="mobile"></label><label>Fax<input name="fax"></label><div class="briefing-block"><div class="briefing-title">Project Briefing</div><div class="briefing-hint">*Please sorted out your files into folders, and pinpoint the main target content to save time for evaluating and analyzing data</div><label class="briefing-field">General briefing<textarea name="briefingGeneral" rows="4" placeholder="輸入 General briefing..."></textarea></label><label class="briefing-field">Layout &amp; file highlight<textarea name="briefingLayout" rows="4" placeholder="輸入 Layout &amp; file highlight..."></textarea></label></div><label class="scan-label"><span>📄 Scan RFQ file</span><input id="excelScanInput" type="file" accept=".xlsx,.xls,.csv" hidden><button id="scanBtn" class="primary scan-btn" type="button">Scan RFQ file</button><small>掃描 Excel 自動填入表單</small></label><button class="primary" type="submit">SAVE</button></form>
+    <div class="project-section-body"><form id="projectForm" class="project-form"><label>Project<input name="name" required placeholder="Project name"></label><label>Sales<input name="sales" list="salesList" autocomplete="off" placeholder="選擇或輸入 Sales"></label><datalist id="salesList"><option value="Glen Tew"><option value="Gerry Lee"><option value="Eugene Ng"><option value="Jim Lim"><option value="Kelvin Tjia"><option value="Benjamin Seng"><option value="Lim Zhi Kang Louis"><option value="Bella"><option value="Jensen"><option value="Rayven Leong"><option value="Zac Lee"><option value="Naomi"></datalist><label>Delivery mode<select name="priority" data-priority-select><option value="">CASE</option><option value="REGULAR">REGULAR</option><option value="URGENT">URGENT</option><option value="CERTAIN DEADLINE">CERTAIN DEADLINE</option></select></label><label class="deadline-label" style="display:none">Deadline<input name="deadline" type="date" data-deadline-input></label><label>Address<input name="address"></label><label>Tenderer 1<input name="tenderer"></label><label>Attn<input name="attn"></label><label>Tel<input name="tel"></label><label>Email<input name="email" type="email"></label><label>Mobile<input name="mobile"></label><label>Fax<input name="fax"></label><div class="briefing-block"><div class="briefing-title">Project Briefing</div><div class="briefing-hint">*Please sorted out your files into folders, and pinpoint the main target content to save time for evaluating and analyzing data</div><label class="briefing-field">General briefing<textarea name="briefingGeneral" rows="4" placeholder="輸入 General briefing..."></textarea></label><label class="briefing-field">Layout &amp; file highlight<textarea name="briefingLayout" rows="4" placeholder="輸入 Layout &amp; file highlight..."></textarea></label></div><label class="scan-label"><span>📄 Scan RFQ file</span><input id="excelScanInput" type="file" accept=".xlsx,.xls,.csv" hidden><button id="scanBtn" class="primary scan-btn" type="button">Scan RFQ file</button><small>掃描 Excel 自動填入表單</small></label><div class="image-scan" id="imageScan"><div class="image-scan-head"><span class="image-scan-title">🖼️ Image scan</span><button type="button" class="image-scan-btn" id="imageScanPick">選擇圖片</button><button type="button" class="image-scan-clear" id="imageScanClear">清除</button><input id="imageScanInput" type="file" accept="image/*" hidden></div><div class="image-scan-drop" id="imageScanDrop" role="button" tabindex="0" aria-label="貼上或選擇要辨識的截圖"><img id="imageScanPreview" alt="待辨識的截圖" hidden><span class="image-scan-text"><strong>貼上截圖</strong><small>在 New Project 這一頁直接按 Ctrl+V 貼上截圖，或點此選擇／拖入圖片，會自動辨識並填入 Project、Sales、Address、Tenderer、Attn、Tel、Email、Mobile、Fax</small></span></div><div class="image-scan-status" id="imageScanStatus" role="status"></div></div><button class="primary" type="submit">SAVE</button></form>
 <input id="itemScanInput" type="file" accept=".xlsx,.xls,.csv" hidden></div>
     </div>
     <div class="project-tab-panel active" data-project-tab-panel="saved">
@@ -215,14 +215,15 @@
   </script>
   <script src="https://www.gstatic.com/firebasejs/11.9.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/11.9.0/firebase-firestore-compat.js"></script>
-  <script src="firestore-db.js?v=20260927c"></script>
-  <script src="firebase.js?v=20260927c"></script>
-  <script src="auth.js?v=20260927c"></script>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script><script src="inventory.js?v=20260927c"></script><script src="app.js?v=20260927c"></script><script src="scan.js?v=20260927c"></script>
-  <script src="js/emailService.js?v=20260927c"></script>
-  <script src="js/emailTemplate.js?v=20260927c"></script>
+  <script src="firestore-db.js?v=20260927d"></script>
+  <script src="firebase.js?v=20260927d"></script>
+  <script src="auth.js?v=20260927d"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script><script src="inventory.js?v=20260927d"></script><script src="app.js?v=20260927d"></script><script src="scan.js?v=20260927d"></script>
+  <script src="js/emailService.js?v=20260927d"></script>
+  <script src="js/emailTemplate.js?v=20260927d"></script>
+  <script src="js/imageScan.js?v=20260927d"></script>
   <script src="https://cdn.jsdelivr.net/npm/lenis@1/dist/lenis.min.js"></script>
-  <script src="js/lenis-init.js?v=20260927c"></script>
+  <script src="js/lenis-init.js?v=20260927d"></script>
   <!-- 舊快取自癒：app.js 若因瀏覽器快取舊版／載入失敗而未設定版本標記，帶 cache-buster 重載一次
        （每個 session 只重載一次，避免無限迴圈）。 -->
   <script>

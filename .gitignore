@@ -34,6 +34,7 @@ assets/*_extracted.txt
 glass_check.png
 project_expand_check.png
 kickoff_check.png
+imagescan_check.png
 
 # Scan helper
 scan_white.js

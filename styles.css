@@ -839,3 +839,67 @@ body.project-expanded .project-browse{display:block;margin:6px 0 16px}
 .kickoff-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .kickoff-name{font-size:13px;font-weight:800;color:#0d5932}
 .kickoff-hint{font-size:10px;color:#7a8896}
+
+/* === Image scan（New Project：貼上截圖 → OCR → 自動填表） === */
+.image-scan{
+  grid-column:1/-1;
+  display:grid;
+  gap:8px;
+  border:1px solid #d8e2ec;
+  border-radius:10px;
+  padding:12px;
+  background:#fafcfe;
+}
+.image-scan-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.image-scan-title{font-size:12px;font-weight:800;color:#17202a}
+.image-scan-btn{
+  border:1px solid #0d5932;
+  border-radius:6px;
+  background:#e8f5ee;
+  color:#0d5932;
+  padding:6px 14px;
+  font:inherit;
+  font-size:11px;
+  font-weight:700;
+  cursor:pointer;
+  margin-left:auto;
+}
+.image-scan-btn:hover{background:#ceead7}
+.image-scan-btn:focus-visible{outline:2px solid #0d5932;outline-offset:1px}
+.image-scan-clear{
+  border:0;
+  background:none;
+  color:#9b5555;
+  font:inherit;
+  font-size:11px;
+  font-weight:700;
+  text-decoration:underline;
+  cursor:pointer;
+}
+.image-scan-drop{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-height:76px;
+  border:1px dashed #9fc3b0;
+  border-radius:8px;
+  padding:10px 12px;
+  background:#fff;
+  cursor:pointer;
+  transition:background .15s,border-color .15s,box-shadow .15s;
+}
+.image-scan-drop:hover{border-color:#0d5932;background:#f4fbf7}
+.image-scan-drop:focus-visible{outline:2px solid #0d5932;outline-offset:1px}
+.image-scan-drop.is-over{border-color:#0d5932;background:#e8f5ee;box-shadow:inset 0 0 0 2px #0d5932}
+.image-scan-drop.is-busy{cursor:progress;opacity:.75}
+.image-scan-drop img{max-width:130px;max-height:96px;border:1px solid #d5dbe1;border-radius:6px;background:#fff}
+.image-scan-text{display:grid;gap:3px}
+.image-scan-text strong{font-size:12px;font-weight:800;color:#0d5932}
+.image-scan-text small{font-size:10px;line-height:1.55;color:#7a8896}
+.image-scan-status{font-size:11px;color:#53606d;min-height:15px}
+.image-scan-status.ok{color:#0d5932;font-weight:700}
+.image-scan-status.warn{color:#8a6d1f;font-weight:700}
+.image-scan-status.error{color:#9b5555;font-weight:700}
+/* 辨識後填入的欄位短暫高亮 */
+.image-scan-filled{animation:imageScanFilled 1.8s ease}
+@keyframes imageScanFilled{0%{background:#DFFF69}100%{background:rgba(255,255,255,.66)}}
