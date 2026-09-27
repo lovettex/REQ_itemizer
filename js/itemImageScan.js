@@ -133,8 +133,23 @@
     var el = statusEl(projectId, type);
     if (!el) return;
     el.textContent = text || '';
-    el.className = 'item-image-status' + (kind ? ' ' + kind : '');
+    el.className = 'image-scan-status' + (kind ? ' ' + kind : '');
   }
+
+  function previewEl(projectId, type) {
+    return document.querySelector('[data-item-image-preview="' + projectId + '|' + type + '"]');
+  }
+
+  /** 顯示／清除該分頁的縮圖預覽（與 New Project 的 Image scan 相同） */
+  function setPreview(projectId, type, dataUrl) {
+    var img = previewEl(projectId, type);
+    if (!img) return;
+    if (!dataUrl) { img.hidden = true; img.removeAttribute('src'); return; }
+    img.src = dataUrl;
+    img.hidden = false;
+  }
+  var lastPreview = {}; // "pid|TYPE" → dataURL（renderProjects 後重新顯示用）
+  function targetKey(projectId, type) { return projectId + '|' + type; }
 
   // --- 填入 -----------------------------------------------------------------
 
@@ -178,7 +193,11 @@
         if (!dataUrl) throw new Error('無法讀取檔案');
         return imageScan.prepareImage(dataUrl);
       })
-      .then(function (prepared) { return imageScan.callOcr(prepared); })
+      .then(function (prepared) {
+        lastPreview[targetKey(projectId, type)] = prepared;
+        setPreview(projectId, type, prepared);
+        return imageScan.callOcr(prepared);
+      })
       .then(function (text) {
         var values = parseItemFields(text, type);
         var keys = Object.keys(values).filter(function (k) { return values[k]; });
@@ -217,15 +236,17 @@
         var filled = 0;
         setTimeout(function () {
           filled = fillItemForm(projectId, itemId, values);
+          // renderProjects 會重建 DOM → 重新套用縮圖與狀態
+          setPreview(projectId, type, lastPreview[targetKey(projectId, type)]);
           var labelList = keys.map(function (k) {
             var def = fieldDefs(type).filter(function (d) { return d[0] === k; })[0];
             return def ? def[1] : k;
           }).join('、');
           setStatus(projectId, type,
             (created ? '已新增 1 筆並填入 ' : '已填入 ') + keys.length + ' 個欄位：' + labelList +
-            (created ? '（確認後按「儲存項目資料」）' : '（確認後按「儲存項目資料」儲存）'), 'ok');
+            '（確認後按「儲存項目資料」' + (created ? '）' : '儲存）'), 'ok');
           if (typeof toast === 'function') toast('Image scan：' + (created ? '已新增項目並填入 ' : '已填入 ') + keys.length + ' 個欄位');
-        }, created ? 120 : 0);
+        }, created ? 150 : 0);
         return keys.length;
       })
       .catch(function (err) {
@@ -283,16 +304,31 @@
     return fileInput;
   }
 
+  function targetFromAttr(attr) {
+    var sep = String(attr || '').lastIndexOf('|');
+    if (sep < 0) return null;
+    return { projectId: attr.slice(0, sep), type: attr.slice(sep + 1) };
+  }
+
   function init() {
-    // 點「🖼️ Image scan」→ 選圖（該分頁即為目標）
+    // 點「選擇圖片」或貼上區塊 → 選圖（該分頁即為目標）
     document.addEventListener('click', function (e) {
-      var btn = e.target.closest('[data-item-image-scan]');
-      if (btn) {
-        var attr = btn.dataset.itemImageScan || '';
-        var sep = attr.lastIndexOf('|');
-        if (sep < 0) return;
-        pendingTarget = { projectId: attr.slice(0, sep), type: attr.slice(sep + 1) };
-        ensureFileInput().click();
+      var pick = e.target.closest('[data-item-image-pick], [data-item-image-drop]');
+      if (pick) {
+        if (e.target.closest('button') && !e.target.closest('[data-item-image-pick]')) return; // 清除鈕另處理
+        pendingTarget = targetFromAttr(pick.dataset.itemImagePick || pick.dataset.itemImageDrop);
+        if (pendingTarget) ensureFileInput().click();
+        return;
+      }
+      // 「清除」→ 清掉該分頁的縮圖與狀態
+      var clear = e.target.closest('[data-item-image-clear]');
+      if (clear) {
+        var t = targetFromAttr(clear.dataset.itemImageClear);
+        if (t) {
+          lastPreview[targetKey(t.projectId, t.type)] = null;
+          setPreview(t.projectId, t.type, null);
+          setStatus(t.projectId, t.type, '');
+        }
         return;
       }
       // 「＋ 手動新增」→ 新增一筆空白項目並展開輸入框
@@ -320,6 +356,45 @@
         setStatus(projectId, type, '已手動新增 1 筆，請直接在下方輸入框填寫後按「儲存項目資料」', 'ok');
       }, 30);
       if (typeof toast === 'function') toast('已新增 1 筆 ' + TYPE_LABEL[type] + ' 項目');
+    });
+
+    // 鍵盤：在貼上區按 Enter / 空白 = 選圖
+    document.addEventListener('keydown', function (e) {
+      var zone = e.target.closest && e.target.closest('[data-item-image-drop]');
+      if (!zone) return;
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      e.preventDefault();
+      pendingTarget = targetFromAttr(zone.dataset.itemImageDrop);
+      if (pendingTarget) ensureFileInput().click();
+    });
+
+    // 拖入圖片
+    ['dragenter', 'dragover'].forEach(function (ev) {
+      document.addEventListener(ev, function (e) {
+        var zone = e.target.closest && e.target.closest('[data-item-image-drop]');
+        if (!zone) return;
+        e.preventDefault();
+        zone.classList.add('is-over');
+      });
+    });
+    ['dragleave', 'dragend'].forEach(function (ev) {
+      document.addEventListener(ev, function (e) {
+        var zone = e.target.closest && e.target.closest('[data-item-image-drop]');
+        if (zone) zone.classList.remove('is-over');
+      });
+    });
+    document.addEventListener('drop', function (e) {
+      var zone = e.target.closest && e.target.closest('[data-item-image-drop]');
+      if (!zone) return;
+      e.preventDefault();
+      zone.classList.remove('is-over');
+      var target = targetFromAttr(zone.dataset.itemImageDrop);
+      var files = (e.dataTransfer && e.dataTransfer.files) || [];
+      if (!target) return;
+      for (var i = 0; i < files.length; i++) {
+        if (/^image\//.test(files[i].type || '')) { applyScan(target, files[i]); return; }
+      }
+      if (files.length) applyScan(target, files[0]);
     });
 
     // 貼上截圖：New Project 由 imageScan.js 處理；Listed Projects 交給這裡

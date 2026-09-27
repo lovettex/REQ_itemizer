@@ -904,21 +904,19 @@ body.project-expanded .project-browse{display:block;margin:6px 0 16px}
 .image-scan-filled{animation:imageScanFilled 1.8s ease}
 @keyframes imageScanFilled{0%{background:#DFFF69}100%{background:rgba(255,255,255,.66)}}
 
-/* === PARTITION / DOOR / OW：Image scan、手動新增、永遠顯示表頭 === */
-.item-image-scan-btn{
-  border:1px solid #0d5932;
-  border-radius:5px;
-  background:#eaf7ef;
-  color:#0d5932;
-  padding:6px 14px;
-  font:inherit;
-  font-size:11px;
-  font-weight:700;
-  cursor:pointer;
-  white-space:nowrap;
+/* === PARTITION / DOOR / OW：Image scan（與 New Project 相同的外觀與操作）、手動新增 === */
+.item-image-scan{
+  display:grid;
+  gap:8px;
+  border:1px solid #d8e2ec;
+  border-radius:10px;
+  padding:10px 12px;
+  margin-bottom:10px;
+  background:#fafcfe;
 }
-.item-image-scan-btn:hover{background:#ceead7}
-.item-image-scan-btn:focus-visible{outline:2px solid #0d5932;outline-offset:1px}
+.item-image-scan .image-scan-drop{min-height:64px}
+.item-image-scan .image-scan-text small{font-size:10px}
+.item-image-preview{max-width:130px !important;max-height:88px !important}
 .item-add-btn{
   border:1px dashed #9fc3b0;
   border-radius:5px;
@@ -933,11 +931,6 @@ body.project-expanded .project-browse{display:block;margin:6px 0 16px}
 }
 .item-add-btn:hover{background:#f4fbf7;border-color:#0d5932}
 .item-add-btn:focus-visible{outline:2px solid #0d5932;outline-offset:1px}
-.item-image-status{font-size:11px;color:#53606d;margin-bottom:6px}
-.item-image-status:empty{display:none}
-.item-image-status.ok{color:#0d5932;font-weight:700}
-.item-image-status.warn{color:#8a6d1f;font-weight:700}
-.item-image-status.error{color:#9b5555;font-weight:700}
 .item-table tbody tr.item-table-empty td{
   padding:14px 10px;
   font-size:11px;

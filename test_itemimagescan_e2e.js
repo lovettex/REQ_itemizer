@@ -98,13 +98,23 @@ const EXPECTED_OW_HEADERS = ['LEGEND (Manual)', 'FINISHES', 'HEIGHT', 'TYPE', 'O
     const th = await headers(suffix);
     const extra = await page.evaluate((sel) => {
       const panel = document.querySelector(sel);
+      const zone = panel.querySelector('.image-scan-drop');
       return {
         rows: panel.querySelectorAll('.item-table tbody tr').length,
         empty: (panel.querySelector('.item-table-empty td') || {}).textContent || '',
         excel: !!panel.querySelector('[data-scan-items]'),
-        image: !!panel.querySelector('[data-item-image-scan]'),
         add: !!panel.querySelector('[data-item-add]'),
-        status: !!panel.querySelector('[data-item-image-status]')
+        status: !!panel.querySelector('[data-item-image-status]'),
+        // 與 New Project 相同的貼上區塊
+        box: !!panel.querySelector('.item-image-scan'),
+        zone: !!zone,
+        zoneHint: zone ? zone.querySelector('.image-scan-text small').textContent : '',
+        zoneLabel: zone ? zone.getAttribute('aria-label') : null,
+        pick: !!panel.querySelector('[data-item-image-pick]'),
+        pickLabel: (panel.querySelector('[data-item-image-pick]') || {}).textContent,
+        clear: !!panel.querySelector('[data-item-image-clear]'),
+        preview: !!panel.querySelector('[data-item-image-preview]'),
+        previewHidden: panel.querySelector('[data-item-image-preview]').hidden
       };
     }, tabPanel(suffix));
     console.log(`Empty ${suffix}:`, JSON.stringify({ headers: th ? th.slice(1, -2) : null, ...extra }));
@@ -112,7 +122,13 @@ const EXPECTED_OW_HEADERS = ['LEGEND (Manual)', 'FINISHES', 'HEIGHT', 'TYPE', 'O
     if (th[0] !== '#') throw new Error(suffix + ' 表頭第一欄應為 #');
     if (JSON.stringify(th.slice(1, -2)) !== JSON.stringify(expect)) throw new Error(suffix + ' 表頭不正確：' + JSON.stringify(th));
     if (extra.rows !== 1 || extra.empty.indexOf('尚無') === -1) throw new Error(suffix + ' 沒有資料時應顯示空狀態列');
-    if (!extra.excel || !extra.image || !extra.add || !extra.status) throw new Error(suffix + ' 工具列缺少按鈕');
+    if (!extra.excel || !extra.add || !extra.status) throw new Error(suffix + ' 工具列缺少按鈕');
+    // Image scan 必須和 New Project tab 一樣有可見的貼上區塊
+    if (!extra.box || !extra.zone || !extra.pick || !extra.clear || !extra.preview) throw new Error(suffix + ' 缺少 Image scan 貼上區塊（外框／貼上區／選擇圖片／清除／縮圖）');
+    if (extra.zoneHint.indexOf('Ctrl+V') === -1) throw new Error(suffix + ' 貼上區提示未說明可 Ctrl+V：' + extra.zoneHint);
+    if (extra.zoneHint.indexOf('輸入框') === -1) throw new Error(suffix + ' 貼上區提示未說明會填入輸入框');
+    if (!extra.previewHidden) throw new Error(suffix + ' 尚未掃描時不應顯示縮圖');
+    if (extra.pickLabel !== '選擇圖片') throw new Error(suffix + ' 應有「選擇圖片」按鈕');
   }
 
   // 2. ＋ 手動新增 → 新增一筆並展開輸入框
@@ -166,6 +182,39 @@ const EXPECTED_OW_HEADERS = ['LEGEND (Manual)', 'FINISHES', 'HEIGHT', 'TYPE', 'O
   if (JSON.stringify(filled.storedExtra) !== '{}') throw new Error('尚未按儲存前不應寫入資料：' + JSON.stringify(filled.storedExtra));
   if (filled.statusClass.indexOf('ok') === -1) throw new Error('狀態應為成功樣式：' + filled.statusClass);
   if (!filled.highlight) throw new Error('填入的欄位應有高亮');
+
+  // 3b. 貼上後該分頁也要像 New Project 一樣顯示縮圖；點「選擇圖片」會開檔；清除會還原
+  const previewState = await page.evaluate((pid) => {
+    const img = document.querySelector(`[data-item-image-preview="${pid}|PARTITION"]`);
+    return { hidden: img.hidden, src: (img.src || '').slice(0, 20) };
+  }, PID);
+  console.log('Item preview:', JSON.stringify(previewState));
+  if (previewState.hidden || previewState.src.indexOf('data:image/') !== 0) throw new Error('貼上後應顯示縮圖預覽');
+
+  const pickOpens = await page.evaluate((pid) => {
+    // 第一次點擊會讓模組建立隱藏的 file input
+    document.querySelector(`[data-item-image-pick="${pid}|PARTITION"]`).click();
+    const input = document.getElementById('itemImageScanInput');
+    if (!input) return { created: false, opened: 0 };
+    let opened = 0;
+    const orig = input.click.bind(input);
+    input.click = () => { opened++; };
+    document.querySelector(`[data-item-image-pick="${pid}|PARTITION"]`).click();
+    document.querySelector(`[data-item-image-drop="${pid}|PARTITION"]`).click();
+    input.click = orig;
+    return { created: true, opened };
+  }, PID);
+  console.log('Pick/drop click opens picker:', JSON.stringify(pickOpens));
+  if (!pickOpens.created) throw new Error('Image scan 未建立檔案選擇 input');
+  if (pickOpens.opened !== 2) throw new Error('「選擇圖片」與點貼上區塊都應開啟檔案選擇');
+
+  const afterClear = await page.evaluate((pid) => {
+    document.querySelector(`[data-item-image-clear="${pid}|PARTITION"]`).click();
+    const img = document.querySelector(`[data-item-image-preview="${pid}|PARTITION"]`);
+    return { hidden: img.hidden, status: document.querySelector(`[data-item-image-status="${pid}|PARTITION"]`).textContent };
+  }, PID);
+  console.log('After clear:', JSON.stringify(afterClear));
+  if (!afterClear.hidden || afterClear.status !== '') throw new Error('清除後應隱藏縮圖並清空狀態');
 
   // 4. 按「儲存項目資料」→ 寫入 item.extra
   await page.evaluate((pid) => {
