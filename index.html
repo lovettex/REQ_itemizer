@@ -7,12 +7,12 @@
   <link rel="icon" type="image/png" sizes="32x32" href="data/favicon-32.png">
   <link rel="icon" type="image/png" sizes="48x48" href="data/favicon-48.png">
   <link rel="apple-touch-icon" sizes="180x180" href="data/favicon-48.png">
-  <link rel="stylesheet" href="styles.css?v=20260925b">
+  <link rel="stylesheet" href="styles.css?v=20260927c">
   <!-- 部署提醒：每次更新後，請把本檔內所有 ?v= 與下方 T1_EXPECT_ASSETS 的版本改成新的值並重新 push。
        格式為 YYYYMMDD；同一天第二次以上部署就在後面加 b、c…（例如 20260925bb），
        否則網址沒變、瀏覽器仍用舊快取。版本改掉才會立刻抓新的 app.js／styles.css，
        不用等 GitHub Pages 的 10 分鐘快取。 -->
-  <script>window.T1_EXPECT_ASSETS = '20260925b';</script>
+  <script>window.T1_EXPECT_ASSETS = '20260927c';</script>
   <script type="importmap">
   {
     "imports": {
@@ -24,33 +24,23 @@
 </head>
 <body>
   <header class="topbar"><div class="brand"><span>T1</span>系統配置庫</div><div class="topbar-right"><span class="topbar-sub">System Partition Configuration · R6</span><span class="topbar-user" id="topbarUser"></span><button type="button" class="topbar-logout" id="logoutBtn">Logout</button></div></header>
-  <section class="panel projects project-wide">
+  <section class="panel projects project-wide" id="projectWidePanel">
     <div class="project-tab-bar">
       <button class="project-tab" data-project-tab="new"><span>NEW PROJECT</span></button>
       <button class="project-tab active" data-project-tab="saved"><span>LISTED PROJECTS</span></button>
-      <button class="project-tab" data-project-tab="confirmed"><span>PROJECT CONFIRMED</span></button>
+      <!-- 右上角 icon：展開整個專案區塊（下方 Master/Profile template 與右側工作區自動隱藏），再點一次或按 Esc 收合 -->
+      <button type="button" class="project-expand-btn" id="projectExpandBtn" aria-expanded="false" aria-controls="projectWidePanel" title="展開專案區塊（隱藏下方區塊）">
+        <svg class="pe-icon pe-expand" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6V2h4"/><path d="M14 6V2h-4"/><path d="M2 10v4h4"/><path d="M14 10v4h-4"/></svg>
+        <svg class="pe-icon pe-collapse" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2v4H2"/><path d="M10 2v4h4"/><path d="M6 14v-4H2"/><path d="M10 14v-4h4"/></svg>
+        <span class="sr-only">展開／收合專案區塊</span>
+      </button>
     </div>
     <div class="project-tab-panel" data-project-tab-panel="new" style="display:none">
     <div class="project-section-body"><form id="projectForm" class="project-form"><label>Project<input name="name" required placeholder="Project name"></label><label>Sales<input name="sales" list="salesList" autocomplete="off" placeholder="選擇或輸入 Sales"></label><datalist id="salesList"><option value="Glen Tew"><option value="Gerry Lee"><option value="Eugene Ng"><option value="Jim Lim"><option value="Kelvin Tjia"><option value="Benjamin Seng"><option value="Lim Zhi Kang Louis"><option value="Bella"><option value="Jensen"><option value="Rayven Leong"><option value="Zac Lee"><option value="Naomi"></datalist><label>Delivery mode<select name="priority" data-priority-select><option value="">CASE</option><option value="REGULAR">REGULAR</option><option value="URGENT">URGENT</option><option value="CERTAIN DEADLINE">CERTAIN DEADLINE</option></select></label><label class="deadline-label" style="display:none">Deadline<input name="deadline" type="date" data-deadline-input></label><label>Address<input name="address"></label><label>Tenderer 1<input name="tenderer"></label><label>Attn<input name="attn"></label><label>Tel<input name="tel"></label><label>Email<input name="email" type="email"></label><label>Mobile<input name="mobile"></label><label>Fax<input name="fax"></label><div class="briefing-block"><div class="briefing-title">Project Briefing</div><div class="briefing-hint">*Please sorted out your files into folders, and pinpoint the main target content to save time for evaluating and analyzing data</div><label class="briefing-field">General briefing<textarea name="briefingGeneral" rows="4" placeholder="輸入 General briefing..."></textarea></label><label class="briefing-field">Layout &amp; file highlight<textarea name="briefingLayout" rows="4" placeholder="輸入 Layout &amp; file highlight..."></textarea></label></div><label class="scan-label"><span>📄 Scan RFQ file</span><input id="excelScanInput" type="file" accept=".xlsx,.xls,.csv" hidden><button id="scanBtn" class="primary scan-btn" type="button">Scan RFQ file</button><small>掃描 Excel 自動填入表單</small></label><button class="primary" type="submit">SAVE</button></form>
 <input id="itemScanInput" type="file" accept=".xlsx,.xls,.csv" hidden></div>
     </div>
     <div class="project-tab-panel active" data-project-tab-panel="saved">
-    <div class="project-section-body"><div class="ps-search-wrap"><div class="ps-search-inner"><input type="text" id="projectSearch" placeholder="搜尋 Project..." autocomplete="off"><span class="ps-arrow">▾</span></div><div class="ps-dropdown" id="projectDropdown" data-lenis-prevent></div></div><div id="projectList" class="project-list"></div><div class="backup"><button id="exportProjects" type="button">匯出 Projects</button><label>匯入 Projects<input id="importProjects" type="file" accept="application/json" hidden></label></div></div>
-    </div>
-    <div class="project-tab-panel" data-project-tab-panel="confirmed" style="display:none">
-    <div class="project-section-body">
-      <div class="confirmed-view-tabs"><button type="button" class="confirmed-view-tab active" data-confirmed-view="listing">LISTING VIEW</button><button type="button" class="confirmed-view-tab" data-confirmed-view="index">INDEX VIEW</button></div>
-      <div class="confirmed-view-panel" data-confirmed-view-panel="listing">
-        <div class="confirmed-filter-bar"><button type="button" class="confirmed-filter-btn" data-confirmed-filter-toggle><span class="confirmed-filter-icon">▶</span> FILTER VIEW <span class="confirmed-filter-count" data-confirmed-filter-count></span></button><button type="button" class="confirmed-filter-clear" data-confirmed-filter-clear style="display:none">清除篩選</button></div>
-        <div class="confirmed-filter-panel" data-confirmed-filter-panel style="display:none"></div>
-        <div id="confirmedListingList" class="confirmed-listing"></div>
-        <div class="pagination" id="confirmedListingPagination"></div>
-      </div>
-      <div class="confirmed-view-panel" data-confirmed-view-panel="index" style="display:none">
-        <div class="ps-search-wrap"><div class="ps-search-inner"><input type="text" id="confirmedSearch" placeholder="檢索 Project..." autocomplete="off"><span class="ps-arrow">▾</span></div><div class="ps-dropdown" id="confirmedDropdown" data-lenis-prevent></div></div>
-        <div id="confirmedList" class="confirmed-list"></div>
-      </div>
-    </div>
+    <div class="project-section-body"><div class="ps-search-wrap"><div class="ps-search-inner"><input type="text" id="projectSearch" placeholder="搜尋 Project..." autocomplete="off"><span class="ps-arrow">▾</span></div><div class="ps-dropdown" id="projectDropdown" data-lenis-prevent></div></div><div class="project-browse" id="projectBrowse"><div class="project-browse-head"><span class="pb-title">ALL PROJECTS</span><span class="pb-count" id="projectBrowseCount"></span></div><div class="project-browse-list" id="projectBrowseList"></div><div class="pagination" id="projectBrowsePagination"></div></div><div id="projectList" class="project-list"></div><div class="backup"><button id="exportProjects" type="button">匯出 Projects</button><label>匯入 Projects<input id="importProjects" type="file" accept="application/json" hidden></label></div></div>
     </div>
   </section>
   <main class="layout">
@@ -225,14 +215,14 @@
   </script>
   <script src="https://www.gstatic.com/firebasejs/11.9.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/11.9.0/firebase-firestore-compat.js"></script>
-  <script src="firestore-db.js?v=20260925b"></script>
-  <script src="firebase.js?v=20260925b"></script>
-  <script src="auth.js?v=20260925b"></script>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script><script src="inventory.js?v=20260925b"></script><script src="app.js?v=20260925b"></script><script src="scan.js?v=20260925b"></script>
-  <script src="js/emailService.js?v=20260925b"></script>
-  <script src="js/emailTemplate.js?v=20260925b"></script>
+  <script src="firestore-db.js?v=20260927c"></script>
+  <script src="firebase.js?v=20260927c"></script>
+  <script src="auth.js?v=20260927c"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script><script src="inventory.js?v=20260927c"></script><script src="app.js?v=20260927c"></script><script src="scan.js?v=20260927c"></script>
+  <script src="js/emailService.js?v=20260927c"></script>
+  <script src="js/emailTemplate.js?v=20260927c"></script>
   <script src="https://cdn.jsdelivr.net/npm/lenis@1/dist/lenis.min.js"></script>
-  <script src="js/lenis-init.js?v=20260925b"></script>
+  <script src="js/lenis-init.js?v=20260927c"></script>
   <!-- 舊快取自癒：app.js 若因瀏覽器快取舊版／載入失敗而未設定版本標記，帶 cache-buster 重載一次
        （每個 session 只重載一次，避免無限迴圈）。 -->
   <script>

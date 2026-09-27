@@ -110,9 +110,10 @@ await page.goto('http://localhost:3000', { waitUntil: 'domcontentloaded' });
   if (bySummary['R9VO5'].bg !== '') throw new Error('submited should have default background');
 
   // Title badge: only confirmed (A2VO3R3) shown
+  // 註：Kickoff 分頁也用同一組 Work Log 摘要（.pc-log），故這裡只取卡片標題列（summary）內的徽章
   const badges = await page.evaluate(() => {
     const card = document.querySelector('.project-card');
-    return Array.from(card.querySelectorAll('.pc-log')).map(b => b.textContent);
+    return Array.from(card.querySelector('summary').querySelectorAll('.pc-log')).map(b => b.textContent);
   });
   console.log('Badges:', JSON.stringify(badges));
   if (JSON.stringify(badges) !== JSON.stringify(['A2VO3R3'])) {
@@ -166,7 +167,7 @@ await page.goto('http://localhost:3000', { waitUntil: 'domcontentloaded' });
     return {
       count: p.workLogs.length,
       statuses: p.workLogs.map(l => l.status),
-      badges: Array.from(document.querySelector('.project-card').querySelectorAll('.pc-log')).map(b => b.textContent),
+      badges: Array.from(document.querySelector('.project-card').querySelector('summary').querySelectorAll('.pc-log')).map(b => b.textContent),
       items: Array.from(document.querySelectorAll('.worklog-item-summary')).map(s => s.textContent),
     };
   });

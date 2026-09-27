@@ -8,7 +8,10 @@ const mimeTypes = {
 };
 
 const server = http.createServer((req, res) => {
-  let filePath = '.' + req.url;
+  // index.html 的資產網址帶版本查詢字串（app.js?v=20260927 等）作為快取破壞，
+  // 這裡先去掉 ?query／#hash 再對應檔案，否則每個 ?v= 資產都會 404（頁面全空）。
+  const urlPath = req.url.split('?')[0].split('#')[0];
+  let filePath = '.' + urlPath;
   if (filePath === './') filePath = './index.html';
   const ext = path.extname(filePath);
   const mimeType = mimeTypes[ext] || 'application/octet-stream';

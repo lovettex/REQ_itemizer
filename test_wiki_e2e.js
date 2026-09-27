@@ -18,7 +18,8 @@ const { chromium } = require('playwright');
   const tabs = await page.evaluate(() => Array.from(document.querySelectorAll('.project-tab')).map(t => t.textContent.trim()));
   console.log('Main tabs:', JSON.stringify(tabs));
   if (tabs.indexOf('ACCESS MANAGEMENT') !== -1 || tabs.indexOf('RFQ Wiki') !== -1) throw new Error('ACCESS MANAGEMENT tab should be removed');
-  if (tabs.indexOf('PROJECT CONFIRMED') === -1) throw new Error('PROJECT CONFIRMED should remain');
+  if (tabs.indexOf('PROJECT CONFIRMED') !== -1) throw new Error('PROJECT CONFIRMED tab should be removed');
+  if (JSON.stringify(tabs) !== JSON.stringify(['NEW PROJECT', 'LISTED PROJECTS'])) throw new Error('Main tabs should be NEW PROJECT + LISTED PROJECTS only: ' + JSON.stringify(tabs));
 
   await browser.close();
   console.log('\nE2E ACCESS MANAGEMENT REMOVED CHECK PASSED');

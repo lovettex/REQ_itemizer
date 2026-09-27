@@ -1,7 +1,7 @@
 // 資產版本標記：需與 index.html 的 ?v= 及 window.T1_EXPECT_ASSETS 一致。
 // 供 index.html 偵測「瀏覽器仍使用舊快取 app.js」時自動重載。
 window.T1 = window.T1 || {};
-window.T1.assetVersion = '20260925b';
+window.T1.assetVersion = '20260927c';
 
 const groups = [
   // PG 01-02: Glass Frame — Vertical Section (MST/001-002)
@@ -373,25 +373,33 @@ function itemExtraSummary(item){const type=item.type||'',extra=item.extra||{};if
 function itemExtraBody(project,item){const type=item.type||'',extra=item.extra||{};const formKey=`${project.id}|${item.id}`;if(type==='OPERABLE_WALL'){const fields=(extraFields.OPERABLE_WALL||[]).map(([key,label])=>`<label><span>${label}</span>${key==='remark'?`<textarea name="${key}">${esc(extra[key])}</textarea>`:`<input name="${key}" value="${esc(extra[key])}">`}</label>`).join('');return `<div class="extra-body"><div class="extra-fields">${fields}</div><button class="primary" type="submit">儲存項目資料</button></div>`}const isPartition=type==='PARTITION';if(!type)return `<div class="extra-body"><div class="type-tabs"><button class="type-tab partition" data-set-type="${formKey}|PARTITION">PARTITION</button><button class="type-tab door" data-set-type="${formKey}|DOOR">DOOR</button></div></div>`;const fields=(extraFields[type]||[]).map(([key,label])=>`<label><span>${label}</span>${key==='remark'?`<textarea name="${key}">${esc(extra[key])}</textarea>`:`<input name="${key}" value="${esc(extra[key])}">`}</label>`).join('');return `<div class="extra-body"><div class="type-tabs"><button class="type-tab partition ${isPartition?'active':''}" data-set-type="${formKey}|PARTITION">PARTITION</button><button class="type-tab door ${!isPartition?'active':''}" data-set-type="${formKey}|DOOR">DOOR</button></div><div class="extra-fields">${fields}</div><button class="primary" type="submit">儲存項目資料</button></div>`}
 function matchedItemsTable(project){const items=project.items.filter(i=>!i.type);if(!items.length)return'<div class="project-empty">尚無未分類商品。</div>';return'<div class="item-table-wrap" data-lenis-prevent><table class="item-table"><thead><tr><th>#</th><th>商品名稱</th><th>配對資訊</th><th>分類</th><th></th></tr></thead><tbody>'+items.map((item,i)=>{const pairInfo=descriptionLine(item.pair);return'<tr><td>'+(i+1)+'</td><td>'+esc(item.pair.name)+'</td><td><small>'+pairInfo+'</small></td><td><select class="matched-type-select" data-matched-classify="'+project.id+'|'+item.id+'"><option value="">選擇分類</option><option value="PARTITION">PARTITION</option><option value="DOOR">DOOR</option></select></td><td class="item-actions"><button data-item-delete="'+project.id+'|'+item.id+'" class="project-delete">刪</button></td></tr>';}).join('')+'</tbody></table></div>';}
 function itemTable(project,type){const items=project.items.filter(i=>i.type===type);if(!items.length)return'<div class="project-empty">尚無 '+type+' 項目。</div>';const fields=extraFields[type]||[];const thead='<thead><tr><th>#</th>'+fields.map(([,l])=>'<th>'+l+'</th>').join('')+'<th>配對資訊</th><th></th></tr></thead>';const tbody='<tbody>'+items.map((item,i)=>{const CLICKABLE_KEYS=['verticalSection','horizontalSection','doorFrame','doorPanel'];const tds=fields.map(([k])=>{const v=item.extra[k];return'<td>'+(v?CLICKABLE_KEYS.includes(k)?'<span class="item-field-link" data-item-field-view="'+esc(v)+'">'+esc(v)+'</span>':esc(v):'—')+'</td>'}).join('');const pairInfo=descriptionLine(item.pair);const actions='<button data-up="'+project.id+'|'+item.id+'"'+(i===0?' disabled':'')+'>▲</button><button data-down="'+project.id+'|'+item.id+'"'+(i===items.length-1?' disabled':'')+'>▼</button><button data-item-delete="'+project.id+'|'+item.id+'" class="project-delete">刪</button><button data-item-edit="'+project.id+'|'+item.id+'" class="item-edit-btn">'+(item.extra&&Object.keys(item.extra).length?'編輯':'設定')+'</button>';return'<tr><td>'+(i+1)+'</td>'+tds+'<td>'+esc(item.pair.name)+'<br><small>'+pairInfo+'</small></td><td class="item-actions">'+actions+'</td></tr>'}).join('')+'</tbody>';const forms=items.map(item=>'<div class="item-extra-display" data-item-summary="'+project.id+'|'+item.id+'" style="display:none">'+itemExtraSummary(item)+'</div><form class="project-extra" data-item-extra-key="'+project.id+'|'+item.id+'" style="display:none">'+itemExtraBody(project,item)+'</form>').join('');return'<div class="item-table-wrap" data-lenis-prevent><table class="item-table">'+thead+tbody+'</table></div>'+forms}
-function renderProjects(){state.projects.forEach(p=>{p.items=Array.isArray(p.items)?p.items:[];if(!Array.isArray(p.workLogs))p.workLogs=[];if(p.workLogSummary){if(!p.workLogs.length)p.workLogs=[{id:id(),summary:p.workLogSummary,status:'submited',createdAt:new Date().toISOString()}];delete p.workLogSummary}});$('projectCount')&&($('projectCount').textContent=state.projects.length?`(${state.projects.length})`:'');$('projectList').innerHTML=state.projects.length?state.projects.map(p=>`<details class="project-card" open data-project-card="${p.id}"><summary${p.priority==='URGENT'&&p.status!=='Completed'?' style="background:#b2fc58;color:#000"':''}><span>${esc(p.name)}<span class="pc-count">${p.items.length} 項配對</span></span><span class="pc-qs"><select class="assign-qs-select" data-assign-qs="${p.id}"><option value="">QS</option><option value="Ben" ${p.assignedQs==='Ben'?'selected':''}>Ben</option><option value="Mary" ${p.assignedQs==='Mary'?'selected':''}>Mary</option><option value="Bella" ${p.assignedQs==='Bella'?'selected':''}>Bella</option><option value="Shih Min" ${p.assignedQs==='Shih Min'?'selected':''}>Shih Min</option></select><select class="assign-status-select" data-assign-status="${p.id}"><option value="">Status</option><option value="Pending info" ${p.status==='Pending info'?'selected':''}>Pending info</option><option value="Pending supplier quote" ${p.status==='Pending supplier quote'?'selected':''}>Pending supplier quote</option><option value="On the queue" ${p.status==='On the queue'?'selected':''}>On the queue</option><option value="Processing" ${p.status==='Processing'?'selected':''}>Processing</option><option value="Double check" ${p.status==='Double check'?'selected':''}>Double check</option><option value="Completed" ${p.status==='Completed'?'selected':''}>Completed</option><option value="On hold" ${p.status==='On hold'?'selected':''}>On hold</option></select>${(Array.isArray(p.workLogs)?p.workLogs:[]).filter(l=>l.status==='confirmed').map(l=>`<span class="pc-log" title="Log Summary">${esc(l.summary||l.qtnNum||l.note||'—')}</span>`).join('')}</span></summary>
-<div class="p-inner-tabs"><button class="p-inner-tab active" data-ptab="${p.id}" data-ptab-panel="info">Client info:<em></em></button><button class="p-inner-tab" data-ptab="${p.id}" data-ptab-panel="matched">Matched Items<em></em></button><button class="p-inner-tab" data-ptab="${p.id}" data-ptab-panel="partition">PARTITION<em></em></button><button class="p-inner-tab" data-ptab="${p.id}" data-ptab-panel="door">DOOR<em></em></button><button class="p-inner-tab" data-ptab="${p.id}" data-ptab-panel="ow">OW<em></em></button><button class="p-inner-tab" data-ptab="${p.id}" data-ptab-panel="notes">Work Log</button></div>
-<div class="p-inner-panel" data-ptab-panel="${p.id}|info">
+// 每個 project 記住最後開啟的內部分頁，重新渲染（例如切換任務下拉、存 Work Log）後不跳回 Client info
+let projectTabState = {};
+// 每個 project 的 All Clear 標記：卡片標題列以 #DFFF69 呈現（URGENT 的 #b2fc58 優先度較低）
+function _projectHeadStyle(p){
+  if (p.allClear) return ' style="background:#DFFF69;color:#000"';
+  if (p.priority==='URGENT' && p.status!=='Completed') return ' style="background:#b2fc58;color:#000"';
+  return '';
+}
+function renderProjects(){state.projects.forEach(p=>{p.items=Array.isArray(p.items)?p.items:[];if(!Array.isArray(p.workLogs))p.workLogs=[];if(p.workLogSummary){if(!p.workLogs.length)p.workLogs=[{id:id(),summary:p.workLogSummary,status:'submited',createdAt:new Date().toISOString()}];delete p.workLogSummary}});$('projectCount')&&($('projectCount').textContent=state.projects.length?`(${state.projects.length})`:'');$('projectList').innerHTML=state.projects.length?state.projects.map(p=>{const ptab=projectTabState[p.id]||'info';return `<details class="project-card" open data-project-card="${p.id}"${p.allClear?' data-all-clear="1"':''}><summary${_projectHeadStyle(p)}><span>${esc(p.name)}<span class="pc-count">${p.items.length} 項配對</span></span><span class="pc-qs"><select class="assign-qs-select" data-assign-qs="${p.id}"><option value="">QS</option><option value="Ben" ${p.assignedQs==='Ben'?'selected':''}>Ben</option><option value="Mary" ${p.assignedQs==='Mary'?'selected':''}>Mary</option><option value="Bella" ${p.assignedQs==='Bella'?'selected':''}>Bella</option><option value="Shih Min" ${p.assignedQs==='Shih Min'?'selected':''}>Shih Min</option></select><select class="assign-status-select" data-assign-status="${p.id}"><option value="">Status</option><option value="Pending info" ${p.status==='Pending info'?'selected':''}>Pending info</option><option value="Pending supplier quote" ${p.status==='Pending supplier quote'?'selected':''}>Pending supplier quote</option><option value="On the queue" ${p.status==='On the queue'?'selected':''}>On the queue</option><option value="Processing" ${p.status==='Processing'?'selected':''}>Processing</option><option value="Double check" ${p.status==='Double check'?'selected':''}>Double check</option><option value="Completed" ${p.status==='Completed'?'selected':''}>Completed</option><option value="On hold" ${p.status==='On hold'?'selected':''}>On hold</option></select>${(Array.isArray(p.workLogs)?p.workLogs:[]).filter(l=>l.status==='confirmed').map(l=>`<span class="pc-log" title="Log Summary">${esc(l.summary||l.qtnNum||l.note||'—')}</span>`).join('')}</span></summary>
+<div class="p-inner-tabs"><button class="p-inner-tab ${ptab==='info'?'active':''}" data-ptab="${p.id}" data-ptab-panel="info">Client info:<em></em></button><button class="p-inner-tab ${ptab==='matched'?'active':''}" data-ptab="${p.id}" data-ptab-panel="matched">Matched Items<em></em></button><button class="p-inner-tab ${ptab==='partition'?'active':''}" data-ptab="${p.id}" data-ptab-panel="partition">PARTITION<em></em></button><button class="p-inner-tab ${ptab==='door'?'active':''}" data-ptab="${p.id}" data-ptab-panel="door">DOOR<em></em></button><button class="p-inner-tab ${ptab==='ow'?'active':''}" data-ptab="${p.id}" data-ptab-panel="ow">OW<em></em></button><button class="p-inner-tab ${ptab==='notes'?'active':''}" data-ptab="${p.id}" data-ptab-panel="notes">Work Log</button><button class="p-inner-tab ${ptab==='kickoff'?'active':''}" data-ptab="${p.id}" data-ptab-panel="kickoff" title="任務追蹤、Project number 與 All Clear">Kickoff</button></div>
+<div class="p-inner-panel" data-ptab-panel="${p.id}|info" style="${ptab==='info'?'':'display:none'}">
 ${projectInputs(p)}<div class="project-info"><div>Sales: ${esc(p.sales||'-')}</div><div>等級: ${esc(p.priority||'-')}</div>${p.deadline?`<div>Deadline: ${esc(p.deadline)}</div>`:''}<div>QS: ${esc(p.assignedQs||'-')}</div><div>Status: ${esc(p.status||'-')}</div><div>Address: ${esc(p.address||'-')}</div><div>Tenderer: ${esc(p.tenderer||'-')}</div><div>Attn: ${esc(p.attn||'-')}</div><div>Tel: ${esc(p.tel||'-')}</div><div>Email: ${esc(p.email||'-')}</div><div>Mobile: ${esc(p.mobile||'-')}</div><div>Fax: ${esc(p.fax||'-')}</div></div></div>
-<div class="p-inner-panel" data-ptab-panel="${p.id}|matched" style="display:none">${matchedItemsTable(p)}</div>
-<div class="p-inner-panel" data-ptab-panel="${p.id}|partition" style="display:none">
+<div class="p-inner-panel" data-ptab-panel="${p.id}|matched" style="${ptab==='matched'?'':'display:none'}">${matchedItemsTable(p)}</div>
+<div class="p-inner-panel" data-ptab-panel="${p.id}|partition" style="${ptab==='partition'?'':'display:none'}">
 <div class="item-scan-row"><button class="item-scan-btn" data-scan-items="${p.id}" type="button">📄 掃描 Excel</button><small class="item-scan-hint">從 Glazing System 匯入 PARTITION 項目</small></div>
 ${itemTable(p,'PARTITION')}</div>
-<div class="p-inner-panel" data-ptab-panel="${p.id}|door" style="display:none">
+<div class="p-inner-panel" data-ptab-panel="${p.id}|door" style="${ptab==='door'?'':'display:none'}">
 <div class="item-scan-row"><button class="item-scan-btn" data-scan-items="${p.id}" type="button">📄 掃描 Excel</button><small class="item-scan-hint">從 Glazing System 匯入 DOOR 項目</small></div>
 ${itemTable(p,'DOOR')}</div>
-<div class="p-inner-panel" data-ptab-panel="${p.id}|ow" style="display:none">
+<div class="p-inner-panel" data-ptab-panel="${p.id}|ow" style="${ptab==='ow'?'':'display:none'}">
 <div class="item-scan-row"><button class="item-scan-btn" data-scan-items="${p.id}" type="button">📄 掃描 Excel</button><small class="item-scan-hint">從 Excel 匯入 OPERABLE WALL 項目</small></div>
 ${itemTable(p,'OPERABLE_WALL')}</div>
-<div class="p-inner-panel" data-ptab-panel="${p.id}|notes" style="display:none">${worklogFormHtml(p)}</div>
-<button class="project-delete" data-project-delete="${p.id}">刪除 Project</button></details>`).join(''):'<div class="project-empty">尚未儲存 Project。</div>';document.querySelectorAll('[data-project-edit]').forEach(form=>form.onsubmit=async e=>{e.preventDefault();const p=state.projects.find(x=>x.id===form.dataset.projectEdit),f=new FormData(form);['name','sales','priority','deadline','address','tenderer','attn','tel','email','mobile','fax'].forEach(k=>{p[k]=f.get(k);if(k==='deadline'&&p[k])p[k]=p[k]+' EOD'});p.briefing={general:f.get('briefingGeneral')||'',layout:f.get('briefingLayout')||''};save();renderProjects();renderPairs();toast('Project 已更新')});document.querySelectorAll('[data-priority-select]').forEach(sel=>sel.onchange=()=>{const dl=sel.closest('form').querySelector('.deadline-label');if(dl)dl.style.display=sel.value==='CERTAIN DEADLINE'?'':'none'});document.querySelectorAll('[data-item-edit]').forEach(btn=>btn.onclick=()=>{const [projectId,itemId]=btn.dataset.itemEdit.split('|');const form=document.querySelector(`[data-item-extra-key="${projectId}|${itemId}"]`);const summary=document.querySelector(`[data-item-summary="${projectId}|${itemId}"]`);if(form.style.display==='none'){form.style.display='';summary.style.display='none';btn.textContent='收起'}else{form.style.display='none';summary.style.display='';btn.textContent=document.querySelector(`[data-item-summary="${projectId}|${itemId}"] .item-type-badge`)?.classList.contains('none')?'設定類別':'編輯資料'}});document.querySelectorAll('[data-project-delete]').forEach(b=>b.onclick=()=>{state.projects=state.projects.filter(p=>p.id!==b.dataset.projectDelete);save();renderProjects();renderPairs();toast('已刪除 Project')});document.querySelectorAll('[data-item-delete]').forEach(b=>b.onclick=()=>{const [projectId,itemId]=b.dataset.itemDelete.split('|');const p=state.projects.find(x=>x.id===projectId);p.items=p.items.filter(x=>x.id!==itemId);save();renderProjects();toast('已刪除項目')});[['data-up',-1],['data-down',1]].forEach(([attribute,delta])=>document.querySelectorAll(`[${attribute}]`).forEach(b=>b.onclick=()=>{const [projectId,itemId]=b.getAttribute(attribute).split('|');const p=state.projects.find(x=>x.id===projectId);const i=p.items.findIndex(x=>x.id===itemId);[p.items[i],p.items[i+delta]]=[p.items[i+delta],p.items[i]];save();renderProjects()}));refreshPairProjectSelect();setTimeout(restoreProjectTabs,0); setTimeout(function(){},100) }
+<div class="p-inner-panel" data-ptab-panel="${p.id}|notes" style="${ptab==='notes'?'':'display:none'}">${worklogFormHtml(p)}</div>
+<div class="p-inner-panel" data-ptab-panel="${p.id}|kickoff" style="${ptab==='kickoff'?'':'display:none'}">${kickoffPanelHtml(p)}</div>
+<button class="project-delete" data-project-delete="${p.id}">刪除 Project</button></details>`}).join(''):'<div class="project-empty">尚未儲存 Project。</div>';document.querySelectorAll('[data-project-edit]').forEach(form=>form.onsubmit=async e=>{e.preventDefault();const p=state.projects.find(x=>x.id===form.dataset.projectEdit),f=new FormData(form);['name','sales','priority','deadline','address','tenderer','attn','tel','email','mobile','fax'].forEach(k=>{p[k]=f.get(k);if(k==='deadline'&&p[k])p[k]=p[k]+' EOD'});p.briefing={general:f.get('briefingGeneral')||'',layout:f.get('briefingLayout')||''};save();renderProjects();renderPairs();toast('Project 已更新')});document.querySelectorAll('[data-priority-select]').forEach(sel=>sel.onchange=()=>{const dl=sel.closest('form').querySelector('.deadline-label');if(dl)dl.style.display=sel.value==='CERTAIN DEADLINE'?'':'none'});document.querySelectorAll('[data-item-edit]').forEach(btn=>btn.onclick=()=>{const [projectId,itemId]=btn.dataset.itemEdit.split('|');const form=document.querySelector(`[data-item-extra-key="${projectId}|${itemId}"]`);const summary=document.querySelector(`[data-item-summary="${projectId}|${itemId}"]`);if(form.style.display==='none'){form.style.display='';summary.style.display='none';btn.textContent='收起'}else{form.style.display='none';summary.style.display='';btn.textContent=document.querySelector(`[data-item-summary="${projectId}|${itemId}"] .item-type-badge`)?.classList.contains('none')?'設定類別':'編輯資料'}});document.querySelectorAll('[data-project-delete]').forEach(b=>b.onclick=()=>{state.projects=state.projects.filter(p=>p.id!==b.dataset.projectDelete);save();renderProjects();renderPairs();toast('已刪除 Project')});document.querySelectorAll('[data-item-delete]').forEach(b=>b.onclick=()=>{const [projectId,itemId]=b.dataset.itemDelete.split('|');const p=state.projects.find(x=>x.id===projectId);p.items=p.items.filter(x=>x.id!==itemId);save();renderProjects();toast('已刪除項目')});[['data-up',-1],['data-down',1]].forEach(([attribute,delta])=>document.querySelectorAll(`[${attribute}]`).forEach(b=>b.onclick=()=>{const [projectId,itemId]=b.getAttribute(attribute).split('|');const p=state.projects.find(x=>x.id===projectId);const i=p.items.findIndex(x=>x.id===itemId);[p.items[i],p.items[i+delta]]=[p.items[i+delta],p.items[i]];save();renderProjects()}));refreshPairProjectSelect();setTimeout(restoreProjectTabs,0); setTimeout(function(){},100) }
 
-// PROJECT CONFIRMED tab — projects that have at least one confirmed Work Log
-// PROJECT CONFIRMED — per-project task drop-downs (selection appends to Summary)
+// KICKOFF 任務下拉 — 每個 project 的任務追蹤（選取後 appended 到該 project 的 Summary）
 // pending: 該任務「尚未完成」的值；無任何記錄亦視為未完成。
 const CONFIRMED_TASKS = [
   { label: 'Ironmongery Sign Off (4DWGS)', options: ['TO DO','DONE'], pending: ['TO DO'] },
@@ -400,35 +408,21 @@ const CONFIRMED_TASKS = [
   { label: 'PICKLIST (DO)', options: ['NOT YET','DO1','DO2','DO3','DO4','DO5','DO6','DO7','DO8','DO9','DO10','DO11'], pending: ['NOT YET'],
     cascade: ['R1','R2','R3','R4','R5','R6','R7','R8','R9','R10','R11'] }
 ];
-const CONFIRMED_TASK_BY_LABEL = Object.fromEntries(CONFIRMED_TASKS.map(t => [t.label, t]));
 // 任務目前狀態 = confirmSummary 中該 label 的最後一筆記錄（無記錄回傳 null）
 function _taskRecord(p, label){
   const rows = Array.isArray(p.confirmSummary)?p.confirmSummary:[];
   for (let i = rows.length - 1; i >= 0; i--) if (rows[i].label === label) return rows[i];
   return null;
 }
-function _isTaskIncomplete(p, label){
-  const task = CONFIRMED_TASK_BY_LABEL[label];
-  if (!task) return false;
-  const rec = _taskRecord(p, label);
-  if (!rec) return true; // 尚無記錄 → 未完成
-  return task.pending.includes(rec.value);
-}
-function _confirmedHits(){
-  return state.projects
-    .map(p => ({ p, logs: (Array.isArray(p.workLogs)?p.workLogs:[]).filter(l => l.status === 'confirmed') }))
-    .filter(x => x.logs.length > 0)
-    .sort((a,b) => (a.p.name||'').localeCompare(b.p.name||''));
-}
 function _taskValueHtml(r){ return esc(r.value) + (r.r ? ' · ' + esc(r.r) : ''); }
-// Work Log 摘要（含備註 Note）— LISTING VIEW 與 INDEX VIEW 共用
+// Work Log 摘要（含備註 Note）— Kickoff 分頁與展開清單共用
 function _workLogHtml(logs){
   if (!logs.length) return '<div class="listing-empty">尚無 confirmed Work Log。</div>';
   return logs.map(l=>`<div class="wl-entry"><span class="pc-log" title="${esc(l.summary||l.note||'')}">${esc(l.summary||l.qtnNum||l.note||'—')}</span>${l.qtnNum?`<span class="wl-entry-qtn">QTN: ${esc(l.qtnNum)}</span>`:''}<span class="wl-entry-date">${esc((l.createdAt||'').slice(0,10))}</span>${l.note?`<span class="wl-entry-note">📝 ${esc(l.note)}</span>`:''}</div>`).join('');
 }
-function _confirmedCardHtml(p, logs){
-  const summary = Array.isArray(p.confirmSummary)?p.confirmSummary:[];
-  const selects = CONFIRMED_TASKS.map(task=>{
+// 四個任務下拉（PICKLIST 選定 DO# 後才出現「下單 R」）— Kickoff 分頁用
+function _confirmedSelectsHtml(p){
+  return CONFIRMED_TASKS.map(task=>{
     const rec = _taskRecord(p, task.label);
     const opts = task.options.map(o=>`<option value="${esc(o)}" ${rec&&rec.value===o?'selected':''}>${esc(o)}</option>`).join('');
     // cascade 只在任務已非「未完成」狀態時出現（PICKLIST 選定 DO# 後才問 R）
@@ -437,83 +431,31 @@ function _confirmedCardHtml(p, logs){
       : '';
     return `<label class="confirmed-select"><span>${esc(task.label)}</span><select data-confirmed-select="${p.id}" data-confirmed-type="${esc(task.label)}"><option value="">—</option>${opts}</select></label>${sub}`;
   }).join('');
-  const items = summary.map(r=>`<div class="confirmed-summary-item"><span class="cs-label">${esc(r.label)}</span><span class="cs-value">${_taskValueHtml(r)}</span><span class="cs-date">${esc((r.createdAt||'').slice(0,10))}</span><button type="button" class="worklog-btn worklog-del" data-confirmed-del="${p.id}|${r.id}" title="刪除">✕</button></div>`).join('');
-  return `<div class="confirmed-card" data-confirmed-card="${p.id}"><div class="confirmed-card-head"><strong class="confirmed-card-name" data-confirmed-open="${p.id}" title="開啟 Work Log">${esc(p.name)}</strong><input class="confirmed-number" data-confirmed-number="${p.id}" value="${esc(p.projectNumber||'')}" placeholder="PROJECT NUMBER" title="Project Number">${p.priority==='URGENT'?'<span class="confirmed-urgent">URGENT</span>':''}${p.sales?`<span class="confirmed-qs">Sales: ${esc(p.sales)}</span>`:''}${p.assignedQs?`<span class="confirmed-qs">QS: ${esc(p.assignedQs)}</span>`:''}</div><div class="confirmed-card-logs">${_workLogHtml(logs)}</div><div class="confirmed-selects">${selects}</div><button type="button" class="confirmed-toggle" data-confirmed-toggle="${p.id}">▼ Summary (${summary.length})</button><div class="confirmed-summary" data-confirmed-summary="${p.id}">${items||'<div class="worklog-empty">尚無 Summary 記錄。</div>'}</div></div>`;
 }
-// PROJECT CONFIRMED / LISTING VIEW — 只列 Project Name，點擊才展開內容（含 Work Log Summary）
-// 每頁 6 筆，其餘分散到第 2、3、4… 頁
-const CONFIRMED_LIST_PAGE_SIZE = 6;
-renderConfirmedListing.filter = new Set();
-renderConfirmedListing._page = 1;
-function renderConfirmedListing(){
-  const list = document.getElementById('confirmedListingList');
-  if (!list) return;
-  const hits = _confirmedHits();
-  const picked = renderConfirmedListing.filter;
-  const shown = picked.size ? hits.filter(({p}) => [...picked].every(label => _isTaskIncomplete(p, label))) : hits;
-  const totalPages = Math.max(1, Math.ceil(shown.length / CONFIRMED_LIST_PAGE_SIZE));
-  const page = Math.min(renderConfirmedListing._page, totalPages);
-  renderConfirmedListing._page = page;
-  const pageItems = shown.slice((page-1)*CONFIRMED_LIST_PAGE_SIZE, page*CONFIRMED_LIST_PAGE_SIZE);
-  list.innerHTML = pageItems.length
-    ? pageItems.map(({p, logs}) => {
-        const summary = Array.isArray(p.confirmSummary)?p.confirmSummary:[];
-        const rows = summary.map(r=>`<div class="confirmed-summary-item"><span class="cs-label">${esc(r.label)}</span><span class="cs-value">${_taskValueHtml(r)}</span><span class="cs-date">${esc((r.createdAt||'').slice(0,10))}</span></div>`).join('') || '<div class="worklog-empty">尚無 Summary 記錄。</div>';
-        return `<details class="listing-item" data-listing-item="${p.id}"><summary><span class="listing-name">${esc(p.name)}</span>${p.projectNumber?`<span class="listing-number">#${esc(p.projectNumber)}</span>`:''}${p.priority==='URGENT'?'<span class="confirmed-urgent">URGENT</span>':''}${p.assignedQs?`<span class="confirmed-qs">QS: ${esc(p.assignedQs)}</span>`:''}</summary><div class="listing-body"><div class="confirmed-card-logs">${_workLogHtml(logs)}</div><div class="confirmed-summary">${rows}</div><button type="button" class="confirmed-toggle" data-confirmed-open="${p.id}">開啟 Work Log</button></div></details>`;
-      }).join('')
-    : `<div class="project-empty">${hits.length ? '沒有符合篩選條件的 Project。' : '尚無已確認 (confirmed) 的 Project。'}</div>`;
-  const pg = document.getElementById('confirmedListingPagination');
-  if (pg) {
-    pg.innerHTML = totalPages > 1
-      ? Array.from({length: totalPages}, (_, i) => `<button type="button" class="pg-btn ${i+1===page?'pg-active':''}" data-confirmed-page="${i+1}">${i+1}</button>`).join('')
-      : '';
-  }
-  const panel = document.querySelector('[data-confirmed-filter-panel]');
-  if (panel) panel.innerHTML = CONFIRMED_TASKS.map(t=>`<label class="confirmed-filter-opt"><input type="checkbox" data-confirmed-filter-opt="${esc(t.label)}" ${picked.has(t.label)?'checked':''}><span>${esc(t.label)}</span></label>`).join('');
-  const count = document.querySelector('[data-confirmed-filter-count]');
-  if (count) count.textContent = picked.size ? `(${picked.size})` : '';
-  const clear = document.querySelector('[data-confirmed-filter-clear]');
-  if (clear) clear.style.display = picked.size ? '' : 'none';
+// Summary 記錄列表（含刪除鈕）— Kickoff 分頁用
+function _confirmedSummaryItemsHtml(p){
+  const summary = Array.isArray(p.confirmSummary)?p.confirmSummary:[];
+  return summary.map(r=>`<div class="confirmed-summary-item"><span class="cs-label">${esc(r.label)}</span><span class="cs-value">${_taskValueHtml(r)}</span><span class="cs-date">${esc((r.createdAt||'').slice(0,10))}</span><button type="button" class="worklog-btn worklog-del" data-confirmed-del="${p.id}|${r.id}" title="刪除">✕</button></div>`).join('')||'<div class="worklog-empty">尚無 Summary 記錄。</div>';
 }
-// LISTING VIEW / INDEX VIEW 切換
+// KICKOFF 分頁（Listed Projects 內每個 project）：Project number（旁邊為 All Clear 按鈕）、
+// Work Log 摘要（confirmed 紀錄）、四個任務下拉＋PICKLIST 下單 R、下方 Summary。
+// 按 All Clear 後該 project 以 #DFFF69 標記（卡片標題列、展開清單、Kickoff 抬頭），再按一次取消。
+function kickoffPanelHtml(p){
+  const logs = (Array.isArray(p.workLogs)?p.workLogs:[]).filter(l => l.status === 'confirmed');
+  const summary = Array.isArray(p.confirmSummary)?p.confirmSummary:[];
+  return `<div class="kickoff-card" data-kickoff-card="${p.id}"><div class="kickoff-head${p.allClear?' all-clear':''}"><span class="kickoff-name">${esc(p.name)}</span><input class="confirmed-number" data-confirmed-number="${p.id}" value="${esc(p.projectNumber||'')}" placeholder="PROJECT NUMBER" title="Project Number"><button type="button" class="kickoff-clear-btn${p.allClear?' active':''}" data-kickoff-clear="${p.id}" aria-pressed="${p.allClear?'true':'false'}" title="標記此 Project 為 All Clear（再按一次取消）">All Clear</button>${p.priority==='URGENT'?'<span class="confirmed-urgent">URGENT</span>':''}${p.sales?`<span class="confirmed-qs">Sales: ${esc(p.sales)}</span>`:''}${p.assignedQs?`<span class="confirmed-qs">QS: ${esc(p.assignedQs)}</span>`:''}</div><div class="confirmed-card-logs">${_workLogHtml(logs)}</div><div class="confirmed-selects">${_confirmedSelectsHtml(p)}</div><button type="button" class="confirmed-toggle" data-confirmed-toggle="${p.id}">▼ Summary (${summary.length})</button><div class="confirmed-summary" data-confirmed-summary="${p.id}">${_confirmedSummaryItemsHtml(p)}</div><small class="kickoff-hint">Project number、任務狀態與 Summary 都存在此 Project 上（Work Log 只列 confirmed 的紀錄）。</small></div>`;
+}
+// All Clear 標記 → 該 project 以 #DFFF69 呈現（卡片標題列＋展開清單＋Kickoff 抬頭）
 document.addEventListener('click', e => {
-  const btn = e.target.closest('[data-confirmed-view]');
+  const btn = e.target.closest('[data-kickoff-clear]');
   if (!btn) return;
-  const view = btn.dataset.confirmedView;
-  document.querySelectorAll('[data-confirmed-view]').forEach(b => b.classList.toggle('active', b === btn));
-  document.querySelectorAll('[data-confirmed-view-panel]').forEach(p => { p.style.display = p.dataset.confirmedViewPanel === view ? '' : 'none'; });
-});
-// FILTER VIEW 開合 + 複選（多選為 AND：所有選取任務皆未完成才顯示）
-document.addEventListener('click', e => {
-  const tog = e.target.closest('[data-confirmed-filter-toggle]');
-  if (tog) {
-    const panel = document.querySelector('[data-confirmed-filter-panel]');
-    if (!panel) return;
-    const isOpen = panel.style.display !== 'none';
-    panel.style.display = isOpen ? 'none' : '';
-    const icon = tog.querySelector('.confirmed-filter-icon');
-    if (icon) icon.textContent = isOpen ? '▶' : '▼';
-    return;
-  }
-  if (e.target.closest('[data-confirmed-filter-clear]')) {
-    renderConfirmedListing.filter.clear();
-    renderConfirmedListing._page = 1;
-    renderConfirmedListing();
-    return;
-  }
-  const pgBtn = e.target.closest('[data-confirmed-page]');
-  if (pgBtn) {
-    renderConfirmedListing._page = parseInt(pgBtn.dataset.confirmedPage, 10) || 1;
-    renderConfirmedListing();
-  }
-});
-document.addEventListener('change', e => {
-  const cb = e.target.closest('[data-confirmed-filter-opt]');
-  if (!cb) return;
-  const label = cb.dataset.confirmedFilterOpt;
-  if (cb.checked) renderConfirmedListing.filter.add(label); else renderConfirmedListing.filter.delete(label);
-  renderConfirmedListing._page = 1; // 篩選條件變更 → 回到第 1 頁
-  renderConfirmedListing();
+  const p = state.projects.find(x => x.id === btn.dataset.kickoffClear);
+  if (!p) return;
+  p.allClear = !p.allClear;
+  save();
+  renderProjects(); // Kickoff 分頁會保持開啟（projectTabState）
+  if (document.body.classList.contains('project-expanded')) renderProjectBrowse();
+  toast(p.allClear ? `已標記 All Clear：${p.name}` : `已取消 All Clear：${p.name}`);
 });
 // INDEX VIEW 卡片：PROJECT NUMBER 輸入（供檢索下拉以編號搜尋）
 document.addEventListener('change', e => {
@@ -529,78 +471,7 @@ document.addEventListener('change', e => {
   toast(v ? `Project Number: ${v}` : '已清除 Project Number');
 });
 
-// PROJECT CONFIRMED：檢索式下拉 — 唯有檢索並選取才顯示該 project 的內容，否則空白
-renderConfirmed.selectedId = null;
-function renderConfirmed(){
-  const list = document.getElementById('confirmedList');
-  if (!list) return;
-  const hits = _confirmedHits();
-  // 檢索下拉清單（所有 confirmed project）
-  const dd = document.getElementById('confirmedDropdown');
-  if (dd) {
-    dd.innerHTML = hits.length
-      ? hits.map(({p}) => `<div class="ps-item" data-confirmed-pick="${p.id}">${esc(p.name)}${p.projectNumber?`<small style="color:#7a97b0;font-weight:400"> #${esc(p.projectNumber)}</small>`:''}${p.assignedQs?`<small style="color:#7a97b0;font-weight:400"> (${esc(p.assignedQs)})</small>`:''}</div>`).join('')
-      : '<div class="ps-empty">尚無已確認 (confirmed) 的 Project</div>';
-  }
-  // 僅顯示選取的 project（若仍為 confirmed），否則空白提示
-  let sel = null;
-  if (renderConfirmed.selectedId) {
-    const hit = hits.find(x => x.p.id === renderConfirmed.selectedId);
-    if (hit) sel = hit;
-    else renderConfirmed.selectedId = null;
-  }
-  list.innerHTML = sel
-    ? _confirmedCardHtml(sel.p, sel.logs)
-    : '<div class="project-empty">請檢索並選取一個已確認 (confirmed) 的 Project。</div>';
-}
-
-// Confirmed searchable dropdown — filter + pick
-(function(){
-  const search = document.getElementById('confirmedSearch');
-  const dd = document.getElementById('confirmedDropdown');
-  if (!search || !dd) return;
-  dd.addEventListener('click', e => {
-    const item = e.target.closest('[data-confirmed-pick]');
-    if (!item) return;
-    renderConfirmed.selectedId = item.dataset.confirmedPick;
-    const p = state.projects.find(x => x.id === renderConfirmed.selectedId);
-    if (search && p) search.value = p.name;
-    dd.classList.remove('open');
-    renderConfirmed();
-  });
-  search.addEventListener('focus', () => { renderConfirmed(); dd.classList.add('open'); });
-  search.addEventListener('blur', () => setTimeout(() => dd.classList.remove('open'), 200));
-  search.addEventListener('input', () => {
-    const q = search.value.toLowerCase().trim();
-    let visible = 0;
-    dd.querySelectorAll('.ps-item').forEach(it => {
-      const match = !q || it.textContent.toLowerCase().includes(q);
-      it.style.display = match ? '' : 'none';
-      if (match) visible++;
-    });
-    const empty = dd.querySelector('.ps-empty');
-    if (empty) empty.style.display = visible ? 'none' : '';
-    dd.classList.add('open');
-  });
-})();
-
-// Click a confirmed project → jump to LISTED PROJECTS, open that card's Work Log tab
-document.addEventListener('click', e => {
-  const opener = e.target.closest('[data-confirmed-open]');
-  if (!opener) return;
-  const pid = opener.dataset.confirmedOpen;
-  const savedBtn = document.querySelector('.project-tab[data-project-tab="saved"]');
-  if (savedBtn) savedBtn.click();
-  const card = document.querySelector(`.project-card[data-project-card="${pid}"]`);
-  if (card) card.open = true;
-  projectTabState[pid] = 'notes';
-  setTimeout(() => {
-    const notesBtn = document.querySelector(`[data-ptab="${pid}"][data-ptab-panel="notes"]`);
-    if (notesBtn) notesBtn.click();
-  }, 60);
-});
-
-// Confirmed card drop-down → append to Summary (persisted per project)
+// Kickoff 分頁：任務下拉 → append 到 Summary（存在該 project 上）
 document.addEventListener('change', e => {
   const sel = e.target.closest('[data-confirmed-select]');
   if (!sel) return;
@@ -637,7 +508,9 @@ document.addEventListener('change', e => {
 document.addEventListener('click', e => {
   const tog = e.target.closest('[data-confirmed-toggle]');
   if (!tog) return;
-  const body = document.querySelector(`[data-confirmed-summary="${tog.dataset.confirmedToggle}"]`);
+  // 只在自己所屬的 Kickoff 卡片內找 Summary
+  const scope = tog.closest('.confirmed-card, .kickoff-card') || document;
+  const body = scope.querySelector(`[data-confirmed-summary="${tog.dataset.confirmedToggle}"]`);
   if (!body) return;
   const isOpen = body.style.display !== 'none';
   body.style.display = isOpen ? 'none' : '';
@@ -659,14 +532,6 @@ document.addEventListener('click', e => {
   toast('Summary 記錄已刪除');
 });
 
-// Make renderProjects trigger confirmed refresh
-const _origRenderProjects = renderProjects;
-renderProjects = function(){
-  _origRenderProjects();
-  renderConfirmed();
-  renderConfirmedListing();
-};
-
 // Event delegation for type tabs and extra forms (avoids re-rendering entire project list)
 document.addEventListener('click',e=>{const btn=e.target.closest('[data-set-type]');if(!btn)return;e.preventDefault();const [projectId,itemId,newType]=btn.dataset.setType.split('|');const p=state.projects.find(x=>x.id===projectId);if(!p)return;const item=p.items.find(x=>x.id===itemId);if(!item)return;item.type=newType;item.extra={};save();const form=btn.closest('.project-extra');const isPartition=newType==='PARTITION';const fields=(extraFields[newType]||[]).map(([key,label])=>`<label><span>${label}</span>${key==='remark'?`<textarea name="${key}"></textarea>`:`<input name="${key}">`}</label>`).join('');const body=form.querySelector('.extra-body');body.innerHTML=`<div class="type-tabs"><button class="type-tab partition ${isPartition?'active':''}" data-set-type="${projectId}|${itemId}|PARTITION">PARTITION</button><button class="type-tab door ${!isPartition?'active':''}" data-set-type="${projectId}|${itemId}|DOOR">DOOR</button></div><div class="extra-fields">${fields}</div><button class="primary" type="submit">儲存項目資料</button>`});
 document.addEventListener('submit',e=>{const form=e.target.closest('[data-item-extra-key]');if(!form)return;e.preventDefault();const [projectId,itemId]=form.dataset.itemExtraKey.split('|');const p=state.projects.find(x=>x.id===projectId);const item=p.items.find(x=>x.id===itemId);const fd=new FormData(form);item.extra=Object.fromEntries(fd.entries());save();renderProjects();toast('項目資料已儲存');});
@@ -674,8 +539,137 @@ document.addEventListener('submit',e=>{const form=e.target.closest('[data-item-e
 $('search').oninput=e=>{state.query=e.target.value;renderResults()};$('clearSearch').onclick=()=>{$('search').value='';state.query='';state.category='';renderFilters();renderResults()};$('inventoryA1').oninput=e=>state.inventoryA1=e.target.value;$('inventoryA2').oninput=e=>state.inventoryA2=e.target.value;$('resetPair').onclick=()=>{state.a1=null;state.a2=null;state.inventoryA1='';state.inventoryA2='';$('pairName').value='Item A';renderSlots()};$('savePair').onclick=()=>{state.pairs.unshift({id:id(),name:$('pairName').value.trim()||'未命名配對',a1:state.a1?structuredClone(state.a1):null,a2:state.a2?structuredClone(state.a2):null,inventoryA1:state.inventoryA1,inventoryA2:state.inventoryA2,qtn:$('qtnSearch').value.trim(),boq:$('boqSearch').value.trim(),createdAt:new Date().toISOString()});save();renderPairs();toast('配對已儲存')};document.addEventListener('change',e=>{const sel=e.target.closest('[data-priority-select]');if(!sel)return;const label=sel.closest('form').querySelector('.deadline-label');if(label)label.style.display=sel.value==='CERTAIN DEADLINE'?'':'none'});document.addEventListener('change',e=>{const sel=e.target.closest('[data-pair-type]');if(!sel)return;const p=state.pairs.find(x=>x.id===sel.dataset.pairType);if(!p)return;p.type=sel.value;save();renderPairs()});$('projectForm').onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target);const deadline=f.get('deadline');const pid=id();state.projects.unshift({id:pid,name:f.get('name').trim(),assignedQs:'',status:'',sales:f.get('sales').trim(),priority:f.get('priority').trim(),deadline:deadline?deadline+' EOD':'',address:f.get('address').trim(),tenderer:f.get('tenderer').trim(),attn:f.get('attn').trim(),tel:f.get('tel').trim(),email:f.get('email').trim(),mobile:f.get('mobile').trim(),fax:f.get('fax').trim(),briefing:{general:f.get('briefingGeneral')||'',layout:f.get('briefingLayout')||''},items:[]});save();try{const _fs2=(window.T1||{}).firestore;if(_fs2&&_fs2.ready&&_fs2.saveProjectsAwait){await _fs2.saveProjectsAwait(state.projects);const _es=(window.T1||{}).emailService,_et=(window.T1||{}).emailTemplate,_auth=(window.T1||{}).auth;if(_es&&_es.sendEmail&&_et){const _p=state.projects[0];if(_p&&_p.email){const _iso=new Date().toISOString().slice(0,10);const _sbj=_et.buildEmailSubject(_p.name);const _html=_et.buildEmailHtml({rfqNumber:_p.name,customer:_p.tenderer||'',project:_p.name,quotationDate:_iso,createdBy:((_auth&&_auth.currentUser?(_auth.currentUser()||{}).email:null)||''),totalItems:(_p.items||[]).length});await _es.sendEmail({to:_p.email,subject:_sbj,html:_html})}}}}catch(_e){console.error('[RFQ Email] notification skipped (RFQ creation unaffected):',_e&&_e.message?_e.message:_e)}e.target.reset();document.querySelector('[data-deadline-input]').closest('.deadline-label').style.display='none';renderProjects();renderPairs();refreshPairProjectSelect();toast('Project 已儲存')};document.querySelectorAll('[data-saved-filter]').forEach(btn=>btn.onclick=()=>{renderPairs._filter=btn.dataset.savedFilter;document.querySelectorAll('[data-saved-filter]').forEach(b=>b.classList.toggle('active',b===btn));renderPairs()});$('exportPairs').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify({pairs:state.pairs,projects:state.projects},null,2)],{type:'application/json'}));a.download='t1-configuration-backup.json';a.click();URL.revokeObjectURL(a.href)};$('importPairs').onchange=async e=>{try{const d=JSON.parse(await e.target.files[0].text());if(!Array.isArray(d.pairs))throw Error();state.pairs=d.pairs;state.projects=Array.isArray(d.projects)?d.projects:[];save();renderPairs();renderProjects();refreshPairProjectSelect();toast('備份已匯入')}catch{toast('無法讀取備份檔')}e.target.value=''};$('exportProjects').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify({projects:state.projects},null,2)],{type:'application/json'}));a.download='t1-projects-backup.json';a.click();URL.revokeObjectURL(a.href)};$('importProjects').onchange=async e=>{try{const d=JSON.parse(await e.target.files[0].text());if(!Array.isArray(d.projects))throw Error();state.projects=d.projects;save();renderProjects();renderPairs();refreshPairProjectSelect();toast('Projects 已匯入')}catch{toast('無法讀取 Projects 備份')}e.target.value=''};$('viewer').addEventListener('click',e=>{if(e.target===$('viewer'))$('viewer').close()});initViewer();renderFilters();renderResults();renderSlots();renderPairs();renderProjects();refreshPairProjectSelect();renderMixMatch();(function boot(){const _overlay=document.getElementById('t1Loading');const _fs=(window.T1||{}).firestore;function _hide(){if(_overlay){_overlay.classList.add('t1-loaded');setTimeout(()=>_overlay.remove(),400)}}if(_fs&&_fs.init){_fs.init().then(data=>{if(data.pairs&&data.projects){state.pairs=data.pairs;state.projects=data.projects;renderPairs();renderProjects();renderFilters();renderResults();renderSlots();refreshPairProjectSelect()}if(data.mixNotes){mixNotes=Object.assign({},data.mixNotes,mixNotes);renderMixMatch()}if(data.mixState&&Array.isArray(data.mixState)){mixState=data.mixState;renderMixMatch()}_hide()}).catch(_hide)}else{_hide()}})();
 $('profileSearch').oninput=e=>{profileState.query=e.target.value;renderProfileResults()};$('clearProfileSearch').onclick=()=>{$('profileSearch').value='';profileState.query='';profileState.category='';renderProfileFilters();renderProfileResults()};renderProfileFilters();renderProfileResults();
 
+// === 上方專案區塊「展開」模式 ===
+// 右上角 icon 展開後：下方 Master template／Profile template 與右側工作區
+// （OPERABLE WALL／CURRENT SET／SAVED LIBRARY／Mix & Match）自動隱藏，上方專案區塊佔滿視窗。
+// 展開時 LISTED PROJECTS 的檢索式下拉選單下方直接列出所有 Project：
+// confirmed／not confirmed 分類，每頁最多 20 筆，其餘分散到第 2、3、4… 頁。
+const PROJECT_BROWSE_PAGE_SIZE = 20;
+const projectBrowse = { selectedId: '' };
+function isProjectConfirmed(p){
+  return (Array.isArray(p.workLogs) ? p.workLogs : []).some(l => l.status === 'confirmed');
+}
+// 選取一個 Project（檢索下拉與展開清單共用）：同步下拉內部選取狀態，只顯示該 Project 卡片
+function selectProject(pid, opts){
+  const o = opts || {};
+  projectBrowse.selectedId = state.projects.some(p => p.id === pid) ? pid : '';
+  const p = state.projects.find(x => x.id === projectBrowse.selectedId);
+  const api = (window.T1 || {}).selectListedProject;
+  if (api) api(projectBrowse.selectedId);
+  else document.querySelectorAll('.project-card').forEach(card => {
+    card.style.display = projectBrowse.selectedId && card.dataset.projectCard === projectBrowse.selectedId ? 'block' : 'none';
+  });
+  if (!o.quiet) {
+    const search = $('projectSearch');
+    if (search) search.value = p ? p.name : '';
+    const dd = $('projectDropdown');
+    if (dd) dd.classList.remove('open');
+  }
+  document.querySelectorAll('[data-browse-project]').forEach(el => {
+    el.classList.toggle('selected', el.dataset.browseProject === projectBrowse.selectedId);
+  });
+  if (!p || o.noScroll || !document.body.classList.contains('project-expanded')) return;
+  const card = document.querySelector(`.project-card[data-project-card="${p.id}"]`);
+  if (card) setTimeout(() => card.scrollIntoView({ block: 'start', behavior: 'smooth' }), 60);
+}
+// 展開清單：所有 Project，confirmed 先列、not confirmed 後列，每頁 20 筆
+function renderProjectBrowse(){
+  const list = $('projectBrowseList');
+  if (!list) return;
+  const all = state.projects
+    .map(p => ({ p, confirmed: isProjectConfirmed(p) }))
+    .sort((a, b) => a.confirmed === b.confirmed
+      ? (a.p.name || '').localeCompare(b.p.name || '')
+      : (a.confirmed ? -1 : 1));
+  const total = all.length;
+  const confirmedCount = all.filter(x => x.confirmed).length;
+  const totalPages = Math.max(1, Math.ceil(total / PROJECT_BROWSE_PAGE_SIZE));
+  const page = Math.min(Math.max(1, renderProjectBrowse._page || 1), totalPages);
+  renderProjectBrowse._page = page;
+  const pageItems = all.slice((page - 1) * PROJECT_BROWSE_PAGE_SIZE, page * PROJECT_BROWSE_PAGE_SIZE);
+  let lastGroup = null;
+  list.innerHTML = pageItems.length ? pageItems.map(({ p, confirmed }) => {
+    let head = '';
+    if (confirmed !== lastGroup) {
+      lastGroup = confirmed;
+      head = `<div class="pb-group${confirmed ? ' pb-group-confirmed' : ''}"><span>${confirmed ? 'CONFIRMED' : 'NOT CONFIRMED'}</span><em>${confirmed ? confirmedCount : total - confirmedCount}</em></div>`;
+    }
+    const items = Array.isArray(p.items) ? p.items.length : 0;
+    const sub = [`${items} 項配對`, p.assignedQs ? `QS: ${esc(p.assignedQs)}` : '', p.status ? esc(p.status) : '']
+      .filter(Boolean).map(t => `<span>${t}</span>`).join('');
+    return `${head}<button type="button" class="pb-item${p.id === projectBrowse.selectedId ? ' selected' : ''}${p.allClear ? ' all-clear' : ''}" data-browse-project="${p.id}"><span class="pb-line"><span class="pb-name">${esc(p.name)}</span>${p.projectNumber ? `<span class="pb-num">#${esc(p.projectNumber)}</span>` : ''}${p.priority === 'URGENT' ? '<span class="pb-tag urgent">URGENT</span>' : ''}</span><span class="pb-sub">${sub}</span></button>`;
+  }).join('') : '<div class="project-empty">尚未儲存 Project。</div>';
+  const pg = $('projectBrowsePagination');
+  if (pg) {
+    pg.innerHTML = totalPages > 1
+      ? Array.from({ length: totalPages }, (_, i) => `<button type="button" class="pg-btn ${i + 1 === page ? 'pg-active' : ''}" data-browse-page="${i + 1}">${i + 1}</button>`).join('')
+      : '';
+  }
+  const count = $('projectBrowseCount');
+  if (count) count.textContent = total ? `共 ${total} 個 Project · 第 ${page} / ${totalPages} 頁` : '';
+}
+renderProjectBrowse._page = 1;
+let projectExpandScrollY = 0;
+function setProjectExpanded(on){
+  const root = $('projectWidePanel');
+  const isOn = !!on;
+  const wasOn = document.body.classList.contains('project-expanded');
+  // 展開前先回到頁面頂端（topbar 不是 fixed，否則 fixed 面板上方會露出空白）；
+  // 收合時還原原本的捲動位置。
+  if (isOn && !wasOn) { projectExpandScrollY = window.scrollY || 0; window.scrollTo(0, 0); }
+  document.body.classList.toggle('project-expanded', isOn);
+  const btn = $('projectExpandBtn');
+  if (btn) {
+    btn.setAttribute('aria-expanded', isOn ? 'true' : 'false');
+    btn.title = isOn ? '收合專案區塊（還原下方區塊）' : '展開專案區塊（隱藏下方區塊）';
+  }
+  if (root) {
+    if (isOn) { root.setAttribute('data-lenis-prevent', ''); root.scrollTop = 0; }
+    else root.removeAttribute('data-lenis-prevent');
+  }
+  if (isOn) renderProjectBrowse();
+  else if (wasOn && projectExpandScrollY) window.scrollTo(0, projectExpandScrollY);
+}
+window.T1 = window.T1 || {};
+window.T1.setProjectExpanded = setProjectExpanded; // 供測試／除錯使用
+// 右上角 icon 開合；Esc 亦可收合（檢視器開啟時 Esc 只關閉檢視器）
+document.addEventListener('click', e => {
+  if (!e.target.closest('#projectExpandBtn')) return;
+  setProjectExpanded(!document.body.classList.contains('project-expanded'));
+});
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape' || !document.body.classList.contains('project-expanded')) return;
+  const viewer = $('viewer');
+  if (viewer && viewer.open) return;
+  setProjectExpanded(false);
+});
+// 展開清單：點選 Project → 顯示該 Project 卡片；點分頁 → 換頁並回到頂端
+document.addEventListener('click', e => {
+  const row = e.target.closest('[data-browse-project]');
+  if (row) { selectProject(row.dataset.browseProject); return; }
+  const pgBtn = e.target.closest('[data-browse-page]');
+  if (!pgBtn) return;
+  renderProjectBrowse._page = parseInt(pgBtn.dataset.browsePage, 10) || 1;
+  renderProjectBrowse();
+  const root = $('projectWidePanel');
+  if (root) root.scrollTo({ top: 0, behavior: 'smooth' });
+});
+// 從檢索下拉選取時，同步展開清單的選取樣式
+document.addEventListener('click', e => {
+  const item = e.target.closest('#projectDropdown .ps-item[data-pid]');
+  if (!item) return;
+  projectBrowse.selectedId = item.dataset.pid;
+  if (document.body.classList.contains('project-expanded')) renderProjectBrowse();
+});
+// 資料更新後同步展開清單（收合狀態下不做事）
+const _prevRenderProjectsBrowse = renderProjects;
+renderProjects = function(){
+  _prevRenderProjectsBrowse();
+  if (document.body.classList.contains('project-expanded')) renderProjectBrowse();
+};
+
 // Project searchable filter dropdown
-(function(){const search=$('projectSearch'),dropdown=$('projectDropdown');if(!search||!dropdown)return;let selectedId='';function rebuild(items){dropdown.innerHTML=items.length?items.map(p=>`<div class="ps-item" data-pid="${p.id}">${esc(p.name)} ${p.assignedQs?`<small style="color:#7a97b0;font-weight:400">(${esc(p.assignedQs)})</small>`:''}</div>`).join(''):'<div class="ps-empty">無符合的 Project</div>';dropdown.querySelectorAll('.ps-item').forEach(el=>{el.addEventListener('click',()=>{selectedId=el.dataset.pid;const p=state.projects.find(x=>x.id===selectedId);search.value=p?p.name:'';dropdown.classList.remove('open');applyFilter()})})}function applyFilter(){document.querySelectorAll('.project-card').forEach(card=>{card.style.display=selectedId&&card.dataset.projectCard===selectedId?'block':'none'})}search.addEventListener('focus',()=>{rebuild(state.projects.slice(0,4));dropdown.classList.add('open')});search.addEventListener('blur',()=>setTimeout(()=>dropdown.classList.remove('open'),200));search.addEventListener('input',()=>{const q=search.value.toLowerCase().trim();const filtered=state.projects.filter(p=>p.name.toLowerCase().includes(q)||(p.assignedQs||'').toLowerCase().includes(q));rebuild(filtered);dropdown.classList.add('open')});const prevRender2=renderProjects;renderProjects=function(){prevRender2();applyFilter()};applyFilter();if(!state.projects.length)selectedId=''})();
+(function(){const search=$('projectSearch'),dropdown=$('projectDropdown');if(!search||!dropdown)return;let selectedId='';window.T1=window.T1||{};window.T1.selectListedProject=function(pid){selectedId=pid||'';applyFilter()};function rebuild(items){dropdown.innerHTML=items.length?items.map(p=>`<div class="ps-item${p.id===selectedId?' selected':''}" data-pid="${p.id}">${esc(p.name)} ${p.assignedQs?`<small style="color:#7a97b0;font-weight:400">(${esc(p.assignedQs)})</small>`:''}</div>`).join(''):'<div class="ps-empty">無符合的 Project</div>';dropdown.querySelectorAll('.ps-item').forEach(el=>{el.addEventListener('click',()=>{selectedId=el.dataset.pid;const p=state.projects.find(x=>x.id===selectedId);search.value=p?p.name:'';dropdown.classList.remove('open');applyFilter()})})}function applyFilter(){document.querySelectorAll('.project-card').forEach(card=>{card.style.display=selectedId&&card.dataset.projectCard===selectedId?'block':'none'})}search.addEventListener('focus',()=>{rebuild(state.projects.slice(0,4));dropdown.classList.add('open')});search.addEventListener('blur',()=>setTimeout(()=>dropdown.classList.remove('open'),200));search.addEventListener('input',()=>{const q=search.value.toLowerCase().trim();const filtered=state.projects.filter(p=>p.name.toLowerCase().includes(q)||(p.assignedQs||'').toLowerCase().includes(q));rebuild(filtered);dropdown.classList.add('open')});const prevRender2=renderProjects;renderProjects=function(){prevRender2();applyFilter()};applyFilter();if(!state.projects.length)selectedId=''})();
 
 // Operable Wall searchable dropdowns
 (function(){function setupSearchableDropdown(searchId,dropdownId,emptyId){const search=document.getElementById(searchId),dropdown=document.getElementById(dropdownId),empty=emptyId?document.getElementById(emptyId):null;if(!search||!dropdown)return;const allItems=dropdown.querySelectorAll('.ow-item');search.addEventListener('focus',()=>{dropdown.classList.add('open')});search.addEventListener('blur',()=>setTimeout(()=>dropdown.classList.remove('open'),180));search.addEventListener('input',()=>{const q=search.value.toLowerCase().trim();let visible=0;dropdown.querySelectorAll('.ow-group').forEach(g=>{let gVis=0;g.querySelectorAll('.ow-item').forEach(item=>{const match=!q||item.dataset.value.toLowerCase().includes(q);item.style.display=match?'':'none';if(match)gVis++});g.style.display=gVis?'':'none';visible+=gVis});const flatItems=dropdown.querySelectorAll(':scope > .ow-item');flatItems.forEach(item=>{const match=!q||item.dataset.value.toLowerCase().includes(q);item.style.display=match?'':'none';if(match)visible++});if(empty)empty.hidden=visible>0;dropdown.classList.add('open')});allItems.forEach(item=>{item.addEventListener('click',()=>{search.value=item.dataset.value;dropdown.classList.remove('open');toast(`已選擇: ${item.dataset.value}`)})})}setupSearchableDropdown('operableWallSearch','operableWallDropdown','owEmpty');setupSearchableDropdown('sourcingSearch','sourcingDropdown','sourcingEmpty');})();
@@ -684,7 +678,7 @@ $('profileSearch').oninput=e=>{profileState.query=e.target.value;renderProfileRe
 (function(){const select=$('owProjectSelect'),copyBtn=$('owCopyBtn');if(!select||!copyBtn)return;function refreshProjects(){const cur=select.value;select.innerHTML='<option value="">選擇 Project</option>'+state.projects.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('');if(cur)select.value=cur}refreshProjects();const prevRender=renderProjects;renderProjects=function(){prevRender();refreshProjects()};copyBtn.addEventListener('click',()=>{const pid=select.value;if(!pid){toast('請先選擇 Project');return}const p=state.projects.find(x=>x.id===pid);if(!p){toast('找不到 Project');return}const sourcing=$('sourcingSearch').value.trim();const product=$('operableWallSearch').value.trim();if(!sourcing&&!product){toast('請先選擇 Sourcing 或 Operable Wall 產品');return}p.items.push({id:id(),pair:{name:(sourcing||product),a1:{code:sourcing||'—',category:'Operable Wall',page:0,image:''},a2:{code:product||'—',category:'Operable Wall',page:0,image:''},inventoryA1:'',inventoryA2:''},type:'OPERABLE_WALL',extra:{legend:$('owLegend').value.trim(),finishes:$('owFinishes').value.trim(),height:$('owHeight').value.trim(),type:$('owType').value.trim(),operate:$('owOperate').value.trim(),country:$('owCountry').value.trim(),hwFinishes:$('owHwFinishes').value.trim(),remark:$('owRemark').value.trim()}});save();renderProjects();toast(`已複製到 ${p.name}`)})})();
 
 // Assigned QS per-project card (delegated)
-document.addEventListener('change',e=>{const sel=e.target.closest('[data-assign-qs]');if(!sel)return;const p=state.projects.find(x=>x.id===sel.dataset.assignQs);if(!p)return;p.assignedQs=sel.value;save();renderConfirmedListing()});
+document.addEventListener('change',e=>{const sel=e.target.closest('[data-assign-qs]');if(!sel)return;const p=state.projects.find(x=>x.id===sel.dataset.assignQs);if(!p)return;p.assignedQs=sel.value;save()});
 document.addEventListener('change',e=>{const sel=e.target.closest('[data-assign-status]');if(!sel)return;const p=state.projects.find(x=>x.id===sel.dataset.assignStatus);if(!p)return;p.status=sel.value;save()});
 
 // QTN data from QTN.md
@@ -952,8 +946,7 @@ document.addEventListener('click',e=>{
   if(down){e.preventDefault();const hit=_findWorkLog(down.dataset.wlogDown);if(!hit)return;const a=hit.p.workLogs;if(hit.i<a.length-1){const t=a[hit.i];a[hit.i]=a[hit.i+1];a[hit.i+1]=t;save();renderProjects();}return}
 });
 // Project inner-tab state persistence
-let projectTabState={};
-document.addEventListener('click',e=>{const btn=e.target.closest('[data-ptab]');if(!btn)return;const pid=btn.dataset.ptab;projectTabState[pid]=btn.dataset.ptabPanel;document.querySelectorAll(`[data-ptab="${pid}"]`).forEach(t=>t.classList.remove('active'));btn.classList.add('active');const panel=btn.dataset.ptabPanel;document.querySelectorAll(`[data-ptab-panel="${pid}|info"],[data-ptab-panel="${pid}|matched"],[data-ptab-panel="${pid}|partition"],[data-ptab-panel="${pid}|door"],[data-ptab-panel="${pid}|ow"],[data-ptab-panel="${pid}|notes"],[data-ptab-panel="${pid}|mail"]`).forEach(p=>{p.style.display=p.dataset.ptabPanel===`${pid}|${panel}`?'':'none'});});
+document.addEventListener('click',e=>{const btn=e.target.closest('[data-ptab]');if(!btn)return;const pid=btn.dataset.ptab;projectTabState[pid]=btn.dataset.ptabPanel;document.querySelectorAll(`[data-ptab="${pid}"]`).forEach(t=>t.classList.remove('active'));btn.classList.add('active');const panel=btn.dataset.ptabPanel;document.querySelectorAll(`[data-ptab-panel^="${pid}|"]`).forEach(p=>{p.style.display=p.dataset.ptabPanel===`${pid}|${panel}`?'':'none'});});
 function restoreProjectTabs(){state.projects.forEach(p=>{const tab=projectTabState[p.id]||'info';const btn=document.querySelector(`[data-ptab="${p.id}"][data-ptab-panel="${tab}"]`);if(btn)btn.click()})}
 // Global helpers for scan.js
 window.T1 = window.T1 || {};
