@@ -117,15 +117,15 @@ const ALL_CLEAR_RGB = 'rgb(223, 255, 105)'; // #DFFF69
   if (afterPick.subLabels.join() !== 'PICKLIST (DO) — 下單 R') throw new Error('應出現「PICKLIST (DO) — 下單 R」下拉：' + JSON.stringify(afterPick.subLabels));
   if (afterPick.summaryItems.indexOf('PICKLIST (DO)=DO1') === -1) throw new Error('Summary 應新增 PICKLIST (DO)=DO1：' + JSON.stringify(afterPick.summaryItems));
 
-  // 4. 下單 R 選 R3 → Summary 顯示 DO1 · R3
+  // 4. 下單 R 選 R3 → Summary 表格的「下單 R」欄顯示 R3
   await page.selectOption(`[data-ptab-panel="${PID}|kickoff"] [data-confirmed-sub]`, 'R3');
   await page.waitForTimeout(500);
   const afterR = await page.evaluate((pid) => {
     const el = document.querySelector(`[data-ptab-panel="${pid}|kickoff"]`);
-    return [...el.querySelectorAll('.confirmed-summary-item')].map(i => i.querySelector('.cs-label').textContent + '=' + i.querySelector('.cs-value').textContent);
+    return [...el.querySelectorAll('.confirmed-summary-item')].map(i => i.querySelector('.cs-label').textContent + '=' + i.querySelector('.cs-value').textContent + '|' + i.querySelector('.cs-r').textContent);
   }, PID);
   console.log('After R3:', JSON.stringify(afterR));
-  if (afterR.indexOf('PICKLIST (DO)=DO1 · R3') === -1) throw new Error('Summary 應顯示 DO1 · R3：' + JSON.stringify(afterR));
+  if (afterR.indexOf('PICKLIST (DO)=DO1|R3') === -1) throw new Error('Summary 表格應顯示 DO1 / R3：' + JSON.stringify(afterR));
 
   // 5. All Clear 按鈕在 Project number 旁邊；按下後該 project 呈現 #DFFF69
   const clearBtn = await page.evaluate((pid) => {

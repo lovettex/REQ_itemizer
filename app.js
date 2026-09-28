@@ -1,7 +1,7 @@
 // 資產版本標記：需與 index.html 的 ?v= 及 window.T1_EXPECT_ASSETS 一致。
 // 供 index.html 偵測「瀏覽器仍使用舊快取 app.js」時自動重載。
 window.T1 = window.T1 || {};
-window.T1.assetVersion = '20260927g';
+window.T1.assetVersion = '20260927h';
 
 const groups = [
   // PG 01-02: Glass Frame — Vertical Section (MST/001-002)
@@ -358,6 +358,16 @@ const WORK_LOG_DROPDOWNS = [
   ['-','VO1','VO2','VO3','VO4','VO5','VO6','VO7','VO8','VO9','VO10','VO11'],
   ['-','R1','R2','R3','R4','R5','R6','R7','R9','R10','R11']
 ];
+// Work Log 明細以表格呈現（可用「匯出 PDF」列印成 PDF 表格）；每列可即時編輯 NOTE
+function worklogRowsHtml(p){
+  const logs = Array.isArray(p.workLogs)?p.workLogs:[];
+  if(!logs.length) return '<tr class="worklog-empty-row"><td colspan="7">尚未生成任何 Log。</td></tr>';
+  return logs.map((log,i)=>{
+    const st = log.status || 'submited';
+    const bg = st==='confirmed' ? 'background:#F0FF45' : (st==='Considering' ? 'background:#406B28;color:#fff' : '');
+    return `<tr class="worklog-item" style="${bg}"><td class="wl-num">${i+1}</td><td class="worklog-item-summary">${esc(log.summary||log.qtnNum||(log.note?'Note':''))}</td><td class="worklog-item-qtn">${log.qtnNum?esc(log.qtnNum):'—'}</td><td class="wl-note-cell"><input class="worklog-note-input" data-wlog-note="${log.id}" value="${esc(log.note||'')}" placeholder="備註／說明…" title="這個 Log 的備註"></td><td class="worklog-item-date">${esc((log.createdAt||'').slice(0,10))}</td><td class="wl-status-cell"><select class="worklog-status" data-wlog-status="${log.id}"><option value="submited" ${st==='submited'?'selected':''}>submited</option><option value="Considering" ${st==='Considering'?'selected':''}>Considering</option><option value="confirmed" ${st==='confirmed'?'selected':''}>confirmed</option></select></td><td class="wl-actions"><button type="button" class="worklog-btn" data-wlog-up="${log.id}" title="上移">▲</button><button type="button" class="worklog-btn" data-wlog-down="${log.id}" title="下移">▼</button><button type="button" class="worklog-btn worklog-del" data-wlog-del="${log.id}" title="刪除">✕</button></td></tr>`;
+  }).join('');
+}
 function worklogFormHtml(p){
   const wl = p.workLog || {};
   const fields = WORK_LOG_DROPDOWNS.map((opts,i)=>{
@@ -365,12 +375,8 @@ function worklogFormHtml(p){
     const options = opts.map(o=>`<option value="${esc(o)}" ${(wl[name]||'-')===o?'selected':''}>${esc(o)}</option>`).join('');
     return `<label class="worklog-field">Work Log ${i+1}<select name="${name}">${options}</select></label>`;
   }).join('');
-  const logs = (Array.isArray(p.workLogs)?p.workLogs:[]).map(log=>{
-    const st = log.status || 'submited';
-    const bg = st==='confirmed' ? 'background:#F0FF45' : (st==='Considering' ? 'background:#406B28;color:#fff' : '');
-    return `<div class="worklog-item" style="${bg}"><span class="worklog-item-summary">${esc(log.summary||log.qtnNum||(log.note?'📝 Note':''))}</span>${log.summary&&log.qtnNum?`<span class="worklog-item-qtn">QTN: ${esc(log.qtnNum)}</span>`:''}<span class="worklog-item-date">${esc((log.createdAt||'').slice(0,10))}</span><select class="worklog-status" data-wlog-status="${log.id}"><option value="submited" ${st==='submited'?'selected':''}>submited</option><option value="Considering" ${st==='Considering'?'selected':''}>Considering</option><option value="confirmed" ${st==='confirmed'?'selected':''}>confirmed</option></select><button type="button" class="worklog-btn" data-wlog-up="${log.id}" title="上移">▲</button><button type="button" class="worklog-btn" data-wlog-down="${log.id}" title="下移">▼</button><button type="button" class="worklog-btn worklog-del" data-wlog-del="${log.id}" title="刪除">✕</button>${log.note?`<span class="worklog-item-note">📝 ${esc(log.note)}</span>`:''}</div>`;
-  }).join('');
-  return `<form class="worklog-form" data-worklog="${p.id}"><div class="worklog-heading">Work Log <input class="worklog-qtn" name="qtnNum" placeholder="QTN NUM:" /></div><div class="worklog-grid">${fields}</div><label class="worklog-note-field">Note<textarea class="worklog-note" name="note" rows="3" placeholder="輸入該報價所作的主要內容（Note）..."></textarea></label><button class="primary" type="submit">Submit Work Log</button><div class="worklog-loglist">${logs||'<div class="worklog-empty">尚未生成任何 Log。</div>'}</div></form>`;
+  const logCount = (Array.isArray(p.workLogs)?p.workLogs:[]).length;
+  return `<form class="worklog-form" data-worklog="${p.id}"><div class="worklog-heading">Work Log <input class="worklog-qtn" name="qtnNum" placeholder="QTN NUM:" /></div><div class="worklog-grid">${fields}</div><label class="worklog-note-field">Note<textarea class="worklog-note" name="note" rows="3" placeholder="輸入該報價所作的主要內容（Note）..."></textarea></label><button class="primary" type="submit">Submit Work Log</button><div class="table-block-head"><span class="table-block-title">WORK LOG SUMMARY <em>(${logCount})</em></span><button type="button" class="table-pdf-btn" data-print-worklog="${p.id}">⬇ 匯出 PDF</button></div><div class="worklog-loglist" data-lenis-prevent><table class="data-table worklog-table"><thead><tr><th class="wl-num">#</th><th>SUMMARY</th><th>QTN</th><th>NOTE</th><th>DATE</th><th>STATUS</th><th></th></tr></thead><tbody>${worklogRowsHtml(p)}</tbody></table></div></form>`;
 }
 function itemExtraSummary(item){const type=item.type||'',extra=item.extra||{};if(!type)return '<span class="item-type-badge none">尚未設定類別</span>';const badge=type==='OPERABLE_WALL'?'<span class="item-type-badge operable-wall">OW</span>':`<span class="item-type-badge ${type==='PARTITION'?'partition':'door'}">${type}</span>`;return `<span class="item-extra-summary">${badge} ${(extraFields[type]||[]).map(([key,label])=>`<span class="extra-kv"><em>${label}:</em> <strong>${esc(extra[key]||'—')}</strong></span>`).join(' ')}</span>`}
 function itemExtraBody(project,item){const type=item.type||'',extra=item.extra||{};const formKey=`${project.id}|${item.id}`;if(type==='OPERABLE_WALL'){const fields=(extraFields.OPERABLE_WALL||[]).map(([key,label])=>`<label><span>${label}</span>${key==='remark'?`<textarea name="${key}">${esc(extra[key])}</textarea>`:`<input name="${key}" value="${esc(extra[key])}">`}</label>`).join('');return `<div class="extra-body"><div class="extra-fields">${fields}</div><button class="primary" type="submit">儲存項目資料</button></div>`}const isPartition=type==='PARTITION';if(!type)return `<div class="extra-body"><div class="type-tabs"><button class="type-tab partition" data-set-type="${formKey}|PARTITION">PARTITION</button><button class="type-tab door" data-set-type="${formKey}|DOOR">DOOR</button></div></div>`;const fields=(extraFields[type]||[]).map(([key,label])=>`<label><span>${label}</span>${key==='remark'?`<textarea name="${key}">${esc(extra[key])}</textarea>`:`<input name="${key}" value="${esc(extra[key])}">`}</label>`).join('');return `<div class="extra-body"><div class="type-tabs"><button class="type-tab partition ${isPartition?'active':''}" data-set-type="${formKey}|PARTITION">PARTITION</button><button class="type-tab door ${!isPartition?'active':''}" data-set-type="${formKey}|DOOR">DOOR</button></div><div class="extra-fields">${fields}</div><button class="primary" type="submit">儲存項目資料</button></div>`}
@@ -420,7 +426,6 @@ function _taskRecord(p, label){
   for (let i = rows.length - 1; i >= 0; i--) if (rows[i].label === label) return rows[i];
   return null;
 }
-function _taskValueHtml(r){ return esc(r.value) + (r.r ? ' · ' + esc(r.r) : ''); }
 // Work Log 摘要（含備註 Note）— Kickoff 分頁與展開清單共用
 function _workLogHtml(logs){
   if (!logs.length) return '<div class="listing-empty">尚無 confirmed Work Log。</div>';
@@ -438,18 +443,27 @@ function _confirmedSelectsHtml(p){
     return `<label class="confirmed-select"><span>${esc(task.label)}</span><select data-confirmed-select="${p.id}" data-confirmed-type="${esc(task.label)}"><option value="">—</option>${opts}</select></label>${sub}`;
   }).join('');
 }
-// Summary 記錄列表（含刪除鈕）— Kickoff 分頁用
+// Summary 以表格呈現（可用「匯出 PDF」列印成 PDF 表格）
+// 每筆記錄（含每一個 PICKLIST (DO) 的 DO#）都有自己的 NOTE 輸入框，用來記錄該次 DO 已下單／發出的內容。
 function _confirmedSummaryItemsHtml(p){
   const summary = Array.isArray(p.confirmSummary)?p.confirmSummary:[];
-  return summary.map(r=>`<div class="confirmed-summary-item"><span class="cs-label">${esc(r.label)}</span><span class="cs-value">${_taskValueHtml(r)}</span><span class="cs-date">${esc((r.createdAt||'').slice(0,10))}</span><button type="button" class="worklog-btn worklog-del" data-confirmed-del="${p.id}|${r.id}" title="刪除">✕</button></div>`).join('')||'<div class="worklog-empty">尚無 Summary 記錄。</div>';
+  if(!summary.length) return '<tr class="summary-empty-row"><td colspan="7">尚無 Summary 記錄。</td></tr>';
+  return summary.map((r,i)=>{
+    const isDo = r.label === 'PICKLIST (DO)';
+    const ph = isDo ? '此 DO 已下單／發出的內容…' : '備註…';
+    return `<tr class="confirmed-summary-item"><td class="cs-num">${i+1}</td><td class="cs-label">${esc(r.label)}</td><td class="cs-value">${esc(r.value||'')}</td><td class="cs-r">${r.r?esc(r.r):'—'}</td><td class="cs-note"><input class="summary-note-input${isDo?' is-do':''}" data-confirmed-note="${p.id}|${r.id}" value="${esc(r.note||'')}" placeholder="${esc(ph)}" title="記錄這筆（DO）已下單／發出的內容"></td><td class="cs-date">${esc((r.createdAt||'').slice(0,10))}</td><td class="cs-actions"><button type="button" class="worklog-btn worklog-del" data-confirmed-del="${p.id}|${r.id}" title="刪除">✕</button></td></tr>`;
+  }).join('');
+}
+function _confirmedSummaryTableHtml(p){
+  const summary = Array.isArray(p.confirmSummary)?p.confirmSummary:[];
+  return `<div class="table-block-head"><span class="table-block-title">KICKOFF SUMMARY <em>(${summary.length})</em></span><button type="button" class="table-pdf-btn" data-print-summary="${p.id}">⬇ 匯出 PDF</button></div><div class="summary-table-wrap" data-lenis-prevent><table class="data-table summary-table"><thead><tr><th>#</th><th>TASK</th><th>VALUE</th><th>下單 R</th><th>NOTE（每個 DO 已發出的內容）</th><th>DATE</th><th></th></tr></thead><tbody>${_confirmedSummaryItemsHtml(p)}</tbody></table></div>`;
 }
 // KICKOFF 分頁（Listed Projects 內每個 project）：Project number（旁邊為 All Clear 按鈕）、
 // Work Log 摘要（confirmed 紀錄）、四個任務下拉＋PICKLIST 下單 R、下方 Summary。
 // 按 All Clear 後該 project 以 #DFFF69 標記（卡片標題列、展開清單、Kickoff 抬頭），再按一次取消。
 function kickoffPanelHtml(p){
   const logs = (Array.isArray(p.workLogs)?p.workLogs:[]).filter(l => l.status === 'confirmed');
-  const summary = Array.isArray(p.confirmSummary)?p.confirmSummary:[];
-  return `<div class="kickoff-card" data-kickoff-card="${p.id}"><div class="kickoff-head${p.allClear?' all-clear':''}"><span class="kickoff-name">${esc(p.name)}</span><input class="confirmed-number" data-confirmed-number="${p.id}" value="${esc(p.projectNumber||'')}" placeholder="PROJECT NUMBER" title="Project Number"><button type="button" class="kickoff-clear-btn${p.allClear?' active':''}" data-kickoff-clear="${p.id}" aria-pressed="${p.allClear?'true':'false'}" title="標記此 Project 為 All Clear（再按一次取消）">All Clear</button>${p.priority==='URGENT'?'<span class="confirmed-urgent">URGENT</span>':''}${p.sales?`<span class="confirmed-qs">Sales: ${esc(p.sales)}</span>`:''}${p.assignedQs?`<span class="confirmed-qs">QS: ${esc(p.assignedQs)}</span>`:''}</div><div class="confirmed-card-logs">${_workLogHtml(logs)}</div><div class="confirmed-selects">${_confirmedSelectsHtml(p)}</div><button type="button" class="confirmed-toggle" data-confirmed-toggle="${p.id}">▼ Summary (${summary.length})</button><div class="confirmed-summary" data-confirmed-summary="${p.id}">${_confirmedSummaryItemsHtml(p)}</div><small class="kickoff-hint">Project number、任務狀態與 Summary 都存在此 Project 上（Work Log 只列 confirmed 的紀錄）。</small></div>`;
+  return `<div class="kickoff-card" data-kickoff-card="${p.id}"><div class="kickoff-head${p.allClear?' all-clear':''}"><span class="kickoff-name">${esc(p.name)}</span><input class="confirmed-number" data-confirmed-number="${p.id}" value="${esc(p.projectNumber||'')}" placeholder="PROJECT NUMBER" title="Project Number"><button type="button" class="kickoff-clear-btn${p.allClear?' active':''}" data-kickoff-clear="${p.id}" aria-pressed="${p.allClear?'true':'false'}" title="標記此 Project 為 All Clear（再按一次取消）">All Clear</button>${p.priority==='URGENT'?'<span class="confirmed-urgent">URGENT</span>':''}${p.sales?`<span class="confirmed-qs">Sales: ${esc(p.sales)}</span>`:''}${p.assignedQs?`<span class="confirmed-qs">QS: ${esc(p.assignedQs)}</span>`:''}</div><div class="confirmed-card-logs">${_workLogHtml(logs)}</div><div class="confirmed-selects">${_confirmedSelectsHtml(p)}</div><div class="confirmed-summary" data-confirmed-summary="${p.id}">${_confirmedSummaryTableHtml(p)}</div><small class="kickoff-hint">Project number、任務狀態與 Summary 都存在此 Project 上（Work Log 只列 confirmed 的紀錄）。每個 DO 都可以在 Summary 的 NOTE 欄記錄這次下單／發出的內容，並可用「匯出 PDF」輸出成表格。</small></div>`;
 }
 // All Clear 標記 → 該 project 以 #DFFF69 呈現（卡片標題列＋展開清單＋Kickoff 抬頭）
 document.addEventListener('click', e => {
@@ -510,18 +524,19 @@ document.addEventListener('change', e => {
   toast(sel.value ? `已更新 ${label}: ${rec.value} · ${sel.value}` : `已清除 ${label} 的 R 選項`);
 });
 
-// Summary toggle (collapsed by default)
-document.addEventListener('click', e => {
-  const tog = e.target.closest('[data-confirmed-toggle]');
-  if (!tog) return;
-  // 只在自己所屬的 Kickoff 卡片內找 Summary
-  const scope = tog.closest('.confirmed-card, .kickoff-card') || document;
-  const body = scope.querySelector(`[data-confirmed-summary="${tog.dataset.confirmedToggle}"]`);
-  if (!body) return;
-  const isOpen = body.style.display !== 'none';
-  body.style.display = isOpen ? 'none' : '';
-  const count = body.querySelectorAll('.confirmed-summary-item').length;
-  tog.textContent = (isOpen ? '▶' : '▼') + ' Summary (' + count + ')';
+// Summary 每筆記錄的 NOTE（含每個 PICKLIST (DO) 的 DO# 已下單／發出內容）
+document.addEventListener('change', e => {
+  const inp = e.target.closest('[data-confirmed-note]');
+  if (!inp) return;
+  const [pid, rid] = inp.dataset.confirmedNote.split('|');
+  const p = state.projects.find(x => x.id === pid);
+  const rec = (p && Array.isArray(p.confirmSummary)) ? p.confirmSummary.find(r => r.id === rid) : null;
+  if (!rec) return;
+  const v = inp.value.trim();
+  if ((rec.note || '') === v) return;
+  rec.note = v;
+  save(); // 不重新渲染，避免打字時失去焦點
+  toast(v ? 'Note 已儲存' : 'Note 已清除');
 });
 
 // Delete a Summary record
@@ -943,6 +958,15 @@ document.addEventListener('change',e=>{
   const hit=_findWorkLog(sel.dataset.wlogStatus);if(!hit)return;
   hit.p.workLogs[hit.i].status=sel.value;save();renderProjects();
 });
+// Work Log 表格內直接編輯 NOTE（不重新渲染，避免打字時失去焦點）
+document.addEventListener('change',e=>{
+  const inp=e.target.closest('[data-wlog-note]');if(!inp)return;
+  const hit=_findWorkLog(inp.dataset.wlogNote);if(!hit)return;
+  const v=inp.value.trim();
+  if((hit.p.workLogs[hit.i].note||'')===v)return;
+  hit.p.workLogs[hit.i].note=v;save();
+  toast(v?'Log Note 已儲存':'Log Note 已清除');
+});
 document.addEventListener('click',e=>{
   const del=e.target.closest('[data-wlog-del]');
   if(del){e.preventDefault();const hit=_findWorkLog(del.dataset.wlogDel);if(!hit)return;hit.p.workLogs.splice(hit.i,1);save();renderProjects();toast('Log 已刪除');return}
@@ -951,6 +975,52 @@ document.addEventListener('click',e=>{
   const down=e.target.closest('[data-wlog-down]');
   if(down){e.preventDefault();const hit=_findWorkLog(down.dataset.wlogDown);if(!hit)return;const a=hit.p.workLogs;if(hit.i<a.length-1){const t=a[hit.i];a[hit.i]=a[hit.i+1];a[hit.i+1]=t;save();renderProjects();}return}
 });
+// === 表格匯出 PDF（Work Log / Kickoff Summary）===
+// 由目前的 project 資料組出表格，交給 js/printTable.js 列印（瀏覽器列印 → 另存為 PDF）。
+function _pdfMetaLines(p){
+  return [
+    'Project: ' + (p.name || ''),
+    p.projectNumber ? 'Project No: ' + p.projectNumber : '',
+    p.sales ? 'Sales: ' + p.sales : '',
+    p.assignedQs ? 'QS: ' + p.assignedQs : '',
+    p.status ? 'Status: ' + p.status : '',
+    p.allClear ? 'ALL CLEAR' : ''
+  ].filter(Boolean);
+}
+function printWorkLogPdf(pid){
+  const p = state.projects.find(x => x.id === pid);
+  if (!p || !(window.T1 || {}).printTable) return false;
+  const logs = Array.isArray(p.workLogs) ? p.workLogs : [];
+  return window.T1.printTable.open({
+    title: 'WORK LOG',
+    subtitle: p.name,
+    meta: _pdfMetaLines(p),
+    columns: ['#', 'SUMMARY', 'QTN', 'NOTE', 'DATE', 'STATUS'],
+    rows: logs.map((l, i) => [i + 1, l.summary || '', l.qtnNum || '', l.note || '', (l.createdAt || '').slice(0, 10), l.status || 'submited'])
+  });
+}
+function printSummaryPdf(pid){
+  const p = state.projects.find(x => x.id === pid);
+  if (!p || !(window.T1 || {}).printTable) return false;
+  const summary = Array.isArray(p.confirmSummary) ? p.confirmSummary : [];
+  return window.T1.printTable.open({
+    title: 'KICKOFF SUMMARY',
+    subtitle: p.name,
+    meta: _pdfMetaLines(p),
+    columns: ['#', 'TASK', 'VALUE', '下單 R', 'NOTE', 'DATE'],
+    rows: summary.map((r, i) => [i + 1, r.label || '', r.value || '', r.r || '', r.note || '', (r.createdAt || '').slice(0, 10)])
+  });
+}
+window.T1 = window.T1 || {};
+window.T1.printWorkLogPdf = printWorkLogPdf;
+window.T1.printSummaryPdf = printSummaryPdf;
+document.addEventListener('click', e => {
+  const wl = e.target.closest('[data-print-worklog]');
+  if (wl) { e.preventDefault(); printWorkLogPdf(wl.dataset.printWorklog); return; }
+  const sum = e.target.closest('[data-print-summary]');
+  if (sum) { e.preventDefault(); printSummaryPdf(sum.dataset.printSummary); }
+});
+
 // Project inner-tab state persistence
 document.addEventListener('click',e=>{const btn=e.target.closest('[data-ptab]');if(!btn)return;const pid=btn.dataset.ptab;projectTabState[pid]=btn.dataset.ptabPanel;document.querySelectorAll(`[data-ptab="${pid}"]`).forEach(t=>t.classList.remove('active'));btn.classList.add('active');const panel=btn.dataset.ptabPanel;document.querySelectorAll(`[data-ptab-panel^="${pid}|"]`).forEach(p=>{p.style.display=p.dataset.ptabPanel===`${pid}|${panel}`?'':'none'});});
 function restoreProjectTabs(){state.projects.forEach(p=>{const tab=projectTabState[p.id]||'info';const btn=document.querySelector(`[data-ptab="${p.id}"][data-ptab-panel="${tab}"]`);if(btn)btn.click()})}

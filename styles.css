@@ -940,3 +940,106 @@ body.project-expanded .project-browse{display:block;margin:6px 0 16px}
 /* Image scan / 手動新增後填入的欄位短暫高亮 */
 .item-scan-filled{animation:itemScanFilled 1.8s ease}
 @keyframes itemScanFilled{0%{background:#DFFF69}100%{background:rgba(255,255,255,.82)}}
+
+/* === WORK LOG / KICKOFF SUMMARY：表格化 + 匯出 PDF === */
+.table-block-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin:10px 0 6px;
+}
+.table-block-title{font-size:11px;font-weight:800;letter-spacing:.08em;color:#0d5932}
+.table-block-title em{font-style:normal;font-weight:700;color:#7a8896;margin-left:2px}
+.table-pdf-btn{
+  border:1px solid #0d5932;
+  border-radius:5px;
+  background:#eaf7ef;
+  color:#0d5932;
+  padding:5px 12px;
+  font:inherit;
+  font-size:11px;
+  font-weight:700;
+  cursor:pointer;
+  white-space:nowrap;
+}
+.table-pdf-btn:hover{background:#ceead7}
+.table-pdf-btn:focus-visible{outline:2px solid #0d5932;outline-offset:1px}
+.worklog-loglist,.summary-table-wrap{overflow-x:auto;margin-top:2px}
+table.data-table{width:100%;border-collapse:collapse;font-size:11px}
+table.data-table th{
+  background:rgba(244,246,248,.80);
+  color:#3a4a5a;
+  font-weight:800;
+  text-align:left;
+  padding:5px 8px;
+  border:1px solid #dde1e6;
+  white-space:nowrap;
+}
+table.data-table td{padding:4px 8px;border:1px solid #e3e7ea;vertical-align:middle}
+table.data-table tbody tr:hover{background:rgba(255,255,255,.55)}
+.wl-num,.cs-num{width:28px;color:#7a8896;text-align:right}
+.worklog-item-summary{font-weight:800;letter-spacing:.04em}
+.worklog-item-qtn{color:#3a4a5a;white-space:nowrap}
+.worklog-item-date,.cs-date{font-size:10px;color:#687384;white-space:nowrap}
+.wl-note-cell,.cs-note{min-width:180px;width:38%}
+.worklog-note-input,.summary-note-input{
+  width:100%;
+  border:1px solid #d5dbe1;
+  border-radius:4px;
+  padding:3px 6px;
+  font:inherit;
+  font-size:11px;
+  color:#17202a;
+  background:rgba(255,255,255,.86);
+}
+.worklog-note-input:focus,.summary-note-input:focus{border-color:#0d5932;outline:2px solid #0d5932}
+.summary-note-input.is-do{background:#fffdf0;border-color:#e0d5a8}
+.wl-actions,.cs-actions{white-space:nowrap;text-align:right}
+.wl-status-cell{white-space:nowrap}
+.cs-label{font-weight:700;color:#53606d;white-space:nowrap}
+.cs-value{font-weight:800;color:#0d5932}
+.cs-r{font-weight:700;color:#3a4a5a;white-space:nowrap}
+.worklog-empty-row td,.summary-empty-row td{font-size:11px;color:#7a8896;padding:10px 8px}
+/* 這兩列原本是 flex 版型，改成 <tr> 後要還原成表格列 */
+table.data-table tr.worklog-item,table.data-table tr.confirmed-summary-item{display:table-row}
+.worklog-loglist{display:block}
+.worklog-item-summary{font-size:11px;min-width:0}
+/* 原本是 flex 版型用的樣式，放在 <td> 上要改回一般儲存格外觀 */
+table.data-table td.worklog-item-qtn,
+table.data-table td.worklog-item-summary,
+table.data-table td.worklog-item-date{
+  background:none;
+  border:0;
+  border-radius:0;
+  padding:4px 8px;
+  color:#17202a;
+  font-weight:700;
+}
+table.data-table td.worklog-item-summary{font-weight:800;letter-spacing:.04em}
+table.data-table td.worklog-item-date{color:#687384;font-weight:400}
+/* 上下移／刪除鈕在表格內要橫向排列 */
+table.data-table .worklog-btn{display:inline-grid;margin-left:3px;vertical-align:middle}
+
+/* 列印／輸出 PDF：只顯示 #printArea（其餘畫面全部隱藏） */
+#printArea{display:none}
+#printArea .print-page{font-family:"Microsoft JhengHei",Arial,sans-serif;color:#17202a}
+#printArea .print-head{margin-bottom:8px}
+#printArea h1{font-size:16px;margin:0 0 2px;letter-spacing:.04em}
+#printArea .print-sub{font-size:13px;font-weight:800;margin-bottom:3px}
+#printArea .print-meta{font-size:10px;color:#444}
+#printArea .print-meta span{margin-right:12px;white-space:nowrap}
+#printArea .print-foot{margin-top:8px;font-size:9px;color:#666}
+@media print{
+  @page{size:A4 landscape;margin:10mm}
+  body.printing{overflow:visible !important;background:#fff !important}
+  body.printing::before,body.printing::after{display:none !important}
+  body.printing>*:not(#printArea){display:none !important}
+  body.printing #printArea{display:block !important;position:static !important;background:#fff}
+  #printArea .print-table{width:100%;border-collapse:collapse;font-size:10px;table-layout:fixed}
+  #printArea .print-table th,#printArea .print-table td{border:1px solid #888;padding:3px 5px;vertical-align:top;word-wrap:break-word}
+  #printArea .print-table thead th{background:#eaeaea;font-weight:800;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  #printArea .print-table thead{display:table-header-group}
+  #printArea .print-table tr{page-break-inside:avoid}
+  #printArea .print-empty{text-align:center;color:#666}
+}
