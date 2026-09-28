@@ -86,6 +86,22 @@ const PID = 'proj-table-pdf';
   if (!wl.pdfBtn) throw new Error('Work Log 應有匯出 PDF 按鈕');
   await page.screenshot({ path: 'tablepdf_worklog.png' }); // 供人工檢視（已列入 .gitignore）
 
+  // 1b. 多行 NOTE：輸入框要長高到完整顯示，且每一行都保留
+  const MULTILINE = '第一次送審\n• 玻璃 10mm 強化\n• 五金 SSS\n• 收邊鋁料';
+  await page.fill('[data-wlog-note="w1"]', MULTILINE);
+  await page.dispatchEvent('[data-wlog-note="w1"]', 'input');
+  await page.waitForTimeout(250);
+  const multi = await page.evaluate(() => {
+    const el = document.querySelector('[data-wlog-note="w1"]');
+    return { lines: el.value.split('\n').length, h: el.clientHeight, scroll: el.scrollHeight, wrap: getComputedStyle(el).whiteSpace };
+  });
+  console.log('Multi-line note:', JSON.stringify(multi));
+  if (multi.lines !== 4) throw new Error('NOTE 應保留 4 行：' + multi.lines);
+  if (multi.h < 60) throw new Error('多行 NOTE 的輸入框應長高：' + multi.h);
+  if (multi.scroll > multi.h + 3) throw new Error('多行 NOTE 不應被裁掉：' + JSON.stringify(multi));
+  await page.dispatchEvent('[data-wlog-note="w1"]', 'change');
+  await page.waitForTimeout(250);
+
   // 2. 在表格內直接編輯 Log NOTE → 寫回資料、不重新渲染
   await page.fill(`[data-wlog-note="w2"]`, '第二批送審');
   await page.dispatchEvent(`[data-wlog-note="w2"]`, 'change');
@@ -128,9 +144,20 @@ const PID = 'proj-table-pdf';
   if (wlPdf.bodyRows !== 2) throw new Error('PDF 應有 2 列資料');
   if (wlPdf.html.indexOf('WORK LOG') === -1 || wlPdf.html.indexOf('Table PDF Project') === -1) throw new Error('PDF 應有標題與專案名稱');
   if (wlPdf.html.indexOf('第二批送審') === -1 || wlPdf.html.indexOf('第一次送審') === -1) throw new Error('PDF 應包含每筆 Log 的 NOTE');
-  // WORK LOG 的 PDF 版面（print media）截圖供人工檢視
+  // 多行 NOTE：PDF 必須保留所有換行（資料條列顯示），且儲存格要完整顯示不被裁掉
+  if (wlPdf.html.indexOf('第一次送審\n• 玻璃 10mm 強化\n• 五金 SSS\n• 收邊鋁料') === -1) throw new Error('PDF 的 NOTE 應保留原始換行：' + JSON.stringify(wlPdf.html.match(/第一次送審[^<]*/)));
   await page.emulateMedia({ media: 'print' });
-  await page.waitForTimeout(200);
+  await page.waitForTimeout(250);
+  const pdfNoteCell = await page.evaluate(() => {
+    const cell = [...document.querySelectorAll('#printArea .print-table tbody td')].find(td => td.textContent.indexOf('第一次送審') !== -1);
+    if (!cell) return null;
+    return { wrap: getComputedStyle(cell).whiteSpace, h: cell.clientHeight, scroll: cell.scrollHeight, text: cell.textContent };
+  });
+  console.log('PDF NOTE cell:', JSON.stringify(pdfNoteCell));
+  if (!pdfNoteCell) throw new Error('找不到 PDF 的 NOTE 儲存格');
+  if (pdfNoteCell.wrap !== 'pre-wrap') throw new Error('PDF NOTE 儲存格應保留換行（white-space:pre-wrap）：' + pdfNoteCell.wrap);
+  if (pdfNoteCell.text.split('\n').length !== 4) throw new Error('PDF NOTE 儲存格應有 4 行：' + JSON.stringify(pdfNoteCell.text));
+  if (pdfNoteCell.scroll > pdfNoteCell.h + 3) throw new Error('PDF NOTE 儲存格高度應隨內容長高（不裁切）：' + JSON.stringify(pdfNoteCell));
   await page.screenshot({ path: 'tablepdf_print_worklog.png' });
   await page.emulateMedia({ media: 'screen' });
   await page.waitForTimeout(150);
@@ -164,6 +191,30 @@ const PID = 'proj-table-pdf';
   // 4. Kickoff Summary 以表格呈現（含每個 DO 的 NOTE 輸入）
   await page.click(`[data-ptab="${PID}"][data-ptab-panel="kickoff"]`);
   await page.waitForTimeout(300);
+  // 4a. Kickoff 的 WORK LOG SUMMARY 也是表格，且不含任何 icon／emoji
+  const klog = await page.evaluate((pid) => {
+    const panel = document.querySelector(`[data-ptab-panel="${pid}|kickoff"]`);
+    const table = panel.querySelector('table.klog-table');
+    const noteCell = table ? table.querySelector('.klog-note') : null;
+    return {
+      isTable: !!table,
+      headers: table ? [...table.querySelectorAll('thead th')].map(th => th.textContent.trim()) : null,
+      rows: panel.querySelectorAll('.klog-row').length,
+      noteText: noteCell ? noteCell.textContent : null,
+      noteWrap: noteCell ? getComputedStyle(noteCell).whiteSpace : null,
+      tableEmoji: table ? /[\u{1F300}-\u{1FAFF}\u{2190}-\u{21FF}\u{2600}-\u{27BF}]/u.test(table.textContent) : null,
+      oldIcons: panel.querySelectorAll('.pc-log,.wl-entry,.wl-entry-note').length
+    };
+  }, PID);
+  console.log('Kickoff WORK LOG table:', JSON.stringify(klog, null, 1));
+  if (!klog.isTable) throw new Error('Kickoff 的 WORK LOG SUMMARY 應以 table 呈現');
+  if (JSON.stringify(klog.headers) !== JSON.stringify(['#', 'SUMMARY', 'QTN', 'NOTE', 'DATE', 'STATUS'])) throw new Error('Kickoff WORK LOG 表頭不正確：' + JSON.stringify(klog.headers));
+  if (klog.rows !== 1) throw new Error('只應列出 confirmed 的 Log（1 筆），實際 ' + klog.rows);
+  if (klog.noteWrap !== 'pre-wrap') throw new Error('Kickoff WORK LOG 的 NOTE 應保留換行：' + klog.noteWrap);
+  if (klog.noteText.split('\n').length !== 4) throw new Error('Kickoff WORK LOG 的 NOTE 應完整顯示 4 行：' + JSON.stringify(klog.noteText));
+  if (klog.tableEmoji) throw new Error('Kickoff WORK LOG 表格不應有 icon／emoji');
+  if (klog.oldIcons !== 0) throw new Error('Kickoff WORK LOG 不應再用舊的 icon 樣式：' + klog.oldIcons);
+
   const sum = await page.evaluate((pid) => {
     const panel = document.querySelector(`[data-ptab-panel="${pid}|kickoff"]`);
     const table = panel.querySelector('table.summary-table');
@@ -289,8 +340,6 @@ const PID = 'proj-table-pdf';
   if (grow.scroll > grow.h + 3) throw new Error('NOTE 內容不應被截掉（要換行並長高）：' + JSON.stringify(grow));
   if (grow.resize !== 'vertical') throw new Error('NOTE 輸入框應可自行調整大小：' + grow.resize);
   await page.screenshot({ path: 'tablepdf_longnote.png' }); // 供人工檢視（已列入 .gitignore）
-
-  await page.screenshot({ path: 'tablepdf_pdf_preview.png' }); // 列印區內容（螢幕上不顯示，僅供檢查）
 
   // 7. 列印樣式：模擬 print media → 只顯示表格（即 PDF 的內容）
   await page.emulateMedia({ media: 'print' });

@@ -5,6 +5,7 @@
 
   var LS_PAIRS = 't1-product-pairs';
   var LS_PROJECTS = 't1-projects';
+  var LS_DELETED_PROJECTS = 't1-projects-deleted'; // 已刪除 Project 的 tombstone（id 清單）
   var COLLECTION = 't1_data';
 
   function lsRead(key) {
@@ -34,6 +35,30 @@
     cloud.forEach(put);
     local.forEach(put);
     return order;
+  }
+
+  /** 兩份 id 清單取聯集（字串化後去重） */
+  function _unionIds(a, b) {
+    var out = [];
+    function add(list) {
+      (Array.isArray(list) ? list : []).forEach(function (id) {
+        if (id == null) return;
+        var k = String(id);
+        if (out.indexOf(k) < 0) out.push(k);
+      });
+    }
+    add(a);
+    add(b);
+    return out;
+  }
+
+  /** 濾掉已刪除（tombstone）的項目 */
+  function _dropIds(arr, ids) {
+    if (!Array.isArray(arr)) return [];
+    if (!ids || !ids.length) return arr;
+    return arr.filter(function (item) {
+      return !(item && item.id != null && ids.indexOf(String(item.id)) >= 0);
+    });
   }
 
   var fs = {
@@ -87,6 +112,10 @@
         var localAccess = (function(){ try { return JSON.parse(localStorage.getItem('t1-access-mgmt') || '[]'); } catch(e) { return []; } })();
         var cloudPairs = results[0].exists ? (results[0].data().items || []) : [];
         var cloudProjects = results[1].exists ? (results[1].data().items || []) : [];
+        var cloudDeleted = results[1].exists ? (results[1].data().deleted || []) : [];
+        // 已刪除清單（tombstone）：本地 ∪ 雲端 —— 否則「雲端仍有舊資料、本機刪掉」的項目
+        // 會在下次載入時被合併回來（刪除無效）。永久保留，避免其他裝置的舊本機快取又補回來。
+        var deletedIds = _unionIds(lsRead(LS_DELETED_PROJECTS), cloudDeleted);
         var cloudMixNotes = results[2].exists ? (results[2].data().items || {}) : {};
         var cloudMixState = results[2].exists ? (results[2].data().mix || null) : null;
         var cloudViewerPos = results[3].exists ? (results[3].data().items || {}) : {};
@@ -94,7 +123,8 @@
         var cloudAccess = results[5].exists ? (results[5].data().items || []) : [];
         var out = {
           pairs: _mergeById(localPairs, cloudPairs),
-          projects: _mergeById(localProjects, cloudProjects),
+          projects: _dropIds(_mergeById(localProjects, cloudProjects), deletedIds),
+          deletedProjects: deletedIds,
           mixNotes: Object.assign({}, localMixNotes, cloudMixNotes), // 備註：雲端優先、本地補缺
           mixState: cloudMixState !== null ? _mergeById(localMixState, cloudMixState) : localMixState, // 槽位：雲端優先、本地補缺（雲端無則用本地）
           viewerPos: Object.assign({}, localViewerPos, cloudViewerPos), // 檢視位置：雲端優先、本地補缺
@@ -104,6 +134,7 @@
         };
         lsWrite(LS_PAIRS, out.pairs);
         lsWrite(LS_PROJECTS, out.projects);
+        lsWrite(LS_DELETED_PROJECTS, out.deletedProjects);
         localStorage.setItem('t1-mixmatch-notes', JSON.stringify(out.mixNotes));
         localStorage.setItem('t1-mixmatch', JSON.stringify(out.mixState));
         localStorage.setItem('t1-viewer-positions', JSON.stringify(out.viewerPos));
@@ -125,21 +156,25 @@
         .catch(function(e) { console.warn('[T1 Firestore] savePairs failed:', e.message); if (typeof toast === 'function') toast('雲端同步失敗（未登入時請先登入），資料僅存本機'); });
     },
 
-    saveProjects: function(projects) {
+    saveProjects: function(projects, deletedProjects) {
       lsWrite(LS_PROJECTS, projects);
+      var deleted = _unionIds(deletedProjects, lsRead(LS_DELETED_PROJECTS));
+      lsWrite(LS_DELETED_PROJECTS, deleted);
       if (!this.db) return;
       this.db.collection(COLLECTION).doc('projects')
-        .set({ items: projects, updatedAt: new Date().toISOString() })
+        .set({ items: projects, deleted: deleted, updatedAt: new Date().toISOString() })
         .catch(function(e) { console.warn('[T1 Firestore] saveProjects failed:', e.message); if (typeof toast === 'function') toast('雲端同步失敗（未登入時請先登入），資料僅存本機'); });
     },
 
     // Awaitable variant of saveProjects — returns the .set() Promise so callers
     // can wait for the Firestore write to complete (e.g. before sending email).
     // Does NOT modify the existing saveProjects behaviour.
-    saveProjectsAwait: function(projects) {
+    saveProjectsAwait: function(projects, deletedProjects) {
       if (!this.db) return Promise.reject(new Error('[T1 Firestore] db not ready'));
+      var deleted = _unionIds(deletedProjects, lsRead(LS_DELETED_PROJECTS));
+      lsWrite(LS_DELETED_PROJECTS, deleted);
       return this.db.collection(COLLECTION).doc('projects')
-        .set({ items: projects, updatedAt: new Date().toISOString() });
+        .set({ items: projects, deleted: deleted, updatedAt: new Date().toISOString() });
     },
 
     // Mix & Match 備註 → Firestore（doc 'mixmatch'，雲端備份）
@@ -183,7 +218,12 @@
     },
 
     _fallback: function() {
-      return { pairs: lsRead(LS_PAIRS), projects: lsRead(LS_PROJECTS) };
+      var deleted = _unionIds(lsRead(LS_DELETED_PROJECTS), []);
+      return {
+        pairs: lsRead(LS_PAIRS),
+        projects: _dropIds(lsRead(LS_PROJECTS), deleted),
+        deletedProjects: deleted
+      };
     }
   };
 

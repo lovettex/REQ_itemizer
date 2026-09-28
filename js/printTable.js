@@ -52,6 +52,7 @@
           return '<tr' + style + '>' + cols.map(function (_, i) {
             var v = r[i];
             // null → 完全空白（例如群組的第二筆以後不重複顯示標題）；undefined/'' → 「—」
+            // 內容含換行時原樣輸出，搭配列印樣式的 white-space:pre-wrap 保留所有換行與縮排
             var cell = v === null ? '' : (v === undefined || v === '' ? '—' : esc(v));
             return '<td>' + cell + '</td>';
           }).join('') + '</tr>';

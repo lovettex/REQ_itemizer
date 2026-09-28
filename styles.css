@@ -1019,6 +1019,18 @@ table.summary-table th:nth-child(4){width:78px}
 table.summary-table th:nth-child(6){width:92px}
 table.summary-table th:nth-child(7){width:110px}
 table.data-table td{overflow-wrap:anywhere}
+/* Kickoff 的 WORK LOG SUMMARY 表格（無 icon；NOTE 保留換行、隨內容長高） */
+.klog-wrap{display:block;overflow-x:auto}
+table.klog-table{table-layout:fixed}
+table.klog-table th:nth-child(1){width:44px}
+table.klog-table th:nth-child(2){width:120px}
+table.klog-table th:nth-child(3){width:100px}
+table.klog-table th:nth-child(5){width:92px}
+table.klog-table th:nth-child(6){width:96px}
+.klog-summary{font-weight:800;letter-spacing:.04em}
+.klog-qtn,.klog-status{white-space:nowrap}
+.klog-date{font-size:10px;color:#687384;white-space:nowrap}
+.klog-note{white-space:pre-wrap;overflow-wrap:anywhere;color:#3a4a5a}
 /* 拖曳排序 */
 .drag-handle{
   display:inline-block;
@@ -1078,6 +1090,9 @@ table.data-table .worklog-btn{display:inline-grid;margin-left:3px;vertical-align
   body.printing #printArea{display:block !important;position:static !important;background:#fff}
   #printArea .print-table{width:100%;border-collapse:collapse;font-size:10px;table-layout:fixed}
   #printArea .print-table th,#printArea .print-table td{border:1px solid #888;padding:3px 5px;vertical-align:top;word-wrap:break-word;overflow-wrap:anywhere}
+  /* NOTE 等欄位保留所有換行與縮排（資料條列顯示），儲存格高度隨內容自動長高 */
+  #printArea .print-table td{white-space:pre-wrap}
+  #printArea .print-table th{white-space:normal}
   #printArea .print-table tbody tr td{background:inherit}
   #printArea .print-table thead th{background:#eaeaea;font-weight:800;-webkit-print-color-adjust:exact;print-color-adjust:exact}
   #printArea .print-table tbody td{-webkit-print-color-adjust:exact;print-color-adjust:exact}
