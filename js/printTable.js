@@ -33,17 +33,27 @@
     return el;
   }
 
-  /** 產生列印用 HTML（供測試直接檢查內容） */
+  /** 產生列印用 HTML（供測試直接檢查內容）
+   *  可選：widths（各欄寬度，例如 ['6%','26%','52%','16%']）、rowStyles（每列 inline style，用來標示重點列）
+   */
   function buildHtml(o) {
     var opts = o || {};
     var cols = opts.columns || [];
     var rows = opts.rows || [];
+    var widths = opts.widths || [];
+    var rowStyles = opts.rowStyles || [];
     var head = '<tr>' + cols.map(function (c) { return '<th>' + esc(c) + '</th>'; }).join('') + '</tr>';
+    var colgroup = widths.length
+      ? '<colgroup>' + cols.map(function (_, i) { return '<col' + (widths[i] ? ' style="width:' + esc(widths[i]) + '"' : '') + '>'; }).join('') + '</colgroup>'
+      : '';
     var body = rows.length
-      ? rows.map(function (r) {
-          return '<tr>' + cols.map(function (_, i) {
+      ? rows.map(function (r, ri) {
+          var style = rowStyles[ri] ? ' style="' + esc(rowStyles[ri]) + '"' : '';
+          return '<tr' + style + '>' + cols.map(function (_, i) {
             var v = r[i];
-            return '<td>' + (v === null || v === undefined || v === '' ? '—' : esc(v)) + '</td>';
+            // null → 完全空白（例如群組的第二筆以後不重複顯示標題）；undefined/'' → 「—」
+            var cell = v === null ? '' : (v === undefined || v === '' ? '—' : esc(v));
+            return '<td>' + cell + '</td>';
           }).join('') + '</tr>';
         }).join('')
       : '<tr><td class="print-empty" colspan="' + cols.length + '">（尚無資料）</td></tr>';
@@ -54,7 +64,7 @@
         (opts.subtitle ? '<div class="print-sub">' + esc(opts.subtitle) + '</div>' : '') +
         (meta.length ? '<div class="print-meta">' + meta.map(function (m) { return '<span>' + esc(m) + '</span>'; }).join('') + '</div>' : '') +
       '</div>' +
-      '<table class="print-table"><thead>' + head + '</thead><tbody>' + body + '</tbody></table>' +
+      '<table class="print-table">' + colgroup + '<thead>' + head + '</thead><tbody>' + body + '</tbody></table>' +
       '<div class="print-foot">列印時間：' + esc(new Date().toLocaleString()) + '</div>' +
     '</div>';
   }

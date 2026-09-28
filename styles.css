@@ -982,19 +982,59 @@ table.data-table tbody tr:hover{background:rgba(255,255,255,.55)}
 .worklog-item-summary{font-weight:800;letter-spacing:.04em}
 .worklog-item-qtn{color:#3a4a5a;white-space:nowrap}
 .worklog-item-date,.cs-date{font-size:10px;color:#687384;white-space:nowrap}
-.wl-note-cell,.cs-note{min-width:180px;width:38%}
+.wl-note-cell,.cs-note{width:auto;min-width:240px}
 .worklog-note-input,.summary-note-input{
+  display:block;
   width:100%;
+  min-height:24px;
   border:1px solid #d5dbe1;
   border-radius:4px;
   padding:3px 6px;
   font:inherit;
   font-size:11px;
+  line-height:1.5;
   color:#17202a;
   background:rgba(255,255,255,.86);
+  white-space:pre-wrap;
+  word-break:break-word;
+  overflow-wrap:anywhere;
+  overflow-y:auto;
+  resize:vertical;   /* 可自行拖曳右下角調整大小 */
 }
 .worklog-note-input:focus,.summary-note-input:focus{border-color:#0d5932;outline:2px solid #0d5932}
 .summary-note-input.is-do{background:#fffdf0;border-color:#e0d5a8}
+/* 表格欄寬比例：順序欄窄、NOTE 欄最寬、其他固定 */
+table.worklog-table{table-layout:fixed}
+table.worklog-table th:nth-child(1){width:52px}
+table.worklog-table th:nth-child(2){width:120px}
+table.worklog-table th:nth-child(3){width:100px}
+table.worklog-table th:nth-child(5){width:92px}
+table.worklog-table th:nth-child(6){width:118px}
+table.worklog-table th:nth-child(7){width:92px}
+table.summary-table{table-layout:fixed}
+table.summary-table th:nth-child(1){width:52px}
+table.summary-table th:nth-child(2){width:160px}
+table.summary-table th:nth-child(3){width:130px}
+table.summary-table th:nth-child(4){width:78px}
+table.summary-table th:nth-child(6){width:92px}
+table.summary-table th:nth-child(7){width:110px}
+table.data-table td{overflow-wrap:anywhere}
+/* 拖曳排序 */
+.drag-handle{
+  display:inline-block;
+  margin-right:5px;
+  padding:0 2px;
+  color:#9aa6b2;
+  font-size:12px;
+  line-height:1;
+  cursor:grab;
+  user-select:none;
+}
+.drag-handle:hover{color:#0d5932}
+.drag-handle:active{cursor:grabbing}
+table.data-table tr.dragging{opacity:.45}
+table.data-table tr.drop-before>td{border-top:2px solid #0d5932 !important}
+table.data-table tr.drop-after>td{border-bottom:2px solid #0d5932 !important}
 .wl-actions,.cs-actions{white-space:nowrap;text-align:right}
 .wl-status-cell{white-space:nowrap}
 .cs-label{font-weight:700;color:#53606d;white-space:nowrap}
@@ -1037,8 +1077,10 @@ table.data-table .worklog-btn{display:inline-grid;margin-left:3px;vertical-align
   body.printing>*:not(#printArea){display:none !important}
   body.printing #printArea{display:block !important;position:static !important;background:#fff}
   #printArea .print-table{width:100%;border-collapse:collapse;font-size:10px;table-layout:fixed}
-  #printArea .print-table th,#printArea .print-table td{border:1px solid #888;padding:3px 5px;vertical-align:top;word-wrap:break-word}
+  #printArea .print-table th,#printArea .print-table td{border:1px solid #888;padding:3px 5px;vertical-align:top;word-wrap:break-word;overflow-wrap:anywhere}
+  #printArea .print-table tbody tr td{background:inherit}
   #printArea .print-table thead th{background:#eaeaea;font-weight:800;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  #printArea .print-table tbody td{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   #printArea .print-table thead{display:table-header-group}
   #printArea .print-table tr{page-break-inside:avoid}
   #printArea .print-empty{text-align:center;color:#666}

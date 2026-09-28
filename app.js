@@ -1,7 +1,7 @@
 // 資產版本標記：需與 index.html 的 ?v= 及 window.T1_EXPECT_ASSETS 一致。
 // 供 index.html 偵測「瀏覽器仍使用舊快取 app.js」時自動重載。
 window.T1 = window.T1 || {};
-window.T1.assetVersion = '20260927h';
+window.T1.assetVersion = '20260927i';
 
 const groups = [
   // PG 01-02: Glass Frame — Vertical Section (MST/001-002)
@@ -358,14 +358,14 @@ const WORK_LOG_DROPDOWNS = [
   ['-','VO1','VO2','VO3','VO4','VO5','VO6','VO7','VO8','VO9','VO10','VO11'],
   ['-','R1','R2','R3','R4','R5','R6','R7','R9','R10','R11']
 ];
-// Work Log 明細以表格呈現（可用「匯出 PDF」列印成 PDF 表格）；每列可即時編輯 NOTE
+// Work Log 明細以表格呈現（可用「匯出 PDF」列印成 PDF 表格）；每列可拖曳調整順序、NOTE 可即時編輯
 function worklogRowsHtml(p){
   const logs = Array.isArray(p.workLogs)?p.workLogs:[];
   if(!logs.length) return '<tr class="worklog-empty-row"><td colspan="7">尚未生成任何 Log。</td></tr>';
   return logs.map((log,i)=>{
     const st = log.status || 'submited';
     const bg = st==='confirmed' ? 'background:#F0FF45' : (st==='Considering' ? 'background:#406B28;color:#fff' : '');
-    return `<tr class="worklog-item" style="${bg}"><td class="wl-num">${i+1}</td><td class="worklog-item-summary">${esc(log.summary||log.qtnNum||(log.note?'Note':''))}</td><td class="worklog-item-qtn">${log.qtnNum?esc(log.qtnNum):'—'}</td><td class="wl-note-cell"><input class="worklog-note-input" data-wlog-note="${log.id}" value="${esc(log.note||'')}" placeholder="備註／說明…" title="這個 Log 的備註"></td><td class="worklog-item-date">${esc((log.createdAt||'').slice(0,10))}</td><td class="wl-status-cell"><select class="worklog-status" data-wlog-status="${log.id}"><option value="submited" ${st==='submited'?'selected':''}>submited</option><option value="Considering" ${st==='Considering'?'selected':''}>Considering</option><option value="confirmed" ${st==='confirmed'?'selected':''}>confirmed</option></select></td><td class="wl-actions"><button type="button" class="worklog-btn" data-wlog-up="${log.id}" title="上移">▲</button><button type="button" class="worklog-btn" data-wlog-down="${log.id}" title="下移">▼</button><button type="button" class="worklog-btn worklog-del" data-wlog-del="${log.id}" title="刪除">✕</button></td></tr>`;
+    return `<tr class="worklog-item" style="${bg}" data-wlog-row="${log.id}"><td class="wl-num"><span class="drag-handle" draggable="true" data-drag-row="wlog|${log.id}" title="拖曳調整順序">⠿</span>${i+1}</td><td class="worklog-item-summary">${esc(log.summary||log.qtnNum||(log.note?'Note':''))}</td><td class="worklog-item-qtn">${log.qtnNum?esc(log.qtnNum):'—'}</td><td class="wl-note-cell"><textarea class="note-input worklog-note-input" data-wlog-note="${log.id}" rows="1" placeholder="備註／說明…" title="這個 Log 的備註（可拖曳右下角調整大小）">${esc(log.note||'')}</textarea></td><td class="worklog-item-date">${esc((log.createdAt||'').slice(0,10))}</td><td class="wl-status-cell"><select class="worklog-status" data-wlog-status="${log.id}"><option value="submited" ${st==='submited'?'selected':''}>submited</option><option value="Considering" ${st==='Considering'?'selected':''}>Considering</option><option value="confirmed" ${st==='confirmed'?'selected':''}>confirmed</option></select></td><td class="wl-actions"><button type="button" class="worklog-btn" data-wlog-up="${log.id}" title="上移">▲</button><button type="button" class="worklog-btn" data-wlog-down="${log.id}" title="下移">▼</button><button type="button" class="worklog-btn worklog-del" data-wlog-del="${log.id}" title="刪除">✕</button></td></tr>`;
   }).join('');
 }
 function worklogFormHtml(p){
@@ -444,14 +444,15 @@ function _confirmedSelectsHtml(p){
   }).join('');
 }
 // Summary 以表格呈現（可用「匯出 PDF」列印成 PDF 表格）
-// 每筆記錄（含每一個 PICKLIST (DO) 的 DO#）都有自己的 NOTE 輸入框，用來記錄該次 DO 已下單／發出的內容。
+// 每筆記錄（含每一個 PICKLIST (DO) 的 DO#）都有自己的 NOTE 輸入框，用來記錄該次 DO 已下單／發出的內容；
+// 列可拖曳或按 ▲▼ 調整順序，NOTE 會自動換行長高、也可自行拖曳右下角放大。
 function _confirmedSummaryItemsHtml(p){
   const summary = Array.isArray(p.confirmSummary)?p.confirmSummary:[];
   if(!summary.length) return '<tr class="summary-empty-row"><td colspan="7">尚無 Summary 記錄。</td></tr>';
   return summary.map((r,i)=>{
     const isDo = r.label === 'PICKLIST (DO)';
     const ph = isDo ? '此 DO 已下單／發出的內容…' : '備註…';
-    return `<tr class="confirmed-summary-item"><td class="cs-num">${i+1}</td><td class="cs-label">${esc(r.label)}</td><td class="cs-value">${esc(r.value||'')}</td><td class="cs-r">${r.r?esc(r.r):'—'}</td><td class="cs-note"><input class="summary-note-input${isDo?' is-do':''}" data-confirmed-note="${p.id}|${r.id}" value="${esc(r.note||'')}" placeholder="${esc(ph)}" title="記錄這筆（DO）已下單／發出的內容"></td><td class="cs-date">${esc((r.createdAt||'').slice(0,10))}</td><td class="cs-actions"><button type="button" class="worklog-btn worklog-del" data-confirmed-del="${p.id}|${r.id}" title="刪除">✕</button></td></tr>`;
+    return `<tr class="confirmed-summary-item" data-sum-row="${r.id}"><td class="cs-num"><span class="drag-handle" draggable="true" data-drag-row="summary|${r.id}" title="拖曳調整順序">⠿</span>${i+1}</td><td class="cs-label">${esc(r.label)}</td><td class="cs-value">${esc(r.value||'')}</td><td class="cs-r">${r.r?esc(r.r):'—'}</td><td class="cs-note"><textarea class="note-input summary-note-input${isDo?' is-do':''}" data-confirmed-note="${p.id}|${r.id}" rows="1" placeholder="${esc(ph)}" title="記錄這筆（DO）已下單／發出的內容（可拖曳右下角調整大小）">${esc(r.note||'')}</textarea></td><td class="cs-date">${esc((r.createdAt||'').slice(0,10))}</td><td class="cs-actions"><button type="button" class="worklog-btn" data-confirmed-up="${r.id}" title="上移"${i===0?' disabled':''}>▲</button><button type="button" class="worklog-btn" data-confirmed-down="${r.id}" title="下移"${i===summary.length-1?' disabled':''}>▼</button><button type="button" class="worklog-btn worklog-del" data-confirmed-del="${p.id}|${r.id}" title="刪除">✕</button></td></tr>`;
   }).join('');
 }
 function _confirmedSummaryTableHtml(p){
@@ -975,6 +976,111 @@ document.addEventListener('click',e=>{
   const down=e.target.closest('[data-wlog-down]');
   if(down){e.preventDefault();const hit=_findWorkLog(down.dataset.wlogDown);if(!hit)return;const a=hit.p.workLogs;if(hit.i<a.length-1){const t=a[hit.i];a[hit.i]=a[hit.i+1];a[hit.i+1]=t;save();renderProjects();}return}
 });
+// === 表格列拖曳排序（Work Log / Kickoff Summary）＋ NOTE 自動長高 ===
+function _findSummary(rid){
+  for(let i=0;i<state.projects.length;i++){
+    const arr=state.projects[i].confirmSummary||[];
+    for(let j=0;j<arr.length;j++) if(arr[j].id===rid) return {p:state.projects[i],i:j};
+  }
+  return null;
+}
+let _dragRow=null; // { kind:'wlog'|'summary', id }
+function _clearDropMarks(){document.querySelectorAll('.drop-before,.drop-after').forEach(el=>el.classList.remove('drop-before','drop-after'))}
+function _moveTableRow(kind,fromId,toId,after){
+  if(kind==='wlog'){
+    const hit=_findWorkLog(fromId);if(!hit)return false;
+    const arr=hit.p.workLogs;
+    const from=arr.findIndex(l=>l.id===fromId);if(from<0)return false;
+    const [item]=arr.splice(from,1);
+    let to=arr.findIndex(l=>l.id===toId);if(to<0){arr.splice(from,0,item);return false}
+    if(after)to++;
+    if(to===from){arr.splice(from,0,item);return false}
+    arr.splice(to,0,item);
+    save();renderProjects();toast('已調整 Work Log 順序');return true;
+  }
+  const hit=_findSummary(fromId);if(!hit)return false;
+  const arr=hit.p.confirmSummary;
+  const from=hit.i;
+  const [item]=arr.splice(from,1);
+  let to=arr.findIndex(r=>r.id===toId);if(to<0){arr.splice(from,0,item);return false}
+  if(after)to++;
+  if(to===from){arr.splice(from,0,item);return false}
+  arr.splice(to,0,item);
+  save();renderProjects();toast('已調整 Summary 順序');return true;
+}
+function _dragRowOf(el){
+  const handle=el.closest('[data-drag-row]');
+  if(!handle)return null;
+  const row=handle.closest('tr');
+  const parts=String(handle.dataset.dragRow||'').split('|');
+  if(!row||parts.length<2)return null;
+  return { kind:parts[0], id:parts[1], row:row };
+}
+function _rowKind(row){
+  if(row.classList.contains('worklog-item'))return 'wlog';
+  if(row.classList.contains('confirmed-summary-item'))return 'summary';
+  return null;
+}
+document.addEventListener('dragstart',e=>{
+  const d=_dragRowOf(e.target);if(!d)return;
+  _dragRow=d;
+  d.row.classList.add('dragging');
+  if(e.dataTransfer){e.dataTransfer.effectAllowed='move';try{e.dataTransfer.setData('text/plain',d.id);}catch(_){}}
+});
+document.addEventListener('dragover',e=>{
+  if(!_dragRow)return;
+  const row=e.target.closest&&e.target.closest('tr');
+  if(!row||_rowKind(row)!==_dragRow.kind)return;
+  e.preventDefault();
+  if(e.dataTransfer)e.dataTransfer.dropEffect='move';
+  _clearDropMarks();
+  const rect=row.getBoundingClientRect();
+  row.classList.add((e.clientY-rect.top)>rect.height/2?'drop-after':'drop-before');
+});
+document.addEventListener('drop',e=>{
+  if(!_dragRow)return;
+  const row=e.target.closest&&e.target.closest('tr');
+  if(!row||_rowKind(row)!==_dragRow.kind)return;
+  e.preventDefault();
+  const toId=_dragRow.kind==='wlog'?row.dataset.wlogRow:row.dataset.sumRow;
+  const rect=row.getBoundingClientRect();
+  const after=(e.clientY-rect.top)>rect.height/2;
+  const from=_dragRow;
+  _clearDropMarks();
+  document.querySelectorAll('tr.dragging').forEach(el=>el.classList.remove('dragging'));
+  _dragRow=null;
+  if(toId&&toId!==from.id)_moveTableRow(from.kind,from.id,toId,after);
+});
+document.addEventListener('dragend',()=>{
+  _clearDropMarks();
+  document.querySelectorAll('tr.dragging').forEach(el=>el.classList.remove('dragging'));
+  _dragRow=null;
+});
+// Kickoff Summary 的 ▲▼ 排序（拖曳以外的替代操作）
+document.addEventListener('click',e=>{
+  const up=e.target.closest('[data-confirmed-up]');
+  if(up){e.preventDefault();const hit=_findSummary(up.dataset.confirmedUp);if(hit&&hit.i>0){const a=hit.p.confirmSummary;const t=a[hit.i];a[hit.i]=a[hit.i-1];a[hit.i-1]=t;save();renderProjects();toast('已調整 Summary 順序')}return}
+  const down=e.target.closest('[data-confirmed-down]');
+  if(down){e.preventDefault();const hit=_findSummary(down.dataset.confirmedDown);if(hit&&hit.i<hit.p.confirmSummary.length-1){const a=hit.p.confirmSummary;const t=a[hit.i];a[hit.i]=a[hit.i+1];a[hit.i+1]=t;save();renderProjects();toast('已調整 Summary 順序')}}
+});
+// NOTE 自動長高（只增不減，保留使用者自行拖曳調整的高度）
+function _autoGrowNote(el){
+  if(!el||el.tagName!=='TEXTAREA')return;
+  if(el.scrollHeight>el.clientHeight+1)el.style.height=(el.scrollHeight+2)+'px';
+}
+function _autoGrowNotes(root){
+  (root||document).querySelectorAll('textarea.note-input').forEach(_autoGrowNote);
+}
+document.addEventListener('input',e=>{
+  const el=e.target.closest('textarea.note-input');
+  if(el)_autoGrowNote(el);
+});
+const _prevRenderProjectsNotes=renderProjects;
+renderProjects=function(){
+  _prevRenderProjectsNotes();
+  _autoGrowNotes();
+};
+
 // === 表格匯出 PDF（Work Log / Kickoff Summary）===
 // 由目前的 project 資料組出表格，交給 js/printTable.js 列印（瀏覽器列印 → 另存為 PDF）。
 function _pdfMetaLines(p){
@@ -995,20 +1101,39 @@ function printWorkLogPdf(pid){
     title: 'WORK LOG',
     subtitle: p.name,
     meta: _pdfMetaLines(p),
-    columns: ['#', 'SUMMARY', 'QTN', 'NOTE', 'DATE', 'STATUS'],
-    rows: logs.map((l, i) => [i + 1, l.summary || '', l.qtnNum || '', l.note || '', (l.createdAt || '').slice(0, 10), l.status || 'submited'])
+    // PDF 不含 QTN / DATE 欄；欄寬以 NOTE 為主
+    columns: ['#', 'SUMMARY', 'NOTE', 'STATUS'],
+    widths: ['6%', '26%', '52%', '16%'],
+    // confirmed 列以黃底標示（與畫面一致）
+    rowStyles: logs.map(l => (l.status || '') === 'confirmed' ? 'background:#F0FF45' : ''),
+    rows: logs.map((l, i) => [i + 1, l.summary || '', l.note || '', l.status || 'submited'])
   });
 }
 function printSummaryPdf(pid){
   const p = state.projects.find(x => x.id === pid);
   if (!p || !(window.T1 || {}).printTable) return false;
   const summary = Array.isArray(p.confirmSummary) ? p.confirmSummary : [];
+  // PDF 不含 DATE 欄，並把所有 PICKLIST (DO) 集中成一群組（其他任務依原順序在前）
+  const others = summary.filter(r => r.label !== 'PICKLIST (DO)');
+  const dos = summary.filter(r => r.label === 'PICKLIST (DO)');
+  const ordered = others.concat(dos);
+  const firstDo = dos[0];
   return window.T1.printTable.open({
     title: 'KICKOFF SUMMARY',
     subtitle: p.name,
     meta: _pdfMetaLines(p),
-    columns: ['#', 'TASK', 'VALUE', '下單 R', 'NOTE', 'DATE'],
-    rows: summary.map((r, i) => [i + 1, r.label || '', r.value || '', r.r || '', r.note || '', (r.createdAt || '').slice(0, 10)])
+    columns: ['#', 'TASK', 'VALUE', '下單 R', 'NOTE'],
+    widths: ['5%', '16%', '14%', '10%', '55%'],
+    // DO 群組以淡綠底標示，其餘列不標示
+    rowStyles: ordered.map(r => r.label === 'PICKLIST (DO)' ? 'background:#EDF7D6' : ''),
+    rows: ordered.map((r, i) => [
+      i + 1,
+      // 群組：DO 只在第一列顯示標題，其餘留白（null → 不顯示「—」）
+      r.label === 'PICKLIST (DO)' ? (r === firstDo ? 'PICKLIST (DO)' : null) : (r.label || ''),
+      r.value || '',
+      r.r || '',
+      r.note || ''
+    ])
   });
 }
 window.T1 = window.T1 || {};
